@@ -331,3 +331,7 @@ class WallReader(object):
         if self.verbose:
             print "table = "+str(ret)
         return ret
+
+class PeekWriter(object):
+    def __init__(self, fp, verbose=False):
+        pass

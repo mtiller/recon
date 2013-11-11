@@ -1,7 +1,7 @@
+def write_wall():
+    from recon.wall import WallWriter
 
-def write_file():
-    from nido import WallWriter
-    with open("sample.nco", "w+") as fp:
+    with open("sample.wll", "w+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=False)
 
@@ -43,9 +43,10 @@ def write_file():
         obj2.add_field("nationality", "GreatBritisher");
         wall.flush();
 
-def read_file():
-    from nido import WallReader
-    with open("sample.nco", "rb") as fp:
+def read_wall():
+    from recon.wall import WallReader
+
+    with open("sample.wll", "rb") as fp:
         wall = WallReader(fp, verbose=False)
         print "Objects:"
         for objname in wall.objects():
@@ -65,5 +66,5 @@ def read_file():
                 vals = map(lambda x: x*scale+offset, vals)
                 print "    @"+alias+": "+str(vals)
 
-write_file()
-read_file()
+write_wall()
+read_wall()
