@@ -69,8 +69,10 @@ class WallWriter(object):
     def flush(self):
         for row in self.buffered_rows:
             print row
+            self.fp.write(self.bson.encode({row[0]: row[1]}))
         for field in self.buffered_fields:
             print field
+            self.fp.write(self.bson.encode({field[0]: field[1:]}))
         self.buffered_rows = []
         self.buffered_fields = []
 
