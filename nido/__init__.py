@@ -146,21 +146,44 @@ class WallWriter(object):
         self.buffered_fields = []
 
 class WallTableWriter(object):
+    """
+    This class is used to add rows to a given wall.
+    """
     def __init__(self, writer, name, signals):
+        """
+        This constructor is only called by the WallWriter class.
+        """
         self.writer = writer
         self.signals = signals
         self.aliases = {}
         self.name = name
+
     def add_alias(self, alias, of, scale=1.0, offset=0.0):
+        """
+        Defines an alias associated with a specific table.  The arguments are
+        the name of the alias, the variable it is an alias of (cannot be an
+        alias itself), the scale factor and the offset value between the alias
+        and base variable.  The value of the alias variable will be computed by
+        multiplying the base variable by the scale factor and then adding the
+        offset value.
+        """
         if self.writer.defined:
             raise FinalizedWall()
         if alias in self.aliases:
             raise KeyError("Alias "+alias+" already defined for table "+name)
+        if alias in self.signals:
+            raise KeyError("'"+name+"' is already the name of a signal, cannot be an alias")
         self.aliases[alias] = {"of": of, "scale": scale, "offset": offset}
     def add_row(self, *args, **kwargs):
+        """
+        This method transforms its arguments (in either positional or keyword form) into
+        a row which it then passes back to the TableWriter object to be buffered.
+        """
         if len(args)!=0 and len(kwargs)!=0:
             raise ValueError("add_row must be called with either positional or keyword args")
         if len(args)==0:
+            # If they specified keyword arguments, make sure they line up exactly with the
+            # existing signals.
             aset = set(kwargs.keys())
             cset = set(self.signals)
             if len(aset-cset)>0:
@@ -170,58 +193,116 @@ class WallTableWriter(object):
             row = map(lambda x: kwargs[x], self.signals)
             self.writer._add_row(self.name, row)
         else:
+            # For positional arguments, just make sure we have the correct number.
+            # TODO: Type check...once we have types
             if len(args)!=len(self.signals):
                 raise ValueError("Expected %d values, got %d" % (len(self.signals),
                                                                  len(args)))
             self.writer._add_row(self.name, args)
 
 class WallObjectWriter(object):
+    """
+    This class is used to write object fields back to a wall.
+    """
     def __init__(self, writer, name):
+        """
+        This constructor is only called by the TableWriter class.
+        """
         self.writer = writer
         self.name = name
     def add_field(self, key, value):
+        """
+        This calls the TableWriter and instructs it to add a field.
+        """
         self.writer._add_field(self.name, key, value)
 
 class WallReader(object):
+    """
+    This class is used to read a wall file.
+    """
     def __init__(self, fp, verbose=False):
+        """
+        This is the constructor for the wall reader.  The file like 'fp' object
+        must support the read, tell and seek methods.
+        """
         self.fp = fp
         self.verbose = verbose
+        # Read the first few bytes to make sure they contain the expected
+        # string.
         id = self.fp.read(len(WALL_ID))
         if id!=WALL_ID:
             raise IOError("Invalid format: File is not a wall file")
+        # Now read the header object
         self.header = self._read()
         if self.verbose:
             print "header = "+str(self.header)
+        # Record where the end of the header is
         self.start = fp.tell()
+
     def _read(self):
+        """
+        This method reads the next "document" from the file.  Because we are using
+        BSON underneath, this just reads a given BSON sequence of bytes and translates
+        it into a Python dictionary.
+        """
+        # Read the least significant and most significant bytes that describe the
+        # length of the BSON document.
         lsb = self.fp.read(1);
         if len(lsb)==0:
             return None
         msb = self.fp.read(1);
         if len(msb)==0:
             raise IOError("Premature EOF");
+        # Compute the length of the BSON string
         l = ord(msb)*256+ord(lsb)
+        # Read the BSON data
         data = self.fp.read(l-2);
         if len(data)<l-2:
             raise IOError("Premature EOF");
+        # Concatenate all the bytes (length and data) into a valid BSON sequence,
+        # decode it and return it.
         data = lsb+msb+data
         return BSON(data).decode()
+
     def objects(self):
+        """
+        Returns the set of objects in this file.
+        """
         return self.header["objects"]
+
     def tables(self):
+        """
+        Returns the set of tabls in this file.
+        """
         return self.header["tables"]
+
     def _read_entries(self, name):
+        """
+        Since this file format is journaled, this internal method is used to sweep
+        through entries and find the ones that match the named entity.  Only the
+        matching objects are retained and returned to the caller for processing.
+        """
         ret = []
+        # Position the file just after the header
         self.fp.seek(self.start)
+        # Read the next BSON document
         row = self._read()
         while row!=None:
             if self.verbose:
                 print "row = "+str(row)
+            # All entries have a single key which is the name of the entity
+            # (table or object) that they apply to.  So this basically extracts
+            # the value from each entity and appends it to an array which will
+            # be returned.
             if name in row:
                 ret.append(row[name])
             row = self._read()
         return ret
+
     def read_object(self, name):
+        """
+        This method extracts the named object.
+        """
         ret = {}
         if not name in self.header["objects"]:
             raise KeyError("No object named "+name+" present, options are: %s" % \
@@ -229,7 +310,11 @@ class WallReader(object):
         for ent in self._read_entries(name):
             ret[ent[0]] = ent[1]
         return ret
+
     def read_table(self, name):
+        """
+        This method extracts the named table
+        """
         if not name in self.header["tables"]:
             raise KeyError("No table named "+name+" present, options are: %s" % \
                            (str(self.header["tables"]),))
