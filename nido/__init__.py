@@ -1,17 +1,23 @@
+from bson import BSON
+
 class FinalizedWall(Exception):
     pass
 
 class ColumnMismatch(Exception):
     pass
 
+WALL_ID = "nido:wall"
+
 class WallWriter(object):
-    def __init__(self, fp):
+    def __init__(self, fp, verbose=False):
         self.fp = fp
+        self.verbose = verbose
         self.defined = False
         self.tables = {}
         self.objects = {}
         self.buffered_rows = []
         self.buffered_fields = []
+        self.bson = BSON()
     def add_table(self, name, signals):
         if self.defined:
             raise FinalizedWall()
@@ -33,14 +39,32 @@ class WallWriter(object):
     def _add_field(self, name, key, value):
         self.buffered_fields.append((name, key, value))
     def finalize(self):
-        print "Tables:"
+        tables = []
+        objects = []
+        if self.verbose:
+            print "Tables:"
         for table in self.tables:
-            print table
-            print "Columns: "+str(self.tables[table].signals)
-            print "Aliases: "+str(self.tables[table].aliases)
-        print "Objects:"
+            tables.append({"name": table,
+                           "signals": self.tables[table].signals,
+                           "aliases": self.tables[table].aliases})
+            if self.verbose:
+                print table
+                print "Columns: "+str(self.tables[table].signals)
+                print "Aliases: "+str(self.tables[table].aliases)
+        if self.verbose:
+            print "Objects:"
         for obj in self.objects:
-            print obj
+            objects.append(obj)
+            if self.verbose:
+                print obj
+        header = {"tables": tables, "objects": objects}
+        bhead = self.bson.encode(header)
+        if self.verbose:
+            print "Header = "+str(header)
+            print "String header length: "+str(len(str(header)))
+            print "Binary header length: "+str(len(bhead))
+        self.fp.write(WALL_ID)
+        self.fp.write(bhead)
         self.defined = True
     def flush(self):
         for row in self.buffered_rows:
