@@ -48,23 +48,67 @@ def read_wall():
 
     with open("sample.wll", "rb") as fp:
         wall = WallReader(fp, verbose=False)
+
         print "Objects:"
         for objname in wall.objects():
             obj = wall.read_object(objname)
             print "  "+objname+" = "+str(obj)
+
         print "Tables:"
         for tabname in wall.tables():
             table = wall.read_table(tabname)
             print "  "+tabname
-            for signal in table["signals"]:
-                print "    #"+signal+": "+str(table["data"][signal])
-            for alias in table["aliases"]:
-                of = table["aliases"][alias]["of"]
-                scale = table["aliases"][alias]["scale"]
-                offset = table["aliases"][alias]["offset"]
-                vals = table["data"][of]
-                vals = map(lambda x: x*scale+offset, vals)
-                print "    @"+alias+": "+str(vals)
+            for signal in table.signals():
+                print "    #"+signal+": "+str(table.data(signal))
+            for alias in table.aliases():
+                print "    @"+alias+": "+str(table.data(alias))
+
+def write_meld():
+    from recon.meld import MeldWriter
+
+    with open("sample.mld", "w+") as fp:
+        meld = MeldWriter(fp, verbose=False)
+        
+        # Melds can contain tables, here is how we define one
+        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+
+        # Tables can also have aliases, here is how we define a few
+        t.add_alias(alias="a", of="x", scale=1.0, offset=1.0);
+        t.add_alias(alias="b", of="y", scale=-1.0, offset=0.0);
+
+        # Melds can also have objects.
+        obj1 = meld.add_object("obj1");
+        obj2 = meld.add_object("obj2");
+
+        t.write("time", [0.0, 1.0, 2.0]);
+        t.write("x", [1.0, 0.0, 1.0]);
+        t.write("y", [2.0, 3.0, 3.0]);
+
+        obj1.write(nationality="American", name="Mike");
+        obj2.write(nationality="GreatBritisher", name="Pete");
+
+def read_meld():
+    from recon.meld import MeldReader
+
+    with open("sample.mdl", "rb") as fp:
+        meld = MeldReader(fp, verbose=False)
+
+        print "Objects:"
+        for objname in meld.objects():
+            obj = meld.read_object(objname)
+            print "  "+objname+" = "+str(obj)
+
+        print "Tables:"
+        for tabname in meld.tables():
+            table = meld.read_table(tabname)
+            print "  "+tabname
+            for signal in table.signals():
+                print "    #"+signal+": "+str(table.data(signal))
+            for alias in table.aliases():
+                print "    @"+alias+": "+str(table.data(alias))
 
 write_wall()
 read_wall()
+
+#write_meld()
+#read_meld()

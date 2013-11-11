@@ -318,20 +318,32 @@ class WallReader(object):
         if not name in self.header["tables"]:
             raise KeyError("No table named "+name+" present, options are: %s" % \
                            (str(self.header["tables"]),))
-        ret = self.header["tables"][name]
-        signals = ret["signals"]
-        data = {}
-        for signal in signals:
-            data[signal] = []
-        n = len(signals)
-        for ent in self._read_entries(name):
-            for index in range(0,n):
-                data[signals[index]].append(ent[index])
-        ret["data"] = data
-        if self.verbose:
-            print "table = "+str(ret)
-        return ret
+        return WallTableReader(self, name, self.header["tables"][name])
 
-class PeekWriter(object):
-    def __init__(self, fp, verbose=False):
-        pass
+class WallTableReader(object):
+    def __init__(self, reader, name, header):
+        self.reader = reader
+        self.name = name
+        self.header = header
+    def signals(self):
+        return self.header["signals"]
+    def aliases(self):
+        return self.header["aliases"].keys()
+    def variables(self):
+        return self.signals()+self.aliases()
+    def data(self, name):
+        if name in self.header["signals"]:
+            signal = name
+            scale = 1.0
+            offset = 0.0
+        elif name in self.header["aliases"]:
+            signal = self.header["aliases"][name]["of"]
+            scale = self.header["aliases"][name]["scale"]
+            offset = self.header["aliases"][name]["offset"]
+        else:
+            raise NameError("No signal or alias named "+name)
+        ret = []
+        index = self.header["signals"].index(signal)
+        for ent in self.reader._read_entries(self.name):
+            ret.append(ent[index])
+        return ret
