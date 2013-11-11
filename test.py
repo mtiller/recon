@@ -25,7 +25,7 @@ def write_file():
         wall.flush()  # We can write data out at any time
         t.add_row(time=1.0, x=0.0, y=3.0)
         wall.flush()
-        t.add_row(time=2.0, x=-1.0, y=3.0)
+        t.add_row(2.0, 1.0, 3.0)
         wall.flush()
 
         # Here we are adding fields to our object
