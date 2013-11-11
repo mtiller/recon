@@ -3,7 +3,7 @@ def write_file():
     from nido import WallWriter
     with open("sample.nco", "w+") as fp:
         # Create the wall object with a file-like object to write to
-        wall = WallWriter(fp)
+        wall = WallWriter(fp, verbose=False)
 
         # Walls can contain tables, here is how we define one
         t = wall.add_table(name="T1", signals=["time", "x", "y"]);
@@ -45,8 +45,8 @@ def write_file():
 
 def read_file():
     from nido import WallReader
-    with open("sample.nco") as fp:
-        wall = WallReader(fp)
+    with open("sample.nco", "rb") as fp:
+        wall = WallReader(fp, verbose=False)
         print "Objects:"
         for objname in wall.objects():
             obj = wall.read_object(objname)
@@ -55,7 +55,15 @@ def read_file():
         for tabname in wall.tables():
             table = wall.read_table(tabname)
             print "  "+tabname
-            for signal in table:
-                print "    "+signal+" = "+table[signal]
+            for signal in table["signals"]:
+                print "    #"+signal+": "+str(table["data"][signal])
+            for alias in table["aliases"]:
+                of = table["aliases"][alias]["of"]
+                scale = table["aliases"][alias]["scale"]
+                offset = table["aliases"][alias]["offset"]
+                vals = table["data"][of]
+                vals = map(lambda x: x*scale+offset, vals)
+                print "    @"+alias+": "+str(vals)
 
 write_file()
+read_file()
