@@ -69,23 +69,29 @@ def write_meld():
     with open("sample.mld", "w+") as fp:
         meld = MeldWriter(fp, verbose=False)
         
-        # Melds can contain tables, here is how we define one
+        # Need to identify all entities in the file first.  We don't need
+        # their data.  We just need to enumerate them for the header.
         t = meld.add_table(name="T1", signals=["time", "x", "y"]);
-
-        # Tables can also have aliases, here is how we define a few
         t.add_alias(alias="a", of="x", scale=1.0, offset=1.0);
         t.add_alias(alias="b", of="y", scale=-1.0, offset=0.0);
+        obj1 = meld.add_object("obj1");
+        obj2 = meld.add_object("obj2");
 
+        # Now we can start writing the actual data to the file.  As soon as we
+        # start writing data, we can't made any changes that would affect the header
         t.write("time", [0.0, 1.0, 2.0]);
         t.write("x", [1.0, 0.0, 1.0]);
         t.write("y", [2.0, 3.0, 3.0]);
 
-        # Melds can also have objects.
-        obj1 = meld.add_object("obj1");
+        # Once we switch to writing another entity, the previous entity is
+        # implicitly finalized
         obj1.write(nationality="American", name="Mike");
 
-        obj2 = meld.add_object("obj2");
         obj2.write(nationality="GreatBritisher", name="Pete");
+
+        # When the meld is closed (and it must be closed!), the entity that was
+        # currently being written is finalized
+        meld.close()
 
 def read_meld():
     from recon.meld import MeldReader
