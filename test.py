@@ -76,15 +76,15 @@ def write_meld():
         t.add_alias(alias="a", of="x", scale=1.0, offset=1.0);
         t.add_alias(alias="b", of="y", scale=-1.0, offset=0.0);
 
-        # Melds can also have objects.
-        obj1 = meld.add_object("obj1");
-        obj2 = meld.add_object("obj2");
-
         t.write("time", [0.0, 1.0, 2.0]);
         t.write("x", [1.0, 0.0, 1.0]);
         t.write("y", [2.0, 3.0, 3.0]);
 
+        # Melds can also have objects.
+        obj1 = meld.add_object("obj1");
         obj1.write(nationality="American", name="Mike");
+
+        obj2 = meld.add_object("obj2");
         obj2.write(nationality="GreatBritisher", name="Pete");
 
 def read_meld():
@@ -110,5 +110,5 @@ def read_meld():
 write_wall()
 read_wall()
 
-#write_meld()
+write_meld()
 #read_meld()
