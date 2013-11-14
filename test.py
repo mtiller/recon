@@ -67,7 +67,7 @@ def write_meld():
     from recon.meld import MeldWriter
 
     with open("sample.mld", "w+") as fp:
-        meld = MeldWriter(fp, verbose=False)
+        meld = MeldWriter(fp, verbose=True)
         
         # Need to identify all entities in the file first.  We don't need
         # their data.  We just need to enumerate them for the header.
