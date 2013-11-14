@@ -2,7 +2,7 @@ from bson import BSON
 
 # This is a unique ID that every wall file starts with so
 # it can be identified/verified.
-WALL_ID = "nido:wall:v1"
+WALL_ID = "recon:wall:v1"
 
 class FinalizedWall(Exception):
     """
