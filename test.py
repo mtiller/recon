@@ -77,6 +77,10 @@ def write_meld():
         obj1 = meld.add_object("obj1");
         obj2 = meld.add_object("obj2");
 
+        # All the structural information has been specified (perhaps this
+        # could be implicitly invoked?)
+        meld.finalize()
+
         # Now we can start writing the actual data to the file.  As soon as we
         # start writing data, we can't made any changes that would affect the header
         t.write("time", [0.0, 1.0, 2.0]);

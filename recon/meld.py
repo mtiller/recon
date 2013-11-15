@@ -1,5 +1,11 @@
 from bson import BSON
 
+class MeldNotFinalized(Exception):
+    """
+    Thrown when data is written to a meld that hasn't been finalized.
+    """
+    pass
+    
 class FinalizedMeld(Exception):
     """
     Thrown when an attempt is made to change structural definitions
@@ -64,6 +70,16 @@ class MeldWriter(object):
         self.cur = obj
         return obj
 
+    def _signal_header(self, table, signal):
+        t = self.header["tables"][table]["indices"]
+        if not signal in t:
+            raise KeyError("Signal "+signal+" not present in "+str(t.keys()))
+        s = t[signal]
+        return s
+
+    def _object_header(self, objname):
+        return self.header["objects"][objname]
+
     def _write_header(self):
         # Binary encoding of header
         if self.verbose:
@@ -80,7 +96,7 @@ class MeldWriter(object):
         else:
             if self.verbose:
                 print "Rewriting header"
-            save = fp.tell()
+            save = self.fp.tell()
             self.fp.seek(0)
             self.fp.write(bhead)
             self.fp.seek(save)
@@ -106,7 +122,7 @@ class MeldWriter(object):
     def close(self):
         if not self.defined:
             self.finalize()
-        pass
+        # TODO: Make sure there is data for every signal and object
 
 class MeldTableWriter(object):
     def __init__(self, writer, name, signals):
@@ -124,12 +140,33 @@ class MeldTableWriter(object):
             raise NameError("Alias "+alias+" refers to non-existant signal "+of)
         self.aliases[alias] = {"of": of, "scale": scale, "offset": offset};
     def write(self, sig, data):
+        if not self.writer.defined:
+            raise MeldNotFinalized("Meld must be finalized before writing data")
         if self.closed:
             raise FinalizedTable("Table "+self.name+" is already closed for writing")
-        pass
+        if not sig in self.signals:
+            raise NameError("Cannot write unknown signal "+sig+" to table")
+        base = self.writer.fp.tell()
+        # TODO: Make sure this is a list
+        # TODO: Make sure it is the correct size (matches any previous)
+        # TODO: Perform type checks
+        bdata = self.writer.bson.encode({"x": data})
+        # We can only encode documents with this library, so now we need to strip
+        # out the data
+        bdata = bdata[(4+3):-1] # This is just the array
+        blen = len(bdata)
+        if self.writer.verbose:
+            print "Data: "+str(data)
+            print "Binary Data: "+str(bdata)
+            print "Length: "+str(blen)
+        self.writer.fp.write(bdata)
+        self.writer._signal_header(self.name, sig)["ind"] = base
+        self.writer._signal_header(self.name, sig)["len"] = blen
+        # Rewrite header with updated location information
+        self.writer._write_header()
+        self.writer.cur = None
     def close(self):
         self.closed = True
-        pass
 
 class MeldObjectWriter(object):
     def __init__(self, writer, name):
@@ -137,9 +174,23 @@ class MeldObjectWriter(object):
         self.name = name
         self.closed = False
     def write(self, **kwargs):
+        if not self.writer.defined:
+            raise MeldNotFinalized("Meld must be finalized before writing data")
         if self.closed:
-            raise FinalizedTable("Object "+name+" is already closed for writing")
-        pass
+            raise FinalizedObject("Object "+name+" is already closed for writing")
+        # TODO: Perform type checks
+        base = self.writer.fp.tell()
+        bdata = self.writer.bson.encode(kwargs)
+        blen = len(bdata)
+        if self.writer.verbose:
+            print "Binary Data: "+str(bdata)
+            print "Length: "+str(blen)
+        self.writer.fp.write(bdata)
+        self.writer._object_header(self.name)["ind"] = base
+        self.writer._object_header(self.name)["len"] = blen
+        # Rewrite header with updated location information
+        self.writer._write_header()
+        self.writer.cur = None
     def close(self):
         self.closed = True
 
