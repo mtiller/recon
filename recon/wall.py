@@ -247,21 +247,39 @@ class WallReader(object):
         """
         # Read the least significant and most significant bytes that describe the
         # length of the BSON document.
-        lsb = self.fp.read(1);
-        if len(lsb)==0:
+        b1 = self.fp.read(1);
+        if len(b1)==0:
             return None
-        msb = self.fp.read(1);
-        if len(msb)==0:
+        if self.verbose:
+            print "B1: "+str(ord(b1))
+        b2 = self.fp.read(1);
+        if len(b2)==0:
             raise IOError("Premature EOF");
+        if self.verbose:
+            print "B1: "+str(ord(b2))
+        b3 = self.fp.read(1);
+        if len(b3)==0:
+            raise IOError("Premature EOF");
+        if self.verbose:
+            print "B1: "+str(ord(b3))
+        b4 = self.fp.read(1);
+        if len(b4)==0:
+            raise IOError("Premature EOF");
+        if self.verbose:
+            print "B1: "+str(ord(b4))
         # Compute the length of the BSON string
-        l = ord(msb)*256+ord(lsb)
+        l = (((ord(b4)*256)+ord(b3)*256)+ord(b2)*256)+ord(b1)
+        if self.verbose:
+            print "Len: "+str(l)
         # Read the BSON data
-        data = self.fp.read(l-2);
-        if len(data)<l-2:
+        data = self.fp.read(l-4);
+        if self.verbose:
+            print "Raw Data: "+str(repr(data))
+        if len(data)<l-4:
             raise IOError("Premature EOF");
         # Concatenate all the bytes (length and data) into a valid BSON sequence,
         # decode it and return it.
-        data = lsb+msb+data
+        data = b1+b2+b3+b4+data
         return BSON(data).decode()
 
     def objects(self):
