@@ -125,7 +125,7 @@ class MeldWriter(object):
                 index[alias] = {"ind": -1,
                                 "s": table.aliases[alias]["scale"],
                                 "off": table.aliases[alias]["offset"]}
-            self.header["tables"][tname] = {"indices": index}
+            self.header["tables"][tname] = {"v": table.variables, "indices": index}
         for oname in self.objects:
             self.header["objects"][oname] = {"ind": -1}
 
@@ -151,9 +151,12 @@ class MeldTableWriter(object):
     def __init__(self, writer, name, signals):
         self.writer = writer
         self.name = name
+        self.variables = []
         self.signals = signals
         self.aliases = {}
         self.closed = False
+        for s in signals:
+            self.variables.append(s)
     def add_alias(self, alias, of, scale=1.0, offset=0.0):
         if alias in self.signals:
             raise NameError("Table already contains a signal named "+alias)
@@ -161,6 +164,7 @@ class MeldTableWriter(object):
             raise NameError("Table already contains an alias named "+alias)
         if not of in self.signals:
             raise NameError("Alias "+alias+" refers to non-existant signal "+of)
+        self.variables.append(alias)
         self.aliases[alias] = {"of": of, "scale": scale, "offset": offset};
     def write(self, sig, data):
         if not self.writer.defined:
@@ -256,9 +260,10 @@ class MeldTableReader(object):
         if not self.table in self.reader.header["tables"]:
             raise NameError("Cannot find table "+self.table)
         self.indices = self.reader.header["tables"][table]["indices"]
+        self.signames = self.reader.header["tables"][table]["v"]
         
     def signals(self):
-        return self.indices.keys()
+        return self.signames
 
     def data(self, signal):
         if not signal in self.indices:

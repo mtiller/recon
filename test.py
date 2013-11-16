@@ -97,11 +97,11 @@ def write_meld():
         # currently being written is finalized
         meld.close()
 
-def read_meld():
+def read_meld(verbose=True):
     from recon.meld import MeldReader
 
     with open("sample.mld", "rb") as fp:
-        meld = MeldReader(fp, verbose=False)
+        meld = MeldReader(fp, verbose=verbose)
 
         print "Objects:"
         for objname in meld.objects():
@@ -119,4 +119,4 @@ write_wall()
 read_wall()
 
 write_meld()
-read_meld()
+read_meld(False)
