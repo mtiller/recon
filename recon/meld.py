@@ -27,6 +27,11 @@ class FinalizedObject(Exception):
     """
     pass
 
+class MissingData(Exception):
+    """
+    Thrown when a Meld file is closed and table or object data is missing
+    """
+    pass
 
 class MeldWriter(object):
     def __init__(self, fp, verbose=False):
@@ -122,7 +127,17 @@ class MeldWriter(object):
     def close(self):
         if not self.defined:
             self.finalize()
-        # TODO: Make sure there is data for every signal and object
+        missing = []
+        for table in self.tables:
+            for signal in self.tables[table].signals:
+                if self._signal_header(table, signal)["ind"]==-1:
+                    missing.append(signal)
+        for obj in self.objects:
+            if self._object_header(obj)["ind"]==-1:
+                missing.append(name)
+        if len(missing)>0:
+            raise MissingData("Data not written for: "+str(missing))
+
 
 class MeldTableWriter(object):
     def __init__(self, writer, name, signals):
@@ -157,15 +172,21 @@ class MeldTableWriter(object):
         blen = len(bdata)
         if self.writer.verbose:
             print "Data: "+str(data)
-            print "Binary Data: "+str(bdata)
+            print "Binary Data: "+str(repr(bdata))
             print "Length: "+str(blen)
         self.writer.fp.write(bdata)
         self.writer._signal_header(self.name, sig)["ind"] = base
         self.writer._signal_header(self.name, sig)["len"] = blen
+        for alias in self.aliases:
+            if self.aliases[alias]["of"]==sig:
+                self.writer._signal_header(self.name, alias)["ind"] = base
+                self.writer._signal_header(self.name, alias)["len"] = blen
+                
         # Rewrite header with updated location information
         self.writer._write_header()
         self.writer.cur = None
     def close(self):
+        missing = []
         self.closed = True
 
 class MeldObjectWriter(object):
@@ -183,11 +204,12 @@ class MeldObjectWriter(object):
         bdata = self.writer.bson.encode(kwargs)
         blen = len(bdata)
         if self.writer.verbose:
-            print "Binary Data: "+str(bdata)
+            print "Binary Data: "+str(repr(bdata))
             print "Length: "+str(blen)
         self.writer.fp.write(bdata)
         self.writer._object_header(self.name)["ind"] = base
         self.writer._object_header(self.name)["len"] = blen
+
         # Rewrite header with updated location information
         self.writer._write_header()
         self.writer.cur = None
