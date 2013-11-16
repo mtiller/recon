@@ -1,4 +1,5 @@
 from bson import BSON
+import bz2
 
 from util import _read
 
@@ -40,8 +41,9 @@ class MissingData(Exception):
     pass
 
 class MeldWriter(object):
-    def __init__(self, fp, verbose=False):
+    def __init__(self, fp, compression=False, verbose=False):
         self.fp = fp
+        self.compression = compression
         self.verbose = verbose
         self.tables = {}
         self.objects = {}
@@ -114,6 +116,18 @@ class MeldWriter(object):
             self.fp.write(bhead)
             self.fp.seek(save)
 
+    def _write_object(self, obj):
+        base = self.fp.tell()
+        bdata = self.bson.encode(obj)
+        if self.compression:
+            c = bz2.BZ2Compressor()
+            a = c.compress(bdata)
+            b = c.flush()
+            bdata = a+b
+        blen = len(bdata)
+        self.fp.write(bdata)
+        return (base, blen)
+
     def finalize(self):
         self.header = {"tables": {}, "objects": {}}
         for tname in self.tables:
@@ -121,13 +135,21 @@ class MeldWriter(object):
             index = {}
             for sig in table.signals:
                 index[sig] = {"ind": -1, "s": 1.0, "off": 1.0}
+                if self.compression:
+                    index[sig]["len"] = -1
             for alias in table.aliases:
                 index[alias] = {"ind": -1,
                                 "s": table.aliases[alias]["scale"],
                                 "off": table.aliases[alias]["offset"]}
+                if self.compression:
+                    index[alias]["len"] = -1
             self.header["tables"][tname] = {"v": table.variables, "indices": index}
         for oname in self.objects:
             self.header["objects"][oname] = {"ind": -1}
+            if self.compression:
+                self.header["objects"][oname]["len"] = -1
+
+        self.header["comp"] = self.compression
 
         self._write_header()
         self.defined = True
@@ -173,23 +195,20 @@ class MeldTableWriter(object):
             raise FinalizedTable("Table "+self.name+" is already closed for writing")
         if not sig in self.signals:
             raise NameError("Cannot write unknown signal "+sig+" to table")
-        base = self.writer.fp.tell()
+
         # TODO: Make sure this is a list
         # TODO: Make sure it is the correct size (matches any previous)
         # TODO: Perform type checks
-        bdata = self.writer.bson.encode({"d": data})
-        # We can only encode documents with this library, so now we need to strip
-        # out the data
-        blen = len(bdata)
-        if self.writer.verbose:
-            print "Data: "+str(data)
-            print "Binary Data: "+str(repr(bdata))
-            print "Length: "+str(blen)
-        self.writer.fp.write(bdata)
+
+        (base, blen) = self.writer._write_object({"d": data})
         self.writer._signal_header(self.name, sig)["ind"] = base
+        if self.writer.compression:
+            self.writer._signal_header(self.name, sig)["len"] = blen
         for alias in self.aliases:
             if self.aliases[alias]["of"]==sig:
                 self.writer._signal_header(self.name, alias)["ind"] = base
+                if self.writer.compression:
+                    self.writer._signal_header(self.name, alias)["len"] = blen
                 
         # Rewrite header with updated location information
         self.writer._write_header()
@@ -208,15 +227,11 @@ class MeldObjectWriter(object):
             raise MeldNotFinalized("Meld must be finalized before writing data")
         if self.closed:
             raise FinalizedObject("Object "+name+" is already closed for writing")
-        # TODO: Perform type checks
-        base = self.writer.fp.tell()
-        bdata = self.writer.bson.encode(kwargs)
-        blen = len(bdata)
-        if self.writer.verbose:
-            print "Binary Data: "+str(repr(bdata))
-            print "Length: "+str(blen)
-        self.writer.fp.write(bdata)
+
+        (base, blen) = self.writer._write_object(kwargs)
         self.writer._object_header(self.name)["ind"] = base
+        if self.writer.compression:
+            self.writer._object_header(self.name)["len"] = base
 
         # Rewrite header with updated location information
         self.writer._write_header()
@@ -232,6 +247,9 @@ class MeldReader(object):
         if file_id != MELD_ID:
             raise IOError("File is not a Meld file")
         self.header = _read(self.fp, self.verbose)
+        self.compression = self.header["comp"]
+        if self.verbose:
+            print "Compression: "+str(self.compression)
         if self.verbose:
             print "Header = "+str(self.header)
 
@@ -250,6 +268,8 @@ class MeldReader(object):
         if not objname in self.objects():
             raise NameError("No object named "+table+" found");
         ind = self.header["objects"][objname]["ind"]
+        if self.compression:
+            blen = self.header["objects"][objname]["len"]
         self.fp.seek(ind)
         return _read(self.fp, self.verbose)
 
@@ -269,5 +289,7 @@ class MeldTableReader(object):
         if not signal in self.indices:
             NameError("No signal named "+str(signal)+" found in table "+str(self.table))
         ind = self.indices[signal]["ind"]
+        if self.reader.compression:
+            blen = self.indices[signal]["len"]
         self.reader.fp.seek(ind)
         return _read(self.reader.fp, self.reader.verbose)["d"]

@@ -63,11 +63,11 @@ def read_wall():
             for alias in table.aliases():
                 print "    @"+alias+": "+str(table.data(alias))
 
-def write_meld():
+def write_meld(compression=False, verbose=False):
     from recon.meld import MeldWriter
 
     with open("sample.mld", "w+") as fp:
-        meld = MeldWriter(fp, verbose=False)
+        meld = MeldWriter(fp, verbose=verbose, compression=compression)
         
         # Need to identify all entities in the file first.  We don't need
         # their data.  We just need to enumerate them for the header.
@@ -118,5 +118,5 @@ def read_meld(verbose=True):
 write_wall()
 read_wall()
 
-write_meld()
+write_meld(compression=False)
 read_meld(False)
