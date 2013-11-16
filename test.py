@@ -67,7 +67,7 @@ def write_meld():
     from recon.meld import MeldWriter
 
     with open("sample.mld", "w+") as fp:
-        meld = MeldWriter(fp, verbose=True)
+        meld = MeldWriter(fp, verbose=False)
         
         # Need to identify all entities in the file first.  We don't need
         # their data.  We just need to enumerate them for the header.
@@ -100,7 +100,7 @@ def write_meld():
 def read_meld():
     from recon.meld import MeldReader
 
-    with open("sample.mdl", "rb") as fp:
+    with open("sample.mld", "rb") as fp:
         meld = MeldReader(fp, verbose=False)
 
         print "Objects:"
@@ -114,11 +114,9 @@ def read_meld():
             print "  "+tabname
             for signal in table.signals():
                 print "    #"+signal+": "+str(table.data(signal))
-            for alias in table.aliases():
-                print "    @"+alias+": "+str(table.data(alias))
 
 write_wall()
 read_wall()
 
 write_meld()
-#read_meld()
+read_meld()

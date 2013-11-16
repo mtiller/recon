@@ -1,5 +1,7 @@
 from bson import BSON
 
+from util import _read
+
 # This is a unique ID that every wall file starts with so
 # it can be identified/verified.
 WALL_ID = "recon:wall:v1"
@@ -233,54 +235,11 @@ class WallReader(object):
         if id!=WALL_ID:
             raise IOError("Invalid format: File is not a wall file")
         # Now read the header object
-        self.header = self._read()
+        self.header = _read(self.fp, self.verbose)
         if self.verbose:
             print "header = "+str(self.header)
         # Record where the end of the header is
         self.start = fp.tell()
-
-    def _read(self):
-        """
-        This method reads the next "document" from the file.  Because we are using
-        BSON underneath, this just reads a given BSON sequence of bytes and translates
-        it into a Python dictionary.
-        """
-        # Read the least significant and most significant bytes that describe the
-        # length of the BSON document.
-        b1 = self.fp.read(1);
-        if len(b1)==0:
-            return None
-        if self.verbose:
-            print "B1: "+str(ord(b1))
-        b2 = self.fp.read(1);
-        if len(b2)==0:
-            raise IOError("Premature EOF");
-        if self.verbose:
-            print "B1: "+str(ord(b2))
-        b3 = self.fp.read(1);
-        if len(b3)==0:
-            raise IOError("Premature EOF");
-        if self.verbose:
-            print "B1: "+str(ord(b3))
-        b4 = self.fp.read(1);
-        if len(b4)==0:
-            raise IOError("Premature EOF");
-        if self.verbose:
-            print "B1: "+str(ord(b4))
-        # Compute the length of the BSON string
-        l = (((ord(b4)*256)+ord(b3)*256)+ord(b2)*256)+ord(b1)
-        if self.verbose:
-            print "Len: "+str(l)
-        # Read the BSON data
-        data = self.fp.read(l-4);
-        if self.verbose:
-            print "Raw Data: "+str(repr(data))
-        if len(data)<l-4:
-            raise IOError("Premature EOF");
-        # Concatenate all the bytes (length and data) into a valid BSON sequence,
-        # decode it and return it.
-        data = b1+b2+b3+b4+data
-        return BSON(data).decode()
 
     def objects(self):
         """
@@ -304,7 +263,7 @@ class WallReader(object):
         # Position the file just after the header
         self.fp.seek(self.start)
         # Read the next BSON document
-        row = self._read()
+        row = _read(self.fp, self.verbose)
         while row!=None:
             if self.verbose:
                 print "row = "+str(row)
@@ -314,7 +273,7 @@ class WallReader(object):
             # be returned.
             if name in row:
                 ret.append(row[name])
-            row = self._read()
+            row = _read(self.fp, self.verbose)
         return ret
 
     def read_object(self, name):

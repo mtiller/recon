@@ -1,5 +1,11 @@
 from bson import BSON
 
+from util import _read
+
+# This is a unique ID that every meld file starts with so
+# it can be identified/verified.
+MELD_ID = "recon:meld:v1"
+
 class MeldNotFinalized(Exception):
     """
     Thrown when data is written to a meld that hasn't been finalized.
@@ -96,6 +102,7 @@ class MeldWriter(object):
         if self.start==None:
             if self.verbose:
                 print "Writing header for the first time"
+            self.fp.write(MELD_ID)
             self.fp.write(bhead)
             self.start = self.fp.tell()
         else:
@@ -103,6 +110,7 @@ class MeldWriter(object):
                 print "Rewriting header"
             save = self.fp.tell()
             self.fp.seek(0)
+            self.fp.write(MELD_ID)
             self.fp.write(bhead)
             self.fp.seek(save)
 
@@ -112,14 +120,14 @@ class MeldWriter(object):
             table = self.tables[tname]
             index = {}
             for sig in table.signals:
-                index[sig] = {"ind": -1, "len": -1, "s": 1.0, "off": 1.0}
+                index[sig] = {"ind": -1, "s": 1.0, "off": 1.0}
             for alias in table.aliases:
-                index[alias] = {"ind": -1, "len": -1,
+                index[alias] = {"ind": -1,
                                 "s": table.aliases[alias]["scale"],
                                 "off": table.aliases[alias]["offset"]}
             self.header["tables"][tname] = {"indices": index}
         for oname in self.objects:
-            self.header["objects"][oname] = {"ind": -1, "len": -1}
+            self.header["objects"][oname] = {"ind": -1}
 
         self._write_header()
         self.defined = True
@@ -165,10 +173,9 @@ class MeldTableWriter(object):
         # TODO: Make sure this is a list
         # TODO: Make sure it is the correct size (matches any previous)
         # TODO: Perform type checks
-        bdata = self.writer.bson.encode({"x": data})
+        bdata = self.writer.bson.encode({"d": data})
         # We can only encode documents with this library, so now we need to strip
         # out the data
-        bdata = bdata[(4+3):-1] # This is just the array
         blen = len(bdata)
         if self.writer.verbose:
             print "Data: "+str(data)
@@ -176,11 +183,9 @@ class MeldTableWriter(object):
             print "Length: "+str(blen)
         self.writer.fp.write(bdata)
         self.writer._signal_header(self.name, sig)["ind"] = base
-        self.writer._signal_header(self.name, sig)["len"] = blen
         for alias in self.aliases:
             if self.aliases[alias]["of"]==sig:
                 self.writer._signal_header(self.name, alias)["ind"] = base
-                self.writer._signal_header(self.name, alias)["len"] = blen
                 
         # Rewrite header with updated location information
         self.writer._write_header()
@@ -208,7 +213,6 @@ class MeldObjectWriter(object):
             print "Length: "+str(blen)
         self.writer.fp.write(bdata)
         self.writer._object_header(self.name)["ind"] = base
-        self.writer._object_header(self.name)["len"] = blen
 
         # Rewrite header with updated location information
         self.writer._write_header()
@@ -218,4 +222,47 @@ class MeldObjectWriter(object):
 
 class MeldReader(object):
     def __init__(self, fp, verbose=False):
-        pass
+        self.fp = fp
+        self.verbose = verbose
+        file_id = self.fp.read(len(MELD_ID))
+        if file_id != MELD_ID:
+            raise IOError("File is not a Meld file")
+        self.header = _read(self.fp, self.verbose)
+        if self.verbose:
+            print "Header = "+str(self.header)
+
+    def tables(self):
+        return self.header["tables"].keys()
+
+    def objects(self):
+        return self.header["objects"].keys()
+
+    def read_table(self, table):
+        if not table in self.tables():
+            raise NameError("No table named "+table+" found");
+        return MeldTableReader(self, table)
+
+    def read_object(self, objname):
+        if not objname in self.objects():
+            raise NameError("No object named "+table+" found");
+        ind = self.header["objects"][objname]["ind"]
+        self.fp.seek(ind)
+        return _read(self.fp, self.verbose)
+
+class MeldTableReader(object):
+    def __init__(self, reader, table):
+        self.reader = reader
+        self.table = table
+        if not self.table in self.reader.header["tables"]:
+            raise NameError("Cannot find table "+self.table)
+        self.indices = self.reader.header["tables"][table]["indices"]
+        
+    def signals(self):
+        return self.indices.keys()
+
+    def data(self, signal):
+        if not signal in self.indices:
+            NameError("No signal named "+str(signal)+" found in table "+str(self.table))
+        ind = self.indices[signal]["ind"]
+        self.reader.fp.seek(ind)
+        return _read(self.reader.fp, self.reader.verbose)["d"]
