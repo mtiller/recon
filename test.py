@@ -115,8 +115,8 @@ def read_meld(verbose=True):
             for signal in table.signals():
                 print "    #"+signal+": "+str(table.data(signal))
 
-write_wall()
-read_wall()
+#write_wall()
+#read_wall()
 
-write_meld(compression=False)
-read_meld(False)
+write_meld(verbose=True,compression=True)
+read_meld(verbose=True)

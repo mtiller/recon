@@ -1,7 +1,7 @@
 from bson import BSON
 import bz2
 
-from util import _read
+from util import _read, _read_compressed
 
 # This is a unique ID that every meld file starts with so
 # it can be identified/verified.
@@ -125,6 +125,9 @@ class MeldWriter(object):
             b = c.flush()
             bdata = a+b
         blen = len(bdata)
+        if self.verbose:
+            print "Binary data: "+str(repr(bdata))
+            print "Binary len: "+str(blen)
         self.fp.write(bdata)
         return (base, blen)
 
@@ -268,10 +271,12 @@ class MeldReader(object):
         if not objname in self.objects():
             raise NameError("No object named "+table+" found");
         ind = self.header["objects"][objname]["ind"]
+        self.fp.seek(ind)
         if self.compression:
             blen = self.header["objects"][objname]["len"]
-        self.fp.seek(ind)
-        return _read(self.fp, self.verbose)
+            return _read_compressed(self.fp, self.verbose, blen)
+        else:
+            return _read(self.fp, self.verbose)
 
 class MeldTableReader(object):
     def __init__(self, reader, table):
@@ -289,7 +294,9 @@ class MeldTableReader(object):
         if not signal in self.indices:
             NameError("No signal named "+str(signal)+" found in table "+str(self.table))
         ind = self.indices[signal]["ind"]
+        self.reader.fp.seek(ind)
         if self.reader.compression:
             blen = self.indices[signal]["len"]
-        self.reader.fp.seek(ind)
-        return _read(self.reader.fp, self.reader.verbose)["d"]
+            return _read_compressed(self.reader.fp, self.reader.verbose, blen)["d"]
+        else:
+            return _read(self.reader.fp, self.reader.verbose)["d"]
