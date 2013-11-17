@@ -341,6 +341,12 @@ class WallTableReader(object):
         return self.header[ALIASES].keys()
     def variables(self):
         return self.signals()+self.aliases()
+    def alias_of(self, name):
+        return self.header[ALIASES][name][OF]
+    def alias_scale(self, name):
+        return self.header[ALIASES][name][SCALE]
+    def alias_offset(self, name):
+        return self.header[ALIASES][name][OFFSET]
     def data(self, name):
         if name in self.header[SIGNALS]:
             signal = name
