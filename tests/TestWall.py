@@ -165,6 +165,17 @@ def testMissingSignal():
         t = wall.read_table("T1")
         t.data("z")
 
+@raises(ValueError)
+def testBadArgs():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        wall.finalize()
+        t.add_row(time=0.0, x=1.0, y=2.0)
+        t.add_row(0.0, 1.0, 2.0)
+        t.add_row(0.0, 1.0, y=2.0)
+
 def testMetadata1():
     with open("sample.wll", "w+") as fp:
         # Create the wall object with a file-like object to write to
@@ -178,7 +189,9 @@ def testMetadata1():
 
     with open("sample.wll", "rb") as fp:
         wall = WallReader(fp)
+        assert wall.metadata=={"a": "bar"}
         t = wall.read_table("T1")
+        assert t.metadata=={"b": "foo"}
 
 @raises(NameError)
 def testMetadata2():

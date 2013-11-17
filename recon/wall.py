@@ -110,18 +110,20 @@ class WallWriter(object):
             print "Tables:"
         for table in self.tables:
             tables[table] = {"signals": self.tables[table].signals,
-                             "aliases": self.tables[table].aliases}
+                             "aliases": self.tables[table].aliases,
+                             "metadata": self.tables[table].metadata}
             if self.verbose:
                 print table
                 print "Columns: "+str(self.tables[table].signals)
                 print "Aliases: "+str(self.tables[table].aliases)
+                print "Metadata: "+str(self.tables[table].metadata)
         if self.verbose:
             print "Objects:"
         for obj in self.objects:
             objects.append(obj)
             if self.verbose:
                 print obj
-        header = {"tables": tables, "objects": objects}
+        header = {"tables": tables, "objects": objects, "metadata": self.metadata}
         bhead = self.bson.encode(header)
         if self.verbose:
             print "Header = "+str(header)
@@ -246,6 +248,7 @@ class WallReader(object):
             raise IOError("Invalid format: File is not a wall file ("+id+")")
         # Now read the header object
         self.header = _read_nolen(self.fp, self.verbose)
+        self.metadata = self.header["metadata"]
         if self.verbose:
             print "header = "+str(self.header)
         # Record where the end of the header is
@@ -312,6 +315,7 @@ class WallTableReader(object):
         self.reader = reader
         self.name = name
         self.header = header
+        self.metadata = self.header["metadata"]
     def signals(self):
         return self.header["signals"]
     def aliases(self):
