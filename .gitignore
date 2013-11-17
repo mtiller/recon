@@ -1,4 +1,6 @@
 dev
 *.pyc
 ./*.wll
-sample.*
+sample*
+cover
+.coverage
