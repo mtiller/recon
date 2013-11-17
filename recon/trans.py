@@ -47,3 +47,8 @@ def wall2meld(wfp, mfp):
         mtable = tables[tabname]
         for signal in wtable.signals():
             mtable.write(signal, wtable.data(signal));
+
+def dsres2meld(wfp, mfp):
+    from dymat import DyMatFile
+
+    pass

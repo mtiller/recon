@@ -1,4 +1,4 @@
-from recon.trans import wall2meld
+from recon.trans import wall2meld, dsres2meld
 
 from recon.wall import WallReader, WallWriter
 from recon.meld import MeldReader, MeldWriter
@@ -41,3 +41,10 @@ def testWall2Meld():
         assert_equals(table.data("y"), [2.0, 3.0, 3.0])
         assert_equals(table.data("a"), [2.0, 1.0, 2.0])
         assert_equals(table.data("b"), [-2.0, -3.0, -3.0])
+
+def testDsres2Meld():
+    with open("dsres.mld", "w+") as fp:
+        dsres2meld("tests/dsres.mat", fp)
+
+    with open("dsres.mld", "rb") as fp:
+        meld = MeldReader(fp, verbose=True)
