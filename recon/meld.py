@@ -1,5 +1,6 @@
 from bson import BSON
 import bz2
+import sys
 
 from util import _read, _read_nolen, _read_compressed
 

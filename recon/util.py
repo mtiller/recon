@@ -37,6 +37,7 @@ def _read_nolen(fp, verbose):
     data = fp.read(l-4);
     if verbose:
         print "Raw Data: "+str(repr(data))
+        print "Data len: "+str(len(data))
     if len(data)<l-4:
         raise IOError("Premature EOF");
     # Concatenate all the bytes (length and data) into a valid BSON sequence,
