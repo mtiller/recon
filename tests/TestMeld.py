@@ -1,3 +1,6 @@
+from nose.tools import *
+from recon.meld import FinalizedMeld, MissingData, WriteAfterClose
+
 def write_meld(compression=False, verbose=False,n=0,name="sample"):
     from recon.meld import MeldWriter
 
@@ -50,10 +53,199 @@ def read_meld(verbose=True):
             for signal in table.signals():
                 print "    #"+signal+": "+str(table.data(signal))
 
-def testUncompressedValidMeld():
+def testUncompressedValidMeld1():
     write_meld(verbose=False,compression=False,n=100)
     read_meld(verbose=False)
 
-def testCompressedValidMeld():
+def testUncompressedValidMeld2():
+    write_meld(verbose=True,compression=False,n=100)
+    read_meld(verbose=True)
+
+def testCompressedValidMeld1():
     write_meld(verbose=False,compression=True,name="sample_comp",n=100)
     read_meld(verbose=False)
+
+def testCompressedValidMeld2():
+    write_meld(verbose=True,compression=True,name="sample_comp",n=100)
+    read_meld(verbose=True)
+
+@raises(NameError)
+def testDuplicateTable1():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+
+@raises(NameError)
+def testDuplicateTable2():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_object(name="T1")
+
+@raises(FinalizedMeld)
+def testDuplicateTable3():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        meld.finalize()
+        t = meld.add_table(name="T2", signals=["time", "x", "y"]);
+
+@raises(NameError)
+def testDuplicateTable4():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        meld.finalize()
+        t.write("time", [0.0, 1.0, 2.0]);
+        t.write("x", [1.0, 0.0, 1.0]);
+        t.write("y", [2.0, 3.0, 3.0]);
+        t.write("z", [2.0, 3.0, 3.0]);
+
+@raises(MissingData)
+def testDuplicateTable5():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        meld.finalize()
+        t.write("time", [0.0, 1.0, 2.0]);
+        t.write("x", [1.0, 0.0, 1.0]);
+        meld.close()
+
+@raises(NameError)
+def testDuplicateTable6():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        meld.finalize()
+        t.write("time", [0.0, 1.0, 2.0]);
+        t.write("x", [1.0, 0.0, 1.0]);
+        t.write("y", [2.0, 3.0, 3.0]);
+        t.add_alias("x", of="y")
+        meld.close()
+
+@raises(NameError)
+def testDuplicateTable7():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        meld.finalize()
+        t.write("time", [0.0, 1.0, 2.0]);
+        t.write("x", [1.0, 0.0, 1.0]);
+        t.write("y", [2.0, 3.0, 3.0]);
+        t.add_alias("z", of="y")
+        t.add_alias("z", of="x")
+        meld.close()
+
+@raises(NameError)
+def testDuplicateTable8():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        meld.finalize()
+        t.write("time", [0.0, 1.0, 2.0]);
+        t.write("x", [1.0, 0.0, 1.0]);
+        t.write("y", [2.0, 3.0, 3.0]);
+        t.add_alias("z", of="a")
+        meld.close()
+
+@raises(ValueError)
+def testDuplicateTable9():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        meld.finalize()
+        t.write("time", 2.0);
+        meld.close()
+
+@raises(ValueError)
+def testDuplicateTable10():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        meld.finalize()
+        t.write("time", 2.0);
+        meld.close()
+        t.write("time", 2.0);
+
+@raises(WriteAfterClose)
+def testDuplicateTable11():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        meld.finalize()
+        t.write("time", [2.0, 1.0, 0.0]);
+        t.write("time", [2.0, 1.0, 0.0]);
+        meld.close()
+
+@raises(NameError)
+def testDuplicateObject1():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_object(name="T1")
+        t = meld.add_object(name="T1")
+
+@raises(NameError)
+def testDuplicateObject2():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_object(name="T1")
+        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+
+@raises(FinalizedMeld)
+def testDuplicateObject3():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_object(name="T1")
+        meld.finalize()
+        t = meld.add_object(name="T2")
+
+def testDuplicateObject4():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_object(name="T1")
+        meld.finalize()
+        t.write(x=2.0,y=3.0)
+        meld.close()
+
+@raises(WriteAfterClose)
+def testDuplicateObject5():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_object(name="T1")
+        meld.finalize()
+        t.write(x=2.0,y=3.0)
+        meld.close()
+        t.write(x=2.0,y=3.0)
