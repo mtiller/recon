@@ -1,7 +1,7 @@
 from bson import BSON
 import bz2
 
-def _read(fp, verbose):
+def _read_nolen(fp, verbose):
     """
     This method reads the next "document" from the file.  Because we are using
     BSON underneath, this just reads a given BSON sequence of bytes and translates
@@ -44,7 +44,19 @@ def _read(fp, verbose):
     data = b1+b2+b3+b4+data
     return BSON(data).decode()
 
-def _read_compressed(fp, verbose, blen):
+def _read(fp, blen, verbose):
+    """
+    This method reads the next "document" from the file.  Because we are using
+    BSON underneath, this just reads a given BSON sequence of bytes and translates
+    it into a Python dictionary.  But if this routine is called, it means that
+    the binary data has to be uncompressed first.
+    """
+    # Read the least significant and most significant bytes that describe the
+    # length of the BSON document.
+    data = fp.read(blen);
+    return BSON(data).decode()
+
+def _read_compressed(fp, blen, verbose):
     """
     This method reads the next "document" from the file.  Because we are using
     BSON underneath, this just reads a given BSON sequence of bytes and translates

@@ -1,6 +1,6 @@
 from bson import BSON
 
-from util import _read
+from util import _read, _read_nolen
 
 # This is a unique ID that every wall file starts with so
 # it can be identified/verified.
@@ -235,7 +235,7 @@ class WallReader(object):
         if id!=WALL_ID:
             raise IOError("Invalid format: File is not a wall file")
         # Now read the header object
-        self.header = _read(self.fp, self.verbose)
+        self.header = _read_nolen(self.fp, self.verbose)
         if self.verbose:
             print "header = "+str(self.header)
         # Record where the end of the header is
@@ -263,7 +263,7 @@ class WallReader(object):
         # Position the file just after the header
         self.fp.seek(self.start)
         # Read the next BSON document
-        row = _read(self.fp, self.verbose)
+        row = _read_nolen(self.fp, self.verbose)
         while row!=None:
             if self.verbose:
                 print "row = "+str(row)
@@ -273,7 +273,7 @@ class WallReader(object):
             # be returned.
             if name in row:
                 ret.append(row[name])
-            row = _read(self.fp, self.verbose)
+            row = _read_nolen(self.fp, self.verbose)
         return ret
 
     def read_object(self, name):

@@ -1,7 +1,7 @@
 from bson import BSON
 import bz2
 
-from util import _read, _read_compressed
+from util import _read, _read_nolen, _read_compressed
 
 # This is a unique ID that every meld file starts with so
 # it can be identified/verified.
@@ -137,20 +137,15 @@ class MeldWriter(object):
             table = self.tables[tname]
             index = {}
             for sig in table.signals:
-                index[sig] = {"ind": -1, "s": 1.0, "off": 1.0}
-                if self.compression:
-                    index[sig]["len"] = -1
+                index[sig] = {"ind": -1, "len": -1, "s": 1.0, "off": 1.0}
             for alias in table.aliases:
                 index[alias] = {"ind": -1,
+                                "len": -1,
                                 "s": table.aliases[alias]["scale"],
                                 "off": table.aliases[alias]["offset"]}
-                if self.compression:
-                    index[alias]["len"] = -1
             self.header["tables"][tname] = {"v": table.variables, "indices": index}
         for oname in self.objects:
-            self.header["objects"][oname] = {"ind": -1}
-            if self.compression:
-                self.header["objects"][oname]["len"] = -1
+            self.header["objects"][oname] = {"ind": -1, "len": -1}
 
         self.header["comp"] = self.compression
 
@@ -205,13 +200,11 @@ class MeldTableWriter(object):
 
         (base, blen) = self.writer._write_object({"d": data})
         self.writer._signal_header(self.name, sig)["ind"] = base
-        if self.writer.compression:
-            self.writer._signal_header(self.name, sig)["len"] = blen
+        self.writer._signal_header(self.name, sig)["len"] = blen
         for alias in self.aliases:
             if self.aliases[alias]["of"]==sig:
                 self.writer._signal_header(self.name, alias)["ind"] = base
-                if self.writer.compression:
-                    self.writer._signal_header(self.name, alias)["len"] = blen
+                self.writer._signal_header(self.name, alias)["len"] = blen
                 
         # Rewrite header with updated location information
         self.writer._write_header()
@@ -233,8 +226,7 @@ class MeldObjectWriter(object):
 
         (base, blen) = self.writer._write_object(kwargs)
         self.writer._object_header(self.name)["ind"] = base
-        if self.writer.compression:
-            self.writer._object_header(self.name)["len"] = base
+        self.writer._object_header(self.name)["len"] = blen
 
         # Rewrite header with updated location information
         self.writer._write_header()
@@ -249,7 +241,7 @@ class MeldReader(object):
         file_id = self.fp.read(len(MELD_ID))
         if file_id != MELD_ID:
             raise IOError("File is not a Meld file")
-        self.header = _read(self.fp, self.verbose)
+        self.header = _read_nolen(self.fp, self.verbose)
         self.compression = self.header["comp"]
         if self.verbose:
             print "Compression: "+str(self.compression)
@@ -271,12 +263,12 @@ class MeldReader(object):
         if not objname in self.objects():
             raise NameError("No object named "+table+" found");
         ind = self.header["objects"][objname]["ind"]
+        blen = self.header["objects"][objname]["len"]
         self.fp.seek(ind)
         if self.compression:
-            blen = self.header["objects"][objname]["len"]
-            return _read_compressed(self.fp, self.verbose, blen)
+            return _read_compressed(self.fp, blen, self.verbose)
         else:
-            return _read(self.fp, self.verbose)
+            return _read(self.fp, blen, self.verbose)
 
 class MeldTableReader(object):
     def __init__(self, reader, table):
@@ -294,9 +286,9 @@ class MeldTableReader(object):
         if not signal in self.indices:
             NameError("No signal named "+str(signal)+" found in table "+str(self.table))
         ind = self.indices[signal]["ind"]
+        blen = self.indices[signal]["len"]
         self.reader.fp.seek(ind)
         if self.reader.compression:
-            blen = self.indices[signal]["len"]
-            return _read_compressed(self.reader.fp, self.reader.verbose, blen)["d"]
+            return _read_compressed(self.reader.fp, blen, self.reader.verbose)["d"]
         else:
-            return _read(self.reader.fp, self.reader.verbose)["d"]
+            return _read(self.reader.fp, blen, self.reader.verbose)["d"]
