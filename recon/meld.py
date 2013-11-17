@@ -168,13 +168,13 @@ class MeldWriter(object):
             table = self.tables[tname]
             index = {}
             for sig in table.signals:
-                index[sig] = {INDEX: -1, LENGTH: -1, "s": 1.0, "off": 1.0}
+                index[sig] = {INDEX: -1, LENGTH: -1, SCALE: 1.0, OFFSET: 1.0}
             for alias in table.aliases:
                 index[alias] = {INDEX: -1,
                                 LENGTH: -1,
-                                "s": table.aliases[alias][SCALE],
-                                "off": table.aliases[alias][OFFSET]}
-            self.header[TABLES][tname] = {"v": table.variables, INDICES: index,
+                                SCALE: table.aliases[alias][SCALE],
+                                OFFSET: table.aliases[alias][OFFSET]}
+            self.header[TABLES][tname] = {VARIABLES: table.variables, INDICES: index,
                                           METADATA: table.metadata,
                                           VMETADATA: table._vmd}
         for oname in self.objects:
@@ -242,7 +242,7 @@ class MeldTableWriter(object):
         # TODO: Make sure it is the correct size (matches any previous)
         # TODO: Perform type checks
 
-        (base, blen) = self.writer._write_object({"d": data})
+        (base, blen) = self.writer._write_object({DATA: data})
         self.writer._signal_header(self.name, sig)[INDEX] = base
         self.writer._signal_header(self.name, sig)[LENGTH] = blen
         for alias in self.aliases:
