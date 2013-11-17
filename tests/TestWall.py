@@ -1,9 +1,11 @@
-def write_wall():
-    from recon.wall import WallWriter
+from recon.wall import WallWriter
+from recon.wall import WallReader
+from nose.tools import *
 
+def write_wall(verbose=False):
     with open("sample.wll", "w+") as fp:
         # Create the wall object with a file-like object to write to
-        wall = WallWriter(fp, verbose=False)
+        wall = WallWriter(fp, verbose=verbose)
 
         # Walls can contain tables, here is how we define one
         t = wall.add_table(name="T1", signals=["time", "x", "y"]);
@@ -43,11 +45,9 @@ def write_wall():
         obj2.add_field("nationality", "GreatBritisher");
         wall.flush();
 
-def read_wall():
-    from recon.wall import WallReader
-
+def read_wall(verbose=False):
     with open("sample.wll", "rb") as fp:
-        wall = WallReader(fp, verbose=False)
+        wall = WallReader(fp, verbose=verbose)
 
         print "Objects:"
         for objname in wall.objects():
@@ -66,3 +66,43 @@ def read_wall():
 def testValidFile():
     write_wall()
     read_wall()
+
+@raises(KeyError)
+def testDuplicate1():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+
+        # Walls can contain tables, here is how we define one
+        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+
+@raises(KeyError)
+def testDuplicate2():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+
+        # Walls can contain tables, here is how we define one
+        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        t = wall.add_object(name="T1")
+
+@raises(KeyError)
+def testDuplicate3():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+
+        # Walls can contain tables, here is how we define one
+        t = wall.add_object(name="T1")
+        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+
+@raises(KeyError)
+def testDuplicate4():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+
+        # Walls can contain tables, here is how we define one
+        t = wall.add_object(name="T1")
+        t = wall.add_object(name="T1")
