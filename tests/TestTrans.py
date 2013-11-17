@@ -8,7 +8,8 @@ from TestWall import write_wall
 from nose.tools import *
 
 def testWall2Meld():
-    write_wall();
+    write_wall(verbose=True);
+
     with open("sample.wll", "rb") as wfp:
         with open("sample.mld", "w+") as mfp:
             wall2meld(wfp, mfp)
@@ -28,8 +29,14 @@ def testWall2Meld():
             for signal in table.signals():
                 print "    #"+signal+": "+str(table.data(signal))
 
+        print "table.metadata = "+str(table.metadata)
+        print "table.var_metadata = "+str(table.var_metadata)
+
+        assert_equals(meld.metadata, {"a": "bar"})
         assert_equals(table.signals(), ["time", "x", "y", "a", "b"])
         assert_equals(table.data("time"), [0.0, 1.0, 2.0])
+        assert_equals(table.metadata, {"b": "foo"})
+        assert_equals(table.var_metadata["time"], {"units": "s"})
         assert_equals(table.data("x"), [1.0, 0.0, 1.0])
         assert_equals(table.data("y"), [2.0, 3.0, 3.0])
         assert_equals(table.data("a"), [2.0, 1.0, 2.0])

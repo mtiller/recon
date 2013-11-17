@@ -5,9 +5,12 @@ def write_wall(verbose=False):
     with open("sample.wll", "w+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=verbose)
+        wall.metadata["a"] = "bar"
 
         # Walls can contain tables, here is how we define one
         t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        t.metadata["b"] = "foo"
+        t.set_var_metadata("time", units="s")
 
         # Tables can also have aliases, here is how we define a few
         t.add_alias(alias="a", of="x", scale=1.0, offset=1.0);

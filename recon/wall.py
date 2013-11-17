@@ -189,6 +189,8 @@ class WallTableWriter(object):
             self._vmd[name] = {}
 
         self._vmd[name].update(kwargs)
+        if self.writer.verbose:
+            print "Current var_metadata = "+str(self._vmd)
 
     def add_alias(self, alias, of, scale=1.0, offset=0.0):
         """

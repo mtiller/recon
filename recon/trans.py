@@ -5,6 +5,8 @@ def wall2meld(wfp, mfp):
     wall = WallReader(wfp)
     meld = MeldWriter(mfp)
 
+    meld.metadata.update(wall.metadata)
+
     objects = {}
     tables = {}
 
@@ -23,6 +25,9 @@ def wall2meld(wfp, mfp):
         table = wall.read_table(tabname)
         tables[tabname] = meld.add_table(name=tabname, signals=table.signals());
         mtable = tables[tabname]
+        mtable.metadata.update(table.metadata)
+        for k in table.var_metadata:
+            mtable.set_var_metadata(k, **table.var_metadata[k])
         for alias in table.aliases():
             mtable.add_alias(alias, 
                              of=table.alias_of(alias),
