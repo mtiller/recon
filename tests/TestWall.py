@@ -192,6 +192,7 @@ def testMetadata1():
         assert wall.metadata=={"a": "bar"}
         t = wall.read_table("T1")
         assert t.metadata=={"b": "foo"}
+        assert t.var_metadata["time"]=={"units": "s"}
 
 @raises(NameError)
 def testMetadata2():
@@ -204,4 +205,3 @@ def testMetadata2():
         t.set_var_metadata("z", units="s")
         wall.finalize()
         t.add_row(time=0.0, x=1.0, y=2.0)
-

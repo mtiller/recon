@@ -111,12 +111,14 @@ class WallWriter(object):
         for table in self.tables:
             tables[table] = {"signals": self.tables[table].signals,
                              "aliases": self.tables[table].aliases,
-                             "metadata": self.tables[table].metadata}
+                             "metadata": self.tables[table].metadata,
+                             "var_metadata": self.tables[table].var_metadata}
             if self.verbose:
                 print table
                 print "Columns: "+str(self.tables[table].signals)
                 print "Aliases: "+str(self.tables[table].aliases)
                 print "Metadata: "+str(self.tables[table].metadata)
+                print "Var Metadata: "+str(self.tables[table].var_metadata)
         if self.verbose:
             print "Objects:"
         for obj in self.objects:
@@ -316,6 +318,7 @@ class WallTableReader(object):
         self.name = name
         self.header = header
         self.metadata = self.header["metadata"]
+        self.var_metadata = self.header["var_metadata"]
     def signals(self):
         return self.header["signals"]
     def aliases(self):
