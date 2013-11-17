@@ -1,5 +1,5 @@
 from StringIO import StringIO
-from recon.util import _read_nolen
+from recon.util import _read_nolen, _read_compressed
 from nose.tools import *
 
 def test1():
@@ -26,3 +26,8 @@ def test4():
 def test5():
     b = StringIO("\x08\x00\x00\x00\x01\x00")
     x = _read_nolen(b, True)
+
+@raises(IOError)
+def test6():
+    b = StringIO("\x08\x00\x00\x00\x01\x00")
+    x = _read_compressed(b, 100, True)

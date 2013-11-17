@@ -35,10 +35,10 @@ def write_meld(compression=False, verbose=False,n=0,name="sample"):
         # currently being written is finalized
         meld.close()
 
-def read_meld(verbose=True):
+def read_meld(verbose=True, name="sample"):
     from recon.meld import MeldReader
 
-    with open("sample.mld", "rb") as fp:
+    with open(name+".mld", "rb") as fp:
         meld = MeldReader(fp, verbose=verbose)
 
         print "Objects:"
@@ -62,8 +62,8 @@ def testUncompressedValidMeld2():
     read_meld(verbose=True)
 
 def testCompressedValidMeld1():
-    write_meld(verbose=False,compression=True,name="sample_comp",n=100)
-    read_meld(verbose=False)
+    write_meld(verbose=True,compression=True,name="sample_comp",n=100)
+    read_meld(verbose=True, name="sample_comp")
 
 def testCompressedValidMeld2():
     write_meld(verbose=True,compression=True,name="sample_comp",n=100)
