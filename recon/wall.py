@@ -11,6 +11,17 @@ METADATA = "metadata"
 TABLES = "tables"
 OBJECTS = "objects"
 
+# Table
+VMETADATA = "var_metadata"
+SIGNALS = "signals"
+ALIASES = "aliases"
+
+# Aliases
+OF = "of"
+SCALE = "scale"
+OFFSET = "offset"
+
+
 class FinalizedWall(Exception):
     """
     Thrown when an attempt is made to change structural definitions
@@ -114,10 +125,10 @@ class WallWriter(object):
         if self.verbose:
             print "Tables:"
         for table in self.tables:
-            tables[table] = {"signals": self.tables[table].signals,
-                             "aliases": self.tables[table].aliases,
-                             "metadata": self.tables[table].metadata,
-                             "var_metadata": self.tables[table]._vmd}
+            tables[table] = {SIGNALS: self.tables[table].signals,
+                             ALIASES: self.tables[table].aliases,
+                             METADATA: self.tables[table].metadata,
+                             VMETADATA: self.tables[table]._vmd}
             if self.verbose:
                 print table
                 print "Columns: "+str(self.tables[table].signals)
@@ -130,7 +141,7 @@ class WallWriter(object):
             objects.append(obj)
             if self.verbose:
                 print obj
-        header = {TABLES: tables, OBJECTS: objects, "metadata": self.metadata}
+        header = {TABLES: tables, OBJECTS: objects, METADATA: self.metadata}
         bhead = self.bson.encode(header)
         if self.verbose:
             print "Header = "+str(header)
@@ -194,7 +205,7 @@ class WallTableWriter(object):
             raise KeyError("Alias "+alias+" already defined for table "+name)
         if alias in self.signals:
             raise KeyError("'"+alias+"' is already the name of a signal, cannot be an alias")
-        self.aliases[alias] = {"of": of, "scale": scale, "offset": offset}
+        self.aliases[alias] = {OF: of, SCALE: scale, OFFSET: offset}
     def add_row(self, *args, **kwargs):
         """
         This method transforms its arguments (in either positional or keyword form) into
@@ -323,26 +334,26 @@ class WallTableReader(object):
         self.name = name
         self.header = header
         self.metadata = self.header[METADATA]
-        self.var_metadata = self.header["var_metadata"]
+        self.var_metadata = self.header[VMETADATA]
     def signals(self):
-        return self.header["signals"]
+        return self.header[SIGNALS]
     def aliases(self):
-        return self.header["aliases"].keys()
+        return self.header[ALIASES].keys()
     def variables(self):
         return self.signals()+self.aliases()
     def data(self, name):
-        if name in self.header["signals"]:
+        if name in self.header[SIGNALS]:
             signal = name
             scale = 1.0
             offset = 0.0
-        elif name in self.header["aliases"]:
-            signal = self.header["aliases"][name]["of"]
-            scale = self.header["aliases"][name]["scale"]
-            offset = self.header["aliases"][name]["offset"]
+        elif name in self.header[ALIASES]:
+            signal = self.header[ALIASES][name][OF]
+            scale = self.header[ALIASES][name][SCALE]
+            offset = self.header[ALIASES][name][OFFSET]
         else:
             raise NameError("No signal or alias named "+name)
         ret = []
-        index = self.header["signals"].index(signal)
+        index = self.header[SIGNALS].index(signal)
         for ent in self.reader._read_entries(self.name):
             ret.append(ent[index])
         return ret
