@@ -133,7 +133,7 @@ def testEmpty():
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
         t = wall.add_table(name="T1", signals=["time", "x", "y"]);
-        wall.flush()
+        wall.finalize()
 
     with open("sample.wll", "rb") as fp:
         wall = WallReader(fp)

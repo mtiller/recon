@@ -232,7 +232,7 @@ class WallReader(object):
         # string.
         id = self.fp.read(len(WALL_ID))
         if id!=WALL_ID:
-            raise IOError("Invalid format: File is not a wall file")
+            raise IOError("Invalid format: File is not a wall file ("+id+")")
         # Now read the header object
         self.header = _read_nolen(self.fp, self.verbose)
         if self.verbose:
