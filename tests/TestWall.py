@@ -1,5 +1,4 @@
-from recon.wall import WallWriter
-from recon.wall import WallReader
+from recon.wall import WallWriter, WallReader, FinalizedWall
 from nose.tools import *
 
 def write_wall(verbose=False):
@@ -106,3 +105,52 @@ def testDuplicate4():
         # Walls can contain tables, here is how we define one
         t = wall.add_object(name="T1")
         t = wall.add_object(name="T1")
+
+@raises(FinalizedWall)
+def testDuplicate5():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+
+        # Walls can contain tables, here is how we define one
+        t = wall.add_object(name="T1")
+        wall.finalize()
+        t = wall.add_object(name="T2")
+
+@raises(FinalizedWall)
+def testDuplicate6():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+
+        # Walls can contain tables, here is how we define one
+        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        wall.finalize()
+        t = wall.add_table(name="T2", signals=["time", "x", "y"]);
+
+def testEmpty():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        wall.flush()
+
+    with open("sample.wll", "rb") as fp:
+        wall = WallReader(fp)
+        t = wall.read_table("T1")
+        t.data("x")
+
+@raises(NameError)
+def testMissingSignal():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        wall.finalize()
+        t.add_row(time=0.0, x=1.0, y=2.0)
+
+    with open("sample.wll", "rb") as fp:
+        wall = WallReader(fp)
+        t = wall.read_table("T1")
+        t.data("z")
+

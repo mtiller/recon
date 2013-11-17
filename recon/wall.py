@@ -72,7 +72,6 @@ class WallWriter(object):
         a WallObjectWriter object will be returned by this method that can be used
         to populate the fields of the object.
         """
-        
         if self.defined:
             raise FinalizedWall()
         self._check_name(name)
