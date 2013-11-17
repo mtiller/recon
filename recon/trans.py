@@ -10,6 +10,10 @@ def wall2meld(wfp, mfp):
 
     # Create definitions for meld
 
+    # TODO: Process metadata
+    # TODO: Add option to do overthing in memory? (to avoid multiple reads)
+    #       Simple implementation...copy wfp into a StringIO buffer and use that.
+
     # Start with objects
     for objname in wall.objects():
         objects[objname] = meld.add_object(objname)
@@ -24,10 +28,9 @@ def wall2meld(wfp, mfp):
                              of=table.alias_of(alias),
                              scale=table.alias_scale(alias),
                              offset=table.alias_offset(alias))
-
+    
+    # Now that all definitions are made, we can finalize the meld
     meld.finalize()
-
-    # TODO: Add option to do overthing in memory?
 
     # Write actual data in meld
     for objname in wall.objects():
