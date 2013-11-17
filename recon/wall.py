@@ -35,6 +35,7 @@ class WallWriter(object):
         self.defined = False
         self.tables = {}
         self.objects = {}
+        self.metadata = {}
         self.buffered_rows = []
         self.buffered_fields = []
         self.bson = BSON()
@@ -157,7 +158,17 @@ class WallTableWriter(object):
         self.writer = writer
         self.signals = signals
         self.aliases = {}
+        self.metadata = {}
+        self.var_metadata = {}
         self.name = name
+
+    def set_var_metadata(self, name, **kwargs):
+        if not name in self.signals and not name in self.aliases:
+            raise NameError("No such signal: "+name);
+        if not name in self.var_metadata:
+            self.var_metadata[name] = {}
+
+        self.var_metadata[name].update(kwargs)
 
     def add_alias(self, alias, of, scale=1.0, offset=0.0):
         """
@@ -173,7 +184,7 @@ class WallTableWriter(object):
         if alias in self.aliases:
             raise KeyError("Alias "+alias+" already defined for table "+name)
         if alias in self.signals:
-            raise KeyError("'"+name+"' is already the name of a signal, cannot be an alias")
+            raise KeyError("'"+alias+"' is already the name of a signal, cannot be an alias")
         self.aliases[alias] = {"of": of, "scale": scale, "offset": offset}
     def add_row(self, *args, **kwargs):
         """

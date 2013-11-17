@@ -128,6 +128,17 @@ def testDuplicate6():
         wall.finalize()
         t = wall.add_table(name="T2", signals=["time", "x", "y"]);
 
+@raises(KeyError)
+def testDuplicate7():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+
+        # Walls can contain tables, here is how we define one
+        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        t.add_alias("time", of="x")
+        wall.finalize()
+
 def testEmpty():
     with open("sample.wll", "w+") as fp:
         # Create the wall object with a file-like object to write to
@@ -153,4 +164,31 @@ def testMissingSignal():
         wall = WallReader(fp)
         t = wall.read_table("T1")
         t.data("z")
+
+def testMetadata1():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+        wall.metadata["a"] = "bar"
+        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        t.metadata["b"] = "foo"
+        t.set_var_metadata("time", units="s")
+        wall.finalize()
+        t.add_row(time=0.0, x=1.0, y=2.0)
+
+    with open("sample.wll", "rb") as fp:
+        wall = WallReader(fp)
+        t = wall.read_table("T1")
+
+@raises(NameError)
+def testMetadata2():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+        wall.metadata["a"] = "bar"
+        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        t.metadata["b"] = "foo"
+        t.set_var_metadata("z", units="s")
+        wall.finalize()
+        t.add_row(time=0.0, x=1.0, y=2.0)
 
