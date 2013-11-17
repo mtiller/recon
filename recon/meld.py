@@ -54,6 +54,7 @@ class MeldWriter(object):
         self.verbose = verbose
         self.tables = {}
         self.objects = {}
+        self.metadata = {}
         self.cur = None # Current object being written
         self.bson = BSON()
 
@@ -138,7 +139,8 @@ class MeldWriter(object):
         return (base, blen)
 
     def finalize(self):
-        self.header = {"tables": {}, "objects": {}}
+        self.header = {"tables": {}, "objects": {},
+                       "metadata": self.metadata}
         for tname in self.tables:
             table = self.tables[tname]
             index = {}
@@ -180,6 +182,8 @@ class MeldTableWriter(object):
         self.variables = []
         self.signals = signals
         self.aliases = {}
+        self.metadata = {}
+        self._vmd = {}
         for s in signals:
             self.variables.append(s)
     def add_alias(self, alias, of, scale=1.0, offset=0.0):
@@ -191,6 +195,15 @@ class MeldTableWriter(object):
             raise NameError("Alias "+alias+" refers to non-existant signal "+of)
         self.variables.append(alias)
         self.aliases[alias] = {"of": of, "scale": scale, "offset": offset};
+
+    def set_var_metadata(self, name, **kwargs):
+        if not name in self.signals and not name in self.aliases:
+            raise NameError("No such signal: "+name);
+        if not name in self._vmd:
+            self._vmd[name] = {}
+
+        self._vmd[name].update(kwargs)
+
     def write(self, sig, data):
         if not self.writer.defined:
             raise MeldNotFinalized("Meld must be finalized before writing data")
@@ -284,7 +297,7 @@ class MeldTableReader(object):
 
     def data(self, signal):
         if not signal in self.indices:
-            NameError("No signal named "+str(signal)+" found in table "+str(self.table))
+            raise NameError("No signal named "+str(signal)+" found in table "+str(self.table))
         ind = self.indices[signal]["ind"]
         blen = self.indices[signal]["len"]
         self.reader.fp.seek(ind)

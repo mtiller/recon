@@ -1,9 +1,8 @@
 from nose.tools import *
 from recon.meld import FinalizedMeld, MissingData, WriteAfterClose
+from recon.meld import MeldWriter, MeldReader
 
 def write_meld(compression=False, verbose=False,n=0,name="sample"):
-    from recon.meld import MeldWriter
-
     with open(name+".mld", "w+") as fp:
         meld = MeldWriter(fp, verbose=verbose, compression=compression)
         
@@ -36,8 +35,6 @@ def write_meld(compression=False, verbose=False,n=0,name="sample"):
         meld.close()
 
 def read_meld(verbose=True, name="sample"):
-    from recon.meld import MeldReader
-
     with open(name+".mld", "rb") as fp:
         meld = MeldReader(fp, verbose=verbose)
 
@@ -249,3 +246,22 @@ def testDuplicateObject5():
         t.write(x=2.0,y=3.0)
         meld.close()
         t.write(x=2.0,y=3.0)
+
+@raises(NameError)
+def testNoSuchSignal():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        meld.finalize()
+        t.write("time", [0.0, 1.0, 2.0]);
+        t.write("x", [1.0, 0.0, 1.0]);
+        t.write("y", [2.0, 3.0, 3.0]);
+        meld.close()
+
+    with open("sample_test.mld", "rb") as fp:
+        meld = MeldReader(fp, verbose=True)
+        t = meld.read_table("T1")
+        x = t.data("x")
+        a = t.data("a")

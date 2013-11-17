@@ -112,13 +112,13 @@ class WallWriter(object):
             tables[table] = {"signals": self.tables[table].signals,
                              "aliases": self.tables[table].aliases,
                              "metadata": self.tables[table].metadata,
-                             "var_metadata": self.tables[table].var_metadata}
+                             "var_metadata": self.tables[table]._vmd}
             if self.verbose:
                 print table
                 print "Columns: "+str(self.tables[table].signals)
                 print "Aliases: "+str(self.tables[table].aliases)
                 print "Metadata: "+str(self.tables[table].metadata)
-                print "Var Metadata: "+str(self.tables[table].var_metadata)
+                print "Var Metadata: "+str(self.tables[table]._vmd)
         if self.verbose:
             print "Objects:"
         for obj in self.objects:
@@ -163,16 +163,16 @@ class WallTableWriter(object):
         self.signals = signals
         self.aliases = {}
         self.metadata = {}
-        self.var_metadata = {}
+        self._vmd = {}
         self.name = name
 
     def set_var_metadata(self, name, **kwargs):
         if not name in self.signals and not name in self.aliases:
             raise NameError("No such signal: "+name);
-        if not name in self.var_metadata:
-            self.var_metadata[name] = {}
+        if not name in self._vmd:
+            self._vmd[name] = {}
 
-        self.var_metadata[name].update(kwargs)
+        self._vmd[name].update(kwargs)
 
     def add_alias(self, alias, of, scale=1.0, offset=0.0):
         """
