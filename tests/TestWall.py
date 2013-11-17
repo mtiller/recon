@@ -1,4 +1,4 @@
-from recon.wall import WallWriter, WallReader, FinalizedWall
+from recon.wall import WallWriter, WallReader, FinalizedWall, NotFinalized
 from nose.tools import *
 
 def write_wall(verbose=False):
@@ -175,6 +175,24 @@ def testBadArgs():
         t.add_row(time=0.0, x=1.0, y=2.0)
         t.add_row(0.0, 1.0, 2.0)
         t.add_row(0.0, 1.0, y=2.0)
+
+@raises(NotFinalized)
+def testNotFinalRow():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        t.add_row(time=0.0, x=1.0, y=2.0)
+        t.add_row(0.0, 1.0, 2.0)
+        t.add_row(0.0, 1.0, y=2.0)
+
+@raises(NotFinalized)
+def testNotFinalField():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+        o = wall.add_object(name="O1");
+        o.add_field("x", 12.0)
 
 def testMetadata1():
     with open("sample.wll", "w+") as fp:

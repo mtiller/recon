@@ -6,6 +6,11 @@ from util import _read, _read_nolen
 # it can be identified/verified.
 WALL_ID = "recon:wall:v1"
 
+# Header
+METADATA = "metadata"
+TABLES = "tables"
+OBJECTS = "objects"
+
 class FinalizedWall(Exception):
     """
     Thrown when an attempt is made to change structural definitions
@@ -125,7 +130,7 @@ class WallWriter(object):
             objects.append(obj)
             if self.verbose:
                 print obj
-        header = {"tables": tables, "objects": objects, "metadata": self.metadata}
+        header = {TABLES: tables, OBJECTS: objects, "metadata": self.metadata}
         bhead = self.bson.encode(header)
         if self.verbose:
             print "Header = "+str(header)
@@ -250,7 +255,7 @@ class WallReader(object):
             raise IOError("Invalid format: File is not a wall file ("+id+")")
         # Now read the header object
         self.header = _read_nolen(self.fp, self.verbose)
-        self.metadata = self.header["metadata"]
+        self.metadata = self.header[METADATA]
         if self.verbose:
             print "header = "+str(self.header)
         # Record where the end of the header is
@@ -260,13 +265,13 @@ class WallReader(object):
         """
         Returns the set of objects in this file.
         """
-        return self.header["objects"]
+        return self.header[OBJECTS]
 
     def tables(self):
         """
         Returns the set of tabls in this file.
         """
-        return self.header["tables"]
+        return self.header[TABLES]
 
     def _read_entries(self, name):
         """
@@ -296,9 +301,9 @@ class WallReader(object):
         This method extracts the named object.
         """
         ret = {}
-        if not name in self.header["objects"]:
+        if not name in self.header[OBJECTS]:
             raise KeyError("No object named "+name+" present, options are: %s" % \
-                           (str(self.header["objects"]),))
+                           (str(self.header[OBJECTS]),))
         for ent in self._read_entries(name):
             ret[ent[0]] = ent[1]
         return ret
@@ -307,17 +312,17 @@ class WallReader(object):
         """
         This method extracts the named table
         """
-        if not name in self.header["tables"]:
+        if not name in self.header[TABLES]:
             raise KeyError("No table named "+name+" present, options are: %s" % \
-                           (str(self.header["tables"]),))
-        return WallTableReader(self, name, self.header["tables"][name])
+                           (str(self.header[TABLES]),))
+        return WallTableReader(self, name, self.header[TABLES][name])
 
 class WallTableReader(object):
     def __init__(self, reader, name, header):
         self.reader = reader
         self.name = name
         self.header = header
-        self.metadata = self.header["metadata"]
+        self.metadata = self.header[METADATA]
         self.var_metadata = self.header["var_metadata"]
     def signals(self):
         return self.header["signals"]
