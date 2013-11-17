@@ -265,3 +265,25 @@ def testNoSuchSignal():
         t = meld.read_table("T1")
         x = t.data("x")
         a = t.data("a")
+
+def testMetadata1():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        meld.metadata["a"] = "bar"
+        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t.metadata["b"] = "foo"
+        t.set_var_metadata("time", units="s")
+        meld.finalize()
+        t.write("time", [0.0, 1.0, 2.0]);
+        t.write("x", [1.0, 0.0, 1.0]);
+        t.write("y", [2.0, 3.0, 3.0]);
+        meld.close()
+
+    with open("sample_test.mld", "rb") as fp:
+        meld = MeldReader(fp, verbose=True)
+        assert meld.metadata == {"a": "bar"}
+        t = meld.read_table("T1")
+        assert t.metadata == {"b": "foo"}
+        assert t.var_metadata["time"]=={"units": "s"}

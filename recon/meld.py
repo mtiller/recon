@@ -151,7 +151,9 @@ class MeldWriter(object):
                                 "len": -1,
                                 "s": table.aliases[alias]["scale"],
                                 "off": table.aliases[alias]["offset"]}
-            self.header["tables"][tname] = {"v": table.variables, "indices": index}
+            self.header["tables"][tname] = {"v": table.variables, "indices": index,
+                                            "metadata": table.metadata,
+                                            "var_metadata": table._vmd}
         for oname in self.objects:
             self.header["objects"][oname] = {"ind": -1, "len": -1}
 
@@ -255,6 +257,7 @@ class MeldReader(object):
         if file_id != MELD_ID:
             raise IOError("File is not a Meld file")
         self.header = _read_nolen(self.fp, self.verbose)
+        self.metadata = self.header["metadata"]
         self.compression = self.header["comp"]
         if self.verbose:
             print "Compression: "+str(self.compression)
@@ -291,7 +294,8 @@ class MeldTableReader(object):
             raise NameError("Cannot find table "+self.table)
         self.indices = self.reader.header["tables"][table]["indices"]
         self.signames = self.reader.header["tables"][table]["v"]
-        
+        self.metadata = self.reader.header["tables"][table]["metadata"]
+        self.var_metadata = self.reader.header["tables"][table]["var_metadata"]
     def signals(self):
         return self.signames
 
