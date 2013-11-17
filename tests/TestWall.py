@@ -62,6 +62,14 @@ def read_wall(verbose=False):
             for alias in table.aliases():
                 print "    @"+alias+": "+str(table.data(alias))
 
+        assert table.signals()==["time", "x", "y"]
+        assert table.data("time")==[0.0, 1.0, 2.0]
+        assert table.data("x")==[1.0, 0.0, 1.0]
+        assert table.data("y")==[2.0, 3.0, 3.0]
+        assert table.data("a")==[2.0, 1.0, 2.0]
+        assert table.data("b")==[-2.0, -3.0, -3.0]
+
+
 def testValidFile():
     write_wall()
     read_wall()

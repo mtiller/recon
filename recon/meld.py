@@ -168,7 +168,7 @@ class MeldWriter(object):
             table = self.tables[tname]
             index = {}
             for sig in table.signals:
-                index[sig] = {INDEX: -1, LENGTH: -1, SCALE: 1.0, OFFSET: 1.0}
+                index[sig] = {INDEX: -1, LENGTH: -1, SCALE: 1.0, OFFSET: 0.0}
             for alias in table.aliases:
                 index[alias] = {INDEX: -1,
                                 LENGTH: -1,
@@ -327,8 +327,11 @@ class MeldTableReader(object):
             raise NameError("No signal named "+str(signal)+" found in table "+str(self.table))
         ind = self.indices[signal][INDEX]
         blen = self.indices[signal][LENGTH]
+        scale = self.indices[signal][SCALE]
+        offset = self.indices[signal][OFFSET]
         self.reader.fp.seek(ind)
         if self.reader.compression:
-            return _read_compressed(self.reader.fp, blen, self.reader.verbose)[DATA]
+            data = _read_compressed(self.reader.fp, blen, self.reader.verbose)[DATA]
         else:
-            return _read(self.reader.fp, blen, self.reader.verbose)[DATA]
+            data = _read(self.reader.fp, blen, self.reader.verbose)[DATA]
+        return map(lambda x: x*scale+offset, data)

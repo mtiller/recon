@@ -361,5 +361,5 @@ class WallTableReader(object):
         ret = []
         index = self.header[SIGNALS].index(signal)
         for ent in self.reader._read_entries(self.name):
-            ret.append(ent[index])
+            ret.append(ent[index]*scale+offset)
         return ret
