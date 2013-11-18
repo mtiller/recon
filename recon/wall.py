@@ -47,8 +47,8 @@ class WallWriter(object):
 
     def __init__(self, fp, verbose=False):
         """
-        Constructor for a WallWriter.  The file-like object fp only needs to
-        support the 'write' method.
+        Constructor for a WallWriter.  The file-like object fp only
+        needs to support the 'write' method.
         """
         self.fp = fp
         self.verbose = verbose
@@ -62,8 +62,8 @@ class WallWriter(object):
 
     def _check_name(self, name):
         """
-        This checks any new name introduced (for either a table or an object)
-        to make sure it is unique across the wall.
+        This checks any new name introduced (for either a table or an
+        object) to make sure it is unique across the wall.
         """
         if name in self.tables:
             raise KeyError("Wall already contains a table named "+name)
@@ -87,11 +87,12 @@ class WallWriter(object):
 
     def add_object(self, name):
         """
-        This adds a new object to the wall.  If the wall has been finalized, this
-        will generated a FinalizedWall exception.  If the name is already used
-        by either a table or object, a KeyError exception will be raised.  Otherwise,
-        a WallObjectWriter object will be returned by this method that can be used
-        to populate the fields of the object.
+        This adds a new object to the wall.  If the wall has been
+        finalized, this will generated a FinalizedWall exception.  If
+        the name is already used by either a table or object, a
+        KeyError exception will be raised.  Otherwise, a
+        WallObjectWriter object will be returned by this method that
+        can be used to populate the fields of the object.
         """
         if self.defined:
             raise FinalizedWall()
