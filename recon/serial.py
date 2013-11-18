@@ -43,10 +43,16 @@ class MsgPackSerializer(object):
         self.compress = compress
     def encode_obj(self, x, verbose=False, uncomp=False):
         import msgpack
-        data = msgpack.packb(x)
-        if self.compress and not uncomp:
-            data = compress(data)
-        return data
+        try:
+            data = msgpack.packb(x)
+            if self.compress and not uncomp:
+                data = compress(data)
+            return data
+        except Exception as e:
+            print "Exception thrown while trying to pack '"+str(x)+"'"
+            if type(x)==list:
+                print "  List contains: "+str(type(x[0]))
+            raise e
     def encode_vec(self, x, verbose=False, uncomp=False):
         return self.encode_obj(x, verbose=verbose, uncomp=uncomp)
     def decode_obj(self, fp, length, verbose=False, uncomp=False):
