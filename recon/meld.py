@@ -12,26 +12,26 @@ DEFSER = MsgPackSerializer
 MELD_ID = "recon:meld:v1"
 
 # Meld
-H_TABLES = "tables"
-H_OBJECTS = "objects"
-H_COMP = "comp"
-H_METADATA = "metadata"
+H_TABLES = "t"
+H_OBJECTS = "o"
+H_COMP = "c"
+H_METADATA = "m"
 
 # Tables
-T_INDICES = "indices"
-T_VARIABLES = "v"
-T_METADATA = "metadata"
-T_VMETADATA = "var_metadata"
+T_INDICES = "i"
+T_VARIABLES = "V"
+T_METADATA = "m"
+T_VMETADATA = "v"
 
 # Variables
-V_INDEX = "ind"
+V_INDEX = "i"
 V_INDHOLD = b'\x00\x00\x00\x00'
-V_LENGTH = "len"
-V_SCALE = "scale"
-V_OFFSET = "offset"
+V_LENGTH = "l"
+V_SCALE = "s"
+V_OFFSET = "o"
 
 # Alias
-A_OF = "of"
+A_OF = "v"
 
 # Data
 D_DATA = "d"

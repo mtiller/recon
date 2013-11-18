@@ -10,20 +10,20 @@ WALL_ID = "recon:wall:v1"
 DEFSER = MsgPackSerializer
 
 # Header
-H_METADATA = "metadata"
-H_TABLES = "tables"
-H_OBJECTS = "objects"
+H_METADATA = "m"
+H_TABLES = "t"
+H_OBJECTS = "o"
 
 # Table
-T_METADATA = "metadata"
-T_VMETADATA = "var_metadata"
-T_SIGNALS = "signals"
-T_ALIASES = "aliases"
+T_METADATA = "m"
+T_VMETADATA = "v"
+T_SIGNALS = "s"
+T_ALIASES = "a"
 
 # Aliases
-A_OF = "of"
-V_SCALE = "scale"
-V_OFFSET = "offset"
+A_OF = "v"
+V_SCALE = "s"
+V_OFFSET = "o"
 
 
 class FinalizedWall(Exception):
