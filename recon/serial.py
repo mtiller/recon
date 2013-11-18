@@ -11,7 +11,7 @@ def decompress(data):
     return c.decompress(data)
 
 class BSONSerializer(object):
-    def __init__(self, compress=False, verbose=False):
+    def __init__(self, compress=False, verbose=False, single=False):
         from bson import BSON
 
         self.bson = BSON()
@@ -39,12 +39,13 @@ class BSONSerializer(object):
         return d["d"]
 
 class MsgPackSerializer(object):
-    def __init__(self, compress=False):
+    def __init__(self, compress=False, single=False):
         self.compress = compress
+        self.single = single
     def encode_obj(self, x, verbose=False, uncomp=False):
         import msgpack
         try:
-            data = msgpack.packb(x)
+            data = msgpack.packb(x, use_single_float=self.single)
             if self.compress and not uncomp:
                 data = compress(data)
             return data

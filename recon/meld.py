@@ -73,7 +73,7 @@ class WriteAfterClose(Exception):
     pass
 
 class MeldWriter(object):
-    def __init__(self, fp, compression=False, verbose=False):
+    def __init__(self, fp, compression=False, verbose=False, single=False):
         self.fp = fp
         self.verbose = verbose
         self.compression = compression
@@ -81,7 +81,7 @@ class MeldWriter(object):
         self.objects = {}
         self.metadata = {}
         self.cur = None # Current object being written
-        self.ser = DEFSER(compress=self.compression)
+        self.ser = DEFSER(compress=self.compression, single=True)
 
         # Everything after here is set when finalized
         self.defined = False
