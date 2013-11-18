@@ -24,6 +24,7 @@ VMETADATA = "var_metadata"
 
 # Signal
 INDEX = "ind"
+INDHOLD = b'\x00\x00\x00\x00'
 LENGTH = "len"
 
 # Alias
@@ -153,8 +154,8 @@ class MeldWriter(object):
         else:
             if self.verbose:
                 print "Rewriting header"
-            if blen!=self.headlen:
-                raise IOError("Header length changed on rewrite")
+            if blen>self.headlen:
+                raise IOError("Header length increased on rewrite")
             save = self.fp.tell()
             self.fp.seek(0)
             self.fp.write(MELD_ID)
@@ -180,17 +181,21 @@ class MeldWriter(object):
             table = self.tables[tname]
             index = {}
             for sig in table.signals:
-                index[sig] = {INDEX: -1L, LENGTH: -1L, SCALE: 1.0, OFFSET: 0.0}
+                index[sig] = {INDEX: INDHOLD,
+                              LENGTH: INDHOLD,
+                              SCALE: 1.0, OFFSET: 0.0}
             for alias in table.aliases:
-                index[alias] = {INDEX: -1L,
-                                LENGTH: -1L,
+                index[alias] = {INDEX: INDHOLD,
+                                LENGTH: INDHOLD,
                                 SCALE: table.aliases[alias][SCALE],
                                 OFFSET: table.aliases[alias][OFFSET]}
-            self.header[TABLES][tname] = {VARIABLES: table.variables, INDICES: index,
+            self.header[TABLES][tname] = {VARIABLES: table.variables,
+                                          INDICES: index,
                                           METADATA: table.metadata,
                                           VMETADATA: table._vmd}
         for oname in self.objects:
-            self.header[OBJECTS][oname] = {INDEX: -1L, LENGTH: -1L}
+            self.header[OBJECTS][oname] = {INDEX: INDHOLD,
+                                           LENGTH: INDHOLD}
 
         self.header[COMP] = self.compression
 
@@ -203,10 +208,10 @@ class MeldWriter(object):
         missing = []
         for table in self.tables:
             for signal in self.tables[table].signals:
-                if self._signal_header(table, signal)[INDEX]==-1:
+                if self._signal_header(table, signal)[INDEX]==INDHOLD:
                     missing.append(signal)
         for obj in self.objects:
-            if self._object_header(obj)[INDEX]==-1:
+            if self._object_header(obj)[INDEX]==INDHOLD:
                 missing.append(name)
         if len(missing)>0:
             raise MissingData("Data not written for: "+str(missing))
@@ -246,7 +251,7 @@ class MeldTableWriter(object):
             raise MeldNotFinalized("Meld must be finalized before writing data")
         if not sig in self.signals:
             raise NameError("Cannot write unknown signal "+sig+" to table")
-        if self.writer._signal_header(self.name, sig)[INDEX]!=-1:
+        if self.writer._signal_header(self.name, sig)[INDEX]!=INDHOLD:
             raise WriteAfterClose("Signal "+sig+" has already been written")
         if not type(data)==list:
             raise ValueError("Data for signal "+sig+" must be a list")
@@ -273,7 +278,7 @@ class MeldObjectWriter(object):
     def write(self, **kwargs):
         if not self.writer.defined:
             raise MeldNotFinalized("Meld must be finalized before writing data")
-        if self.writer._object_header(self.name)[INDEX] != -1:
+        if self.writer._object_header(self.name)[INDEX] != INDHOLD:
             raise WriteAfterClose("Object "+self.name+" is closed for writing")
 
         (base, blen) = self.writer._write_object(kwargs)
