@@ -8,15 +8,15 @@ class BSONSerializer(object):
         self.bson = BSON()
         self.compress = compress
         self.verbose = verbose
-    def encode(self, x, nocomp=False):
+    def encode(self, x, uncomp=False):
         data = self.bson.encode(x)
-        if self.compress and not nocomp:
+        if self.compress and not uncomp:
             c = bz2.BZ2Compressor()
             a = c.compress(data)
             b = c.flush()
             data = a+b
         return data
-    def decode(self, fp, length=None):
+    def decode(self, fp, length):
         if length==None:
             data = _read_nolen(fp, verbose=self.verbose)
         else:
@@ -29,9 +29,10 @@ class BSONSerializer(object):
 class MsgPackSerializer(object):
     def __init__(self, compress=False):
         self.compress = compress
-    def encode(self, x, verbose=False, nocomp=False):
+    def encode(self, x, verbose=False, uncomp=False):
         import msgpack
         return msgpack.packb(x)
-    def decode(self, fp, length=None, verbose=False):
+    def decode(self, fp, length, verbose=False):
         import msgpack
-        return msgpack.unpack(fp)
+        bytes = fp.read(length)
+        return msgpack.unpackb(bytes)

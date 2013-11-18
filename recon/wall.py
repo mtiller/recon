@@ -1,5 +1,7 @@
 from serial import BSONSerializer
 
+from util import write_len, read_len
+
 # This is a unique ID that every wall file starts with so
 # it can be identified/verified.
 WALL_ID = "recon:wall:v1"
@@ -147,6 +149,7 @@ class WallWriter(object):
             print "Binary header length: "+str(len(bhead))
             print "Binary header: "+repr(bhead)
         self.fp.write(WALL_ID)
+        write_len(self.fp, len(bhead))
         self.fp.write(bhead)
         self.defined = True
 
@@ -157,11 +160,15 @@ class WallWriter(object):
         for row in self.buffered_rows:
             if self.verbose:
                 print row
-            self.fp.write(self.ser.encode({row[0]: row[1]}))
+            rowdata = self.ser.encode({row[0]: row[1]})
+            write_len(self.fp, len(rowdata))
+            self.fp.write(rowdata)
         for field in self.buffered_fields:
             if self.verbose:
                 print field
-            self.fp.write(self.ser.encode({field[0]: field[1:]}))
+            fielddata = self.ser.encode({field[0]: field[1:]})
+            write_len(self.fp, len(fielddata))
+            self.fp.write(fielddata)
         self.buffered_rows = []
         self.buffered_fields = []
 
@@ -267,7 +274,9 @@ class WallReader(object):
         if id!=WALL_ID:
             raise IOError("Invalid format: File is not a wall file ("+id+")")
         # Now read the header object
-        (self.header, self.headlen) = self.ser.decode(self.fp)
+
+        self.headlen = read_len(self.fp)
+        self.header = self.ser.decode(self.fp, length=self.headlen)
         self.metadata = self.header[METADATA]
         if self.verbose:
             print "header = "+str(self.header)
@@ -296,8 +305,9 @@ class WallReader(object):
         # Position the file just after the header
         self.fp.seek(self.start)
         # Read the next BSON document
-        (row, rowlen) = self.ser.decode(self.fp)
-        while row!=None:
+        rowlen = read_len(self.fp, ignoreEOF=True)
+        while rowlen!=None:
+            row = self.ser.decode(self.fp, length=rowlen)
             if self.verbose:
                 print "row = "+str(row)
             # All entries have a single key which is the name of the entity
@@ -306,7 +316,7 @@ class WallReader(object):
             # be returned.
             if name in row:
                 ret.append(row[name])
-            (row, rowlen) = self.ser.decode(self.fp)
+            rowlen = read_len(self.fp, ignoreEOF=True)
         return ret
 
     def read_object(self, name):

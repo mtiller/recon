@@ -2,6 +2,8 @@ import sys
 
 from serial import BSONSerializer, MsgPackSerializer
 
+from util import write_len, read_len
+
 DEFSER = BSONSerializer
 #DEFSER = MsgPackSerializer
 
@@ -133,14 +135,17 @@ class MeldWriter(object):
 
         # Header can never be compressed because it needs to
         # remain the same size on each write
-        bhead = self.ser.encode(self.header, nocomp=True)
+        bhead = self.ser.encode(self.header, uncomp=True)
+        blen = len(bhead)
         if self.verbose:
-            print "len(bhead) = "+str(len(bhead))
+            print "len(bhead) = "+str(blen)
 
         if self.start==None:
             if self.verbose:
                 print "Writing header for the first time"
             self.fp.write(MELD_ID)
+            write_len(self.fp, blen)
+            print "BLEN -> "+str(blen)
             self.fp.write(bhead)
             self.start = self.fp.tell()
         else:
@@ -149,6 +154,7 @@ class MeldWriter(object):
             save = self.fp.tell()
             self.fp.seek(0)
             self.fp.write(MELD_ID)
+            write_len(self.fp, blen)
             self.fp.write(bhead)
             self.fp.seek(save)
 
@@ -281,9 +287,12 @@ class MeldReader(object):
         file_id = self.fp.read(len(MELD_ID))
         if file_id != MELD_ID:
             raise IOError("File is not a Meld file")
+        blen = read_len(self.fp)
+        self.headlen = blen
+        print "BLEN <- "+str(blen)
         #self.ser = BSONSerializer(compress=False)
         self.ser = DEFSER(compress=False)
-        (self.header, self.headlen) = self.ser.decode(self.fp)
+        self.header = self.ser.decode(self.fp, length=blen)
         self.metadata = self.header[METADATA]
         self.compression = self.header[COMP]
         #self.ser = BSONSerializer(compress=self.compression)
