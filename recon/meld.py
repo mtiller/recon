@@ -101,6 +101,9 @@ class MeldWriter(object):
             raise NameError("Wall already contains an object named "+name)
 
     def add_table(self, name, signals):
+        """
+        Method for adding a new table to the meld
+        """
         if self.defined:
             raise FinalizedMeld()
         self._check_names(name)
@@ -110,6 +113,9 @@ class MeldWriter(object):
         return table
 
     def add_object(self, name):
+        """
+        Method for adding a new object to the meld
+        """
         if self.defined:
             raise FinalizedMeld()
         self._check_names(name)
@@ -119,26 +125,40 @@ class MeldWriter(object):
         return obj
 
     def _signal_header(self, table, signal):
+        """
+        Extracts header information about a given signal
+        in a given table.
+        """
         t = self.header[H_TABLES][table][T_INDICES]
         s = t[signal]
         return s
 
     def _object_header(self, objname):
+        """
+        Extracts header information about a given object
+        """
         return self.header[H_OBJECTS][objname]
 
     def _write_header(self):
+        """
+        This method writes the header to the file.  If this is the first
+        time that the header is being written then some additional
+        state is set (offset of data section, etc).
+        """
+
         # Binary encoding of header
         if self.verbose:
             print "Header = "+str(self.header)
 
-        # Header can never be compressed because it needs to
-        # remain the same size on each write
+        # Header can never be compressed because it cannot
+        # grow in size on subsequent rewrites
         bhead = self.ser.encode_obj(self.header, uncomp=True)
         blen = len(bhead)
         if self.verbose:
             print "len(bhead) = "+str(blen)
 
         if self.start==None:
+            # If we have not written the header previously...
             if self.verbose:
                 print "Writing header for the first time"
             self.fp.write(MELD_ID)
@@ -147,18 +167,26 @@ class MeldWriter(object):
             self.start = self.fp.tell()
             self.headlen = blen
         else:
+            # If this is a rewrite of the header...
             if self.verbose:
                 print "Rewriting header"
             if blen>self.headlen:
                 raise IOError("Header length increased on rewrite")
+            # Save where we are
             save = self.fp.tell()
+            # Jump back to the start of the file
             self.fp.seek(0)
+            # Rewrite the header
             self.fp.write(MELD_ID)
             write_len(self.fp, blen)
             self.fp.write(bhead)
+            # Jump back to where we were when this function was called
             self.fp.seek(save)
 
     def _write_object(self, obj):
+        """
+        Code to write an object to the stream
+        """
         base = self.fp.tell()
         bdata = self.ser.encode_obj(obj)
         blen = len(bdata)
@@ -169,6 +197,9 @@ class MeldWriter(object):
         return (base, blen)
 
     def _write_vector(self, vec):
+        """
+        Code to write a vector of data to the stream
+        """
         base = self.fp.tell()
         bdata = self.ser.encode_vec(vec)
         blen = len(bdata)
@@ -179,6 +210,11 @@ class MeldWriter(object):
         return (base, blen)
 
     def finalize(self):
+        """
+        Finalize the meld (i.e. the header structure).  We may change
+        values in the header in the future (in fact, we almost certainly
+        will), but the size and structure of the header cannot change.
+        """
         self.header = {H_TABLES: {},
                        H_OBJECTS: {},
                        H_METADATA: self.metadata}
@@ -208,6 +244,9 @@ class MeldWriter(object):
         self.defined = True
 
     def close(self):
+        """
+        Close this meld for any more writing.
+        """
         if not self.defined:
             self.finalize()
         missing = []
@@ -223,7 +262,14 @@ class MeldWriter(object):
         self.closed = True
 
 class MeldTableWriter(object):
+    """
+    This class is used to write tables to a meld
+    """
     def __init__(self, writer, name, signals):
+        """
+        Initialized by MeldWriter with information about
+        this particular table.
+        """
         self.writer = writer
         self.name = name
         self.variables = []
@@ -234,6 +280,9 @@ class MeldTableWriter(object):
         for s in signals:
             self.variables.append(s)
     def add_alias(self, alias, of, scale=1.0, offset=0.0):
+        """
+        Code to add an alias to this table.
+        """
         if alias in self.signals:
             raise NameError("Table already contains a signal named "+alias)
         if alias in self.aliases:
@@ -244,6 +293,9 @@ class MeldTableWriter(object):
         self.aliases[alias] = {A_OF: of, V_SCALE: scale, V_OFFSET: offset};
 
     def set_var_metadata(self, name, **kwargs):
+        """
+        Routine to set metadata for a particular variable in this table.
+        """
         if not name in self.signals and not name in self.aliases:
             raise NameError("No such signal: "+str(name));
         if not name in self._vmd:
@@ -252,6 +304,9 @@ class MeldTableWriter(object):
         self._vmd[name].update(kwargs)
 
     def write(self, sig, data):
+        """
+        Used to write data (i.e. a column) to this table.
+        """
         if not self.writer.defined:
             raise MeldNotFinalized("Meld must be finalized before writing data")
         if not sig in self.signals:
@@ -265,22 +320,33 @@ class MeldTableWriter(object):
         # TODO: Perform type checks
 
         (base, blen) = self.writer._write_vector(data)
-        self.writer._signal_header(self.name, sig)[V_INDEX] = long(base)
-        self.writer._signal_header(self.name, sig)[V_LENGTH] = long(blen)
+        sighead = self.writer._signal_header(self.name, sig)
+        sighead[V_INDEX] = long(base)
+        sighead[V_LENGTH] = long(blen)
         for alias in self.aliases:
             if self.aliases[alias][A_OF]==sig:
-                self.writer._signal_header(self.name, alias)[V_INDEX] = long(base)
-                self.writer._signal_header(self.name, alias)[V_LENGTH] = long(blen)
+                ahead = self.writer._signal_header(self.name, alias)
+                ahead[V_INDEX] = long(base)
+                ahead[V_LENGTH] = long(blen)
                 
         # Rewrite header with updated location information
         self.writer._write_header()
         self.writer.cur = None
 
 class MeldObjectWriter(object):
+    """
+    Writes objects to a meld
+    """
     def __init__(self, writer, name):
+        """
+        Initialized by a MeldWriter
+        """
         self.writer = writer
         self.name = name
     def write(self, **kwargs):
+        """
+        Write keyword arguments as fields for the specified object.
+        """
         if not self.writer.defined:
             raise MeldNotFinalized("Meld must be finalized before writing data")
         if self.writer._object_header(self.name)[V_INDEX] != V_INDHOLD:
@@ -295,7 +361,14 @@ class MeldObjectWriter(object):
         self.writer.cur = None
 
 class MeldReader(object):
+    """
+    This class is used for reading melds
+    """
     def __init__(self, fp, verbose=False):
+        """
+        Reads the header information (two reads, one for size and one
+        for rest of header).
+        """
         self.fp = fp
         self.verbose = verbose
 
@@ -319,6 +392,11 @@ class MeldReader(object):
             print "Header = "+str(self.header)
 
     def report(self):
+        """
+        A little helper routine to write out some basic information about
+        how size is allocated.  Not polished and not really for public
+        consumption (and not totally accurate or helpful either).
+        """
         ret = {}
         ret["header"] = self.headlen
         
@@ -337,17 +415,29 @@ class MeldReader(object):
         return ret
 
     def tables(self):
+        """
+        List of tables in this meld
+        """
         return self.header[H_TABLES].keys()
 
     def objects(self):
+        """
+        List of objects in this meld
+        """
         return self.header[H_OBJECTS].keys()
 
     def read_table(self, table):
+        """
+        Reads a table from the meld
+        """
         if not table in self.tables():
             raise NameError("No table named "+table+" found");
         return MeldTableReader(self, table)
 
     def read_object(self, objname):
+        """
+        Reads an object from the meld
+        """
         if not objname in self.objects():
             raise NameError("No object named "+table+" found");
         ind = self.header[H_OBJECTS][objname][V_INDEX]
@@ -356,21 +446,34 @@ class MeldReader(object):
         return self.ser.decode_obj(self.fp, blen)
 
 class MeldTableReader(object):
+    """
+    Class for reading tables inside a meld
+    """
     def __init__(self, reader, table):
+        """
+        Initialized by MeldReader
+        """
         self.reader = reader
         self.table = table
-        if not self.table in self.reader.header[H_TABLES]:
-            raise NameError("Cannot find table "+self.table)
         self.indices = self.reader.header[H_TABLES][table][T_INDICES]
         self.signames = self.reader.header[H_TABLES][table][T_VARIABLES]
         self.metadata = self.reader.header[H_TABLES][table][T_METADATA]
         self.var_metadata = self.reader.header[H_TABLES][table][T_VMETADATA]
+
+
     def signals(self):
+        """
+        Signals in this table.
+        """
         return self.signames
 
     def data(self, signal):
+        """
+        Data (in this table) associated with a specific signal name
+        """
         if not signal in self.indices:
-            raise NameError("No signal named "+str(signal)+" found in table "+str(self.table))
+            raise NameError("No signal named "+str(signal)+\
+                                " found in table "+str(self.table))
         ind = self.indices[signal][V_INDEX]
         blen = self.indices[signal][V_LENGTH]
         scale = self.indices[signal][V_SCALE]

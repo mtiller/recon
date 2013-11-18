@@ -41,8 +41,8 @@ class NotFinalized(Exception):
 
 class WallWriter(object):
     """
-    This class is responsible for writing wall files.  It provides a largely
-    pythonic API for doing so.
+    This class is responsible for writing wall files.  It provides a
+    largely pythonic API for doing so.
     """
 
     def __init__(self, fp, verbose=False):
@@ -223,7 +223,8 @@ class WallTableWriter(object):
         if alias in self.aliases:
             raise KeyError("Alias "+alias+" already defined for table "+name)
         if alias in self.signals:
-            raise KeyError("'"+alias+"' is already the name of a signal, cannot be an alias")
+            raise KeyError("'"+alias+"' is already the name of a signal"+\
+                               ", cannot be an alias")
         self.aliases[alias] = {A_OF: of, V_SCALE: scale, V_OFFSET: offset}
     def add_row(self, *args, **kwargs):
         """
@@ -232,24 +233,28 @@ class WallTableWriter(object):
         TableWriter object to be buffered.
         """
         if len(args)!=0 and len(kwargs)!=0:
-            raise ValueError("add_row must be called with either positional or keyword args")
+            raise ValueError("add_row must be called with either"+\
+                                 " positional or keyword args")
         if len(args)==0:
-            # If they specified keyword arguments, make sure they line up exactly with the
-            # existing signals.
+            # If they specified keyword arguments, make sure they line
+            # up exactly with the existing signals.
             aset = set(kwargs.keys())
             cset = set(self.signals)
             if len(aset-cset)>0:
-                raise KeyError("Values provided for undefined columns: "+(aset-cset))
+                raise KeyError("Values provided for undefined columns: "+\
+                                   str(aset-cset))
             if len(cset-aset)>0:
                 raise KeyError("Missing values for columns: "+(cset-aset))
             row = map(lambda x: kwargs[x], self.signals)
             self.writer._add_row(self.name, row)
         else:
-            # For positional arguments, just make sure we have the correct number.
+            # For positional arguments, just make sure we have the
+            # correct number.
+
             # TODO: Type check...once we have types
             if len(args)!=len(self.signals):
-                raise ValueError("Expected %d values, got %d" % (len(self.signals),
-                                                                 len(args)))
+                raise ValueError("Expected %d values, got %d" % \
+                                     (len(self.signals), len(args)))
             self.writer._add_row(self.name, args)
 
 class WallObjectWriter(object):
@@ -344,8 +349,9 @@ class WallReader(object):
         """
         ret = {}
         if not name in self.header[H_OBJECTS]:
-            raise KeyError("No object named "+name+" present, options are: %s" % \
-                           (str(self.header[H_OBJECTS]),))
+            raise KeyError("No object named "+name+ \
+                               " present, options are: %s" % \
+                               (str(self.header[H_OBJECTS]),))
         for ent in self._read_entries(name):
             ret[ent[0]] = ent[1]
         return ret
@@ -355,8 +361,9 @@ class WallReader(object):
         This method extracts the named table
         """
         if not name in self.header[H_TABLES]:
-            raise KeyError("No table named "+name+" present, options are: %s" % \
-                           (str(self.header[H_TABLES]),))
+            raise KeyError("No table named "+name+\
+                               " present, options are: %s" % \
+                               (str(self.header[H_TABLES]),))
         return WallTableReader(self, name, self.header[H_TABLES][name])
 
 class WallTableReader(object):
