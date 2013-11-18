@@ -72,11 +72,12 @@ class WallWriter(object):
 
     def add_table(self, name, signals):
         """
-        This adds a new table to the wall.  If the wall has been finalized, this
-        will generated a FinalizedWall exception.  If the name is already used
-        by either a table or object, a KeyError exception will be raised.  Otherwise,
-        a WallTableWriter object will be returned by this method that can be used
-        to populate the table.
+        This adds a new table to the wall.  If the wall has been
+        finalized, this will generated a FinalizedWall exception.  If
+        the name is already used by either a table or object, a
+        KeyError exception will be raised.  Otherwise, a
+        WallTableWriter object will be returned by this method that
+        can be used to populate the table.
         """
         if self.defined:
             raise FinalizedWall()
@@ -103,8 +104,8 @@ class WallWriter(object):
 
     def _add_row(self, name, row):
         """
-        This is an internal method called by the WallTableWriter object to add
-        a new row to the wall.
+        This is an internal method called by the WallTableWriter
+        object to add a new row to the wall.
         """
         if not self.defined:
             raise NotFinalized("Must finalize the wall before adding rows")
@@ -112,8 +113,8 @@ class WallWriter(object):
 
     def _add_field(self, name, key, value):
         """
-        This is an internal method called by the WallObjectWriter object to add
-        a new field value to the wall.
+        This is an internal method called by the WallObjectWriter
+        object to add a new field value to the wall.
         """
         if not self.defined:
             raise NotFinalized("Must finalize the wall before adding fields")
@@ -121,9 +122,10 @@ class WallWriter(object):
 
     def finalize(self):
         """
-        This method is called when all tables and objects have been defined.  Once
-        called, it is not possible to add new tables or objects.  Furthermore, it
-        is not possible to add rows or fields until the wall has been finalized.
+        This method is called when all tables and objects have been
+        defined.  Once called, it is not possible to add new tables or
+        objects.  Furthermore, it is not possible to add rows or
+        fields until the wall has been finalized.
         """
         tables = {}
         objects = []
@@ -194,6 +196,10 @@ class WallTableWriter(object):
         self.name = name
 
     def set_var_metadata(self, name, **kwargs):
+        """
+        This sets the variable specific metadata for a given
+        signal.
+        """
         if not name in self.signals and not name in self.aliases:
             raise NameError("No such signal: "+name);
         if not name in self._vmd:
@@ -205,12 +211,12 @@ class WallTableWriter(object):
 
     def add_alias(self, alias, of, scale=1.0, offset=0.0):
         """
-        Defines an alias associated with a specific table.  The arguments are
-        the name of the alias, the variable it is an alias of (cannot be an
-        alias itself), the scale factor and the offset value between the alias
-        and base variable.  The value of the alias variable will be computed by
-        multiplying the base variable by the scale factor and then adding the
-        offset value.
+        Defines an alias associated with a specific table.  The
+        arguments are the name of the alias, the variable it is an
+        alias of (cannot be an alias itself), the scale factor and the
+        offset value between the alias and base variable.  The value
+        of the alias variable will be computed by multiplying the base
+        variable by the scale factor and then adding the offset value.
         """
         if self.writer.defined:
             raise FinalizedWall()
@@ -221,8 +227,9 @@ class WallTableWriter(object):
         self.aliases[alias] = {A_OF: of, V_SCALE: scale, V_OFFSET: offset}
     def add_row(self, *args, **kwargs):
         """
-        This method transforms its arguments (in either positional or keyword form) into
-        a row which it then passes back to the TableWriter object to be buffered.
+        This method transforms its arguments (in either positional or
+        keyword form) into a row which it then passes back to the
+        TableWriter object to be buffered.
         """
         if len(args)!=0 and len(kwargs)!=0:
             raise ValueError("add_row must be called with either positional or keyword args")
@@ -267,26 +274,29 @@ class WallReader(object):
     """
     def __init__(self, fp, verbose=False):
         """
-        This is the constructor for the wall reader.  The file like 'fp' object
-        must support the read, tell and seek methods.
+        This is the constructor for the wall reader.  The file like
+        'fp' object must support the read, tell and seek methods.
         """
         self.fp = fp
         self.verbose = verbose
 
         self.ser = DEFSER()
+
         # Read the first few bytes to make sure they contain the expected
         # string.
         id = self.fp.read(len(WALL_ID))
         if id!=WALL_ID:
             raise IOError("Invalid format: File is not a wall file ("+id+")")
-        # Now read the header object
 
+        # Now read the length of the header object
+        # and then the header object itself
         self.headlen = read_len(self.fp)
         self.header = self.ser.decode_obj(self.fp, length=self.headlen)
         self.metadata = self.header[H_METADATA]
         if self.verbose:
             print "header = "+str(self.header)
-        # Record where the end of the header is
+
+        # Record where the end of the header is.
         self.start = fp.tell()
 
     def objects(self):
@@ -303,14 +313,17 @@ class WallReader(object):
 
     def _read_entries(self, name):
         """
-        Since this file format is journaled, this internal method is used to sweep
-        through entries and find the ones that match the named entity.  Only the
-        matching objects are retained and returned to the caller for processing.
+        Since this file format is journaled, this internal method is
+        used to sweep through entries and find the ones that match the
+        named entity.  Only the matching objects are retained and
+        returned to the caller for processing.
         """
         ret = []
+
         # Position the file just after the header
         self.fp.seek(self.start)
-        # Read the next BSON document
+
+        # Read the next object
         rowlen = read_len(self.fp, ignoreEOF=True)
         while rowlen!=None:
             row = self.ser.decode_obj(self.fp, length=rowlen)
@@ -347,25 +360,59 @@ class WallReader(object):
         return WallTableReader(self, name, self.header[H_TABLES][name])
 
 class WallTableReader(object):
+    """
+    This class is responsible for reading tables in wall files.
+    """
     def __init__(self, reader, name, header):
+        """
+        Initialize this object with information from
+        the reader (which is who creates this)
+        """
         self.reader = reader
         self.name = name
         self.header = header
         self.metadata = self.header[T_METADATA]
         self.var_metadata = self.header[T_VMETADATA]
     def signals(self):
+        """
+        Signals in this table
+        """
         return self.header[T_SIGNALS]
+
     def aliases(self):
+        """
+        Aliases in this table
+        """
         return self.header[T_ALIASES].keys()
+
     def variables(self):
+        """
+        Variables in this table (signals + aliases)
+        """
         return self.signals()+self.aliases()
+
     def alias_of(self, name):
+        """
+        Indicate what a given alias is an alias of
+        """
         return self.header[T_ALIASES][name][A_OF]
+
     def alias_scale(self, name):
+        """
+        Scale factor between alias and base signal
+        """
         return self.header[T_ALIASES][name][V_SCALE]
+
     def alias_offset(self, name):
+        """
+        Offset between alias and base signal
+        """
         return self.header[T_ALIASES][name][V_OFFSET]
+
     def data(self, name):
+        """
+        Get the data for a given variable (signal or alias)
+        """
         if name in self.header[T_SIGNALS]:
             signal = name
             scale = 1.0
