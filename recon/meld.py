@@ -2,7 +2,7 @@ import sys
 
 from serial import BSONSerializer, MsgPackSerializer
 
-from util import write_len, read_len
+from util import write_len, read_len, conv_len
 
 #DEFSER = BSONSerializer
 DEFSER = MsgPackSerializer
@@ -301,11 +301,13 @@ class MeldReader(object):
 
         self.ser = DEFSER(compress=False)
 
-        file_id = self.fp.read(len(MELD_ID))
+        lead = self.fp.read(len(MELD_ID)+4)
+        
+        file_id = lead[:-4]
         if file_id != MELD_ID:
             raise IOError("File is not a Meld file")
 
-        blen = read_len(self.fp)
+        blen = conv_len(lead[-4:])
         self.headlen = blen
         self.header = self.ser.decode_obj(self.fp, length=blen)
         self.metadata = self.header[H_METADATA]
