@@ -50,6 +50,7 @@ def wall2meld(wfp, mfp):
 
 def dsres2meld(df, mfp, verbose=False, compression=True):
     from dymat import DyMatFile
+    import numpy
 
     mf = DyMatFile(df)
     meld = MeldWriter(mfp, compression=compression)
@@ -77,33 +78,38 @@ def dsres2meld(df, mfp, verbose=False, compression=True):
             if col in columns:
                 if verbose:
                     print "  Alias "+name+" (of: "+columns[col]+")"
-                aliases.append((name, columns[col], mf._vars[name][3]))
+                aliases.append((name, mf._vars[name][0],
+                                columns[col], mf._vars[name][3]))
             else:
                 if verbose:
                     print "  Signal "+name+" ("+str(col)+")"
                 columns[col] = name
                 signals.append(name)
 
+        print "Number of columns: "+str(len(columns.keys()))
+        print "Number of signals: "+str(len(signals))
+        print "Number of aliases: "+str(len(aliases))
+
         signal_map[block] = signals
         alias_map[block] = aliases
 
         tables[block] = meld.add_table("T"+str(block), signals=[aname]+signals)
-        print "  Signals: "+str(tables[block].signals)
         tables[block].set_var_metadata(aname, **{DESC:adesc})
 
         for name in signals:
             tables[block].set_var_metadata(name,
                                            **{DESC:mf.description(name)})
-        for name in aliases:
-            tables[block].add_alias(alias=name[0], of=name[1],
-                                    scale=name[2], offset=0.0)
-            tables[block].set_var_metadata(name,
-                                           **{DESC:mf.description(name[0])})
+        for alias in aliases:
+            tables[block].add_alias(alias=alias[0], of=alias[2],
+                                    scale=alias[3], offset=0.0)
+            tables[block].set_var_metadata(alias[0],
+                                           **{DESC:mf.description(alias[0])})
 
     meld.finalize()
 
     for block in mf.blocks():
         (abscissa, aname, adesc) = mf.abscissa(block)
+        abscissa = list(abscissa.astype(numpy.float))
         tables[block].write(aname, list(abscissa))
 
         signals = signal_map[block]
@@ -111,6 +117,7 @@ def dsres2meld(df, mfp, verbose=False, compression=True):
         print "  Writing signals: "+str(signals)
 
         for signal in signals:
-            tables[block].write(signal, list(mf.data(signal)))
+            vec = list(mf.data(signal).astype(numpy.float))
+            tables[block].write(signal, vec)
 
     meld.close()
