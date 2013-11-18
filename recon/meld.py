@@ -73,11 +73,12 @@ class MeldWriter(object):
         self.fp = fp
         self.verbose = verbose
         self.compression = compression
+        #self.compression = False
         self.tables = {}
         self.objects = {}
         self.metadata = {}
         self.cur = None # Current object being written
-        self.ser = BSONSerializer(compress=compression)
+        self.ser = BSONSerializer(compress=self.compression)
 
         # Everything after here is set when finalized
         self.defined = False
@@ -125,7 +126,10 @@ class MeldWriter(object):
         # Binary encoding of header
         if self.verbose:
             print "Header = "+str(self.header)
-        bhead = self.ser.encode(self.header)
+
+        # Header can never be compressed because it needs to
+        # remain the same size on each write
+        bhead = self.ser.encode(self.header, nocomp=True)
         if self.verbose:
             print "len(bhead) = "+str(len(bhead))
 
@@ -270,13 +274,14 @@ class MeldReader(object):
         self.fp = fp
         self.verbose = verbose
 
-        self.ser = BSONSerializer()
         file_id = self.fp.read(len(MELD_ID))
         if file_id != MELD_ID:
             raise IOError("File is not a Meld file")
+        self.ser = BSONSerializer(compress=False)
         (self.header, self.headlen) = self.ser.decode(self.fp)
         self.metadata = self.header[METADATA]
         self.compression = self.header[COMP]
+        self.ser = BSONSerializer(compress=self.compression)
         if self.verbose:
             print "Compression: "+str(self.compression)
         if self.verbose:
