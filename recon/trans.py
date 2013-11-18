@@ -48,12 +48,12 @@ def wall2meld(wfp, mfp):
         for signal in wtable.signals():
             mtable.write(signal, wtable.data(signal));
 
-def dsres2meld(df, mfp, verbose=False, compression=True):
+def dsres2meld(df, mfp, verbose=False, compression=True, single=True):
     from dymat import DyMatFile
     import numpy
 
     mf = DyMatFile(df)
-    meld = MeldWriter(mfp, compression=compression)
+    meld = MeldWriter(mfp, compression=compression, single=single)
 
     tables = {}
     signal_map = {}
