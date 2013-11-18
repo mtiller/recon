@@ -1,0 +1,92 @@
+% sample file for Modelica Conference paper
+
+\documentclass[11pt,a4paper,twocolumn]{article}
+\usepackage{graphicx}
+\graphicspath{{fig/}}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}    %% european characters can be used
+\usepackage{lmodern,amsmath,mathptmx,url}      %% recommended for readable pdf
+\pagestyle{empty}                %% no page numbers!
+\usepackage{geometry}            %% please don't change geometry settings!
+\geometry{left=20mm, right=20mm, top=25.4mm, bottom=25mm, noheadfoot, columnsep=8mm}
+\parindent0pt
+\bibliographystyle{ieeetr}
+
+% some additional packages
+\usepackage{listings} % for code listings
+\usepackage{color}
+\usepackage[hidelinks=true]{hyperref}
+
+% usefull commands
+\newcommand{\myr}{\textsuperscript{\textregistered}}
+\newcommand{\ud}{\mathrm{d}}
+\newcommand{\matx}[1]{\mathbf{#1}}
+\newcommand{\recon}{\texttt{recon}}
+\newcommand{\wall}{\texttt{wall}}
+\newcommand{\meld}{\texttt{meld}}
+\newcommand{\code}[1]{\texttt{#1}} % make quoting code text a bit simpler
+
+\begin{document}
+
+\title{\textbf{{\small Modelica'2014}\\
+    \recon -- Web and network friendly simulation data formats}}
+
+\author{Michael Tiller\\
+  \href{http://xogeny.com}{Xogeny Inc.}, USA\\
+  \href{mailto:michael.tiller@xogeny.com}
+       {\nolinkurl{michael.tiller@xogeny.com}}
+  \and Peter Harman\\
+  \href{http://www.cydesign.com}
+       {CyDesign}, UK\\
+  \href{mailto:peter@cydesign.com}{\nolinkurl{peter@cydesign.com}}}
+\date{} % <--- leave date empty
+\maketitle\thispagestyle{empty} %% <-- you need this for the first page
+
+\section*{Abstract}
+
+
+\paragraph{Keywords:}\emph{modelica, FMI, simulation results,
+  cloud, web, open source}
+
+\section{Introduction}
+\label{sec:intro}
+
+\section{Background}
+\label{sec:background}
+
+Problems we want to solve:
+\begin{itemize}
+\item one
+\item another one
+\item and a third one
+\end{itemize}
+
+\subsection{Exisiting solutions}
+\label{sec:exist-sol}
+
+\subsection{New approach}
+\label{sec:exist-sol}
+Foo
+\lstset{language=python}
+\begin{lstlisting}[frame=single]  % Start your code-block
+f()
+\end{lstlisting}
+
+
+Search for librararies is done by executed by doing:
+\lstset{language=bash}
+\begin{lstlisting}[frame=shadowbox]  % Start your code-block
+
+% command
+\end{lstlisting}
+
+\section{Discussion}
+\label{sec:discussion}
+%TODO
+
+\section{Conclusion}
+\label{sec:conclusion}
+%TODO
+
+\bibliography{recon}
+\end{document}
