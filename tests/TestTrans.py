@@ -57,3 +57,21 @@ def testDsres2Meld_Compression():
     with open("dsres_comp.mld", "rb") as fp:
         meld = MeldReader(fp, verbose=True)
         print str(meld.report())
+
+
+def testDsres2Meld_Robot():
+    with open("dsres_robot.mld", "w+") as fp:
+        dsres2meld("tests/fullRobot.mat", fp, verbose=True, compression=False)
+
+    with open("dsres.mld", "rb") as fp:
+        meld = MeldReader(fp, verbose=True)
+        print str(meld.report())
+
+def testDsres2Meld_Compression_Robot():
+    with open("dsres_robot_comp.mld", "w+") as fp:
+        dsres2meld("tests/fullRobot.mat", fp, verbose=True, compression=True)
+
+    with open("dsres_comp.mld", "rb") as fp:
+        meld = MeldReader(fp, verbose=True)
+        print str(meld.report())
+
