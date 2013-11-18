@@ -1,6 +1,4 @@
-from bson import BSON
-
-from util import _read, _read_nolen
+from serial import BSONSerializer
 
 # This is a unique ID that every wall file starts with so
 # it can be identified/verified.
@@ -54,7 +52,7 @@ class WallWriter(object):
         self.metadata = {}
         self.buffered_rows = []
         self.buffered_fields = []
-        self.bson = BSON()
+        self.ser = BSONSerializer()
 
     def _check_name(self, name):
         """
@@ -142,7 +140,7 @@ class WallWriter(object):
             if self.verbose:
                 print obj
         header = {TABLES: tables, OBJECTS: objects, METADATA: self.metadata}
-        bhead = self.bson.encode(header)
+        bhead = self.ser.encode(header)
         if self.verbose:
             print "Header = "+str(header)
             print "String header length: "+str(len(str(header)))
@@ -159,11 +157,11 @@ class WallWriter(object):
         for row in self.buffered_rows:
             if self.verbose:
                 print row
-            self.fp.write(self.bson.encode({row[0]: row[1]}))
+            self.fp.write(self.ser.encode({row[0]: row[1]}))
         for field in self.buffered_fields:
             if self.verbose:
                 print field
-            self.fp.write(self.bson.encode({field[0]: field[1:]}))
+            self.fp.write(self.ser.encode({field[0]: field[1:]}))
         self.buffered_rows = []
         self.buffered_fields = []
 
@@ -261,13 +259,15 @@ class WallReader(object):
         """
         self.fp = fp
         self.verbose = verbose
+
+        self.ser = BSONSerializer()
         # Read the first few bytes to make sure they contain the expected
         # string.
         id = self.fp.read(len(WALL_ID))
         if id!=WALL_ID:
             raise IOError("Invalid format: File is not a wall file ("+id+")")
         # Now read the header object
-        (self.header, self.headlen) = _read_nolen(self.fp, self.verbose)
+        (self.header, self.headlen) = self.ser.decode(self.fp)
         self.metadata = self.header[METADATA]
         if self.verbose:
             print "header = "+str(self.header)
@@ -296,7 +296,7 @@ class WallReader(object):
         # Position the file just after the header
         self.fp.seek(self.start)
         # Read the next BSON document
-        (row, rowlen) = _read_nolen(self.fp, self.verbose)
+        (row, rowlen) = self.ser.decode(self.fp)
         while row!=None:
             if self.verbose:
                 print "row = "+str(row)
@@ -306,7 +306,7 @@ class WallReader(object):
             # be returned.
             if name in row:
                 ret.append(row[name])
-            (row, rowlen) = _read_nolen(self.fp, self.verbose)
+            (row, rowlen) = self.ser.decode(self.fp)
         return ret
 
     def read_object(self, name):

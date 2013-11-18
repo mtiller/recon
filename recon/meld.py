@@ -1,8 +1,6 @@
-from bson import BSON
-import bz2
 import sys
 
-from util import _read, _read_nolen, _read_compressed
+from serial import BSONSerializer
 
 # This is a unique ID that every meld file starts with so
 # it can be identified/verified.
@@ -73,13 +71,13 @@ class WriteAfterClose(Exception):
 class MeldWriter(object):
     def __init__(self, fp, compression=False, verbose=False):
         self.fp = fp
-        self.compression = compression
         self.verbose = verbose
+        self.compression = compression
         self.tables = {}
         self.objects = {}
         self.metadata = {}
         self.cur = None # Current object being written
-        self.bson = BSON()
+        self.ser = BSONSerializer(compress=compression)
 
         # Everything after here is set when finalized
         self.defined = False
@@ -127,7 +125,7 @@ class MeldWriter(object):
         # Binary encoding of header
         if self.verbose:
             print "Header = "+str(self.header)
-        bhead = self.bson.encode(self.header)
+        bhead = self.ser.encode(self.header)
         if self.verbose:
             print "len(bhead) = "+str(len(bhead))
 
@@ -148,12 +146,7 @@ class MeldWriter(object):
 
     def _write_object(self, obj):
         base = self.fp.tell()
-        bdata = self.bson.encode(obj)
-        if self.compression:
-            c = bz2.BZ2Compressor()
-            a = c.compress(bdata)
-            b = c.flush()
-            bdata = a+b
+        bdata = self.ser.encode(obj)
         blen = len(bdata)
         if self.verbose:
             print "Binary data: "+str(repr(bdata))
@@ -276,10 +269,12 @@ class MeldReader(object):
     def __init__(self, fp, verbose=False):
         self.fp = fp
         self.verbose = verbose
+
+        self.ser = BSONSerializer()
         file_id = self.fp.read(len(MELD_ID))
         if file_id != MELD_ID:
             raise IOError("File is not a Meld file")
-        (self.header, self.headlen) = _read_nolen(self.fp, self.verbose)
+        (self.header, self.headlen) = self.ser.decode(self.fp)
         self.metadata = self.header[METADATA]
         self.compression = self.header[COMP]
         if self.verbose:
@@ -322,10 +317,7 @@ class MeldReader(object):
         ind = self.header[OBJECTS][objname][INDEX]
         blen = self.header[OBJECTS][objname][LENGTH]
         self.fp.seek(ind)
-        if self.compression:
-            return _read_compressed(self.fp, blen, self.verbose)
-        else:
-            return _read(self.fp, blen, self.verbose)
+        return self.ser.decode(self.fp, blen)
 
 class MeldTableReader(object):
     def __init__(self, reader, table):
@@ -348,8 +340,5 @@ class MeldTableReader(object):
         scale = self.indices[signal][SCALE]
         offset = self.indices[signal][OFFSET]
         self.reader.fp.seek(ind)
-        if self.reader.compression:
-            data = _read_compressed(self.reader.fp, blen, self.reader.verbose)[DATA]
-        else:
-            data = _read(self.reader.fp, blen, self.reader.verbose)[DATA]
+        data = self.reader.ser.decode(self.reader.fp, blen)[DATA]
         return map(lambda x: x*scale+offset, data)
