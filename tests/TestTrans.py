@@ -44,7 +44,16 @@ def testWall2Meld():
 
 def testDsres2Meld():
     with open("dsres.mld", "w+") as fp:
-        dsres2meld("tests/dsres.mat", fp)
+        dsres2meld("tests/dsres.mat", fp, verbose=True, compression=False)
 
     with open("dsres.mld", "rb") as fp:
         meld = MeldReader(fp, verbose=True)
+        print str(meld.report())
+
+def testDsres2Meld_Compression():
+    with open("dsres_comp.mld", "w+") as fp:
+        dsres2meld("tests/dsres.mat", fp, verbose=True, compression=True)
+
+    with open("dsres_comp.mld", "rb") as fp:
+        meld = MeldReader(fp, verbose=True)
+        print str(meld.report())

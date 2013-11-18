@@ -4,7 +4,7 @@ from nose.tools import *
 
 def test1():
     b = StringIO()
-    x = _read_nolen(b, True)
+    (x, l) = _read_nolen(b, True)
     assert x==None
 
 @raises(IOError)

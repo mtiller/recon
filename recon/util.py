@@ -11,7 +11,7 @@ def _read_nolen(fp, verbose):
     # length of the BSON document.
     b1 = fp.read(1);
     if len(b1)==0:
-        return None
+        return (None, 0)
     if verbose:
         print "B1: "+str(ord(b1))
     b2 = fp.read(1);
@@ -43,7 +43,7 @@ def _read_nolen(fp, verbose):
     # Concatenate all the bytes (length and data) into a valid BSON sequence,
     # decode it and return it.
     data = b1+b2+b3+b4+data
-    return BSON(data).decode()
+    return (BSON(data).decode(), l)
 
 def _read(fp, blen, verbose):
     """

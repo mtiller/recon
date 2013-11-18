@@ -279,13 +279,31 @@ class MeldReader(object):
         file_id = self.fp.read(len(MELD_ID))
         if file_id != MELD_ID:
             raise IOError("File is not a Meld file")
-        self.header = _read_nolen(self.fp, self.verbose)
+        (self.header, self.headlen) = _read_nolen(self.fp, self.verbose)
         self.metadata = self.header[METADATA]
         self.compression = self.header[COMP]
         if self.verbose:
             print "Compression: "+str(self.compression)
         if self.verbose:
             print "Header = "+str(self.header)
+
+    def report(self):
+        ret = {}
+        ret["header"] = self.headlen
+        
+        for table in self.tables():
+            signals = self.header[TABLES][table][INDICES].keys()
+            signal_map = {}
+            tl = 0
+            for signal in signals:
+                ind = self.header[TABLES][table][INDICES][signal][INDEX]
+                blen = self.header[TABLES][table][INDICES][signal][LENGTH]
+                if not ind in signal_map:
+                    signal_map[ind] = [blen]
+                    tl += blen
+                signal_map[ind].append(signal)
+            ret[table] = signal_map
+        return ret
 
     def tables(self):
         return self.header[TABLES].keys()
