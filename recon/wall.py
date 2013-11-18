@@ -1,10 +1,13 @@
-from serial import BSONSerializer
+from serial import BSONSerializer, MsgPackSerializer
 
 from util import write_len, read_len
 
 # This is a unique ID that every wall file starts with so
 # it can be identified/verified.
 WALL_ID = "recon:wall:v1"
+
+#DEFSER = BSONSerializer
+DEFSER = MsgPackSerializer
 
 # Header
 METADATA = "metadata"
@@ -54,7 +57,7 @@ class WallWriter(object):
         self.metadata = {}
         self.buffered_rows = []
         self.buffered_fields = []
-        self.ser = BSONSerializer()
+        self.ser = DEFSER()
 
     def _check_name(self, name):
         """
@@ -267,7 +270,7 @@ class WallReader(object):
         self.fp = fp
         self.verbose = verbose
 
-        self.ser = BSONSerializer()
+        self.ser = DEFSER()
         # Read the first few bytes to make sure they contain the expected
         # string.
         id = self.fp.read(len(WALL_ID))
