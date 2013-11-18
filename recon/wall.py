@@ -147,7 +147,7 @@ class WallWriter(object):
                 print obj
         header = {H_TABLES: tables, H_OBJECTS: objects,
                   H_METADATA: self.metadata}
-        bhead = self.ser.encode(header)
+        bhead = self.ser.encode_obj(header)
         if self.verbose:
             print "Header = "+str(header)
             print "String header length: "+str(len(str(header)))
@@ -165,13 +165,13 @@ class WallWriter(object):
         for row in self.buffered_rows:
             if self.verbose:
                 print row
-            rowdata = self.ser.encode({row[0]: row[1]})
+            rowdata = self.ser.encode_obj({row[0]: row[1]})
             write_len(self.fp, len(rowdata))
             self.fp.write(rowdata)
         for field in self.buffered_fields:
             if self.verbose:
                 print field
-            fielddata = self.ser.encode({field[0]: field[1:]})
+            fielddata = self.ser.encode_obj({field[0]: field[1:]})
             write_len(self.fp, len(fielddata))
             self.fp.write(fielddata)
         self.buffered_rows = []
@@ -281,7 +281,7 @@ class WallReader(object):
         # Now read the header object
 
         self.headlen = read_len(self.fp)
-        self.header = self.ser.decode(self.fp, length=self.headlen)
+        self.header = self.ser.decode_obj(self.fp, length=self.headlen)
         self.metadata = self.header[H_METADATA]
         if self.verbose:
             print "header = "+str(self.header)
@@ -312,7 +312,7 @@ class WallReader(object):
         # Read the next BSON document
         rowlen = read_len(self.fp, ignoreEOF=True)
         while rowlen!=None:
-            row = self.ser.decode(self.fp, length=rowlen)
+            row = self.ser.decode_obj(self.fp, length=rowlen)
             if self.verbose:
                 print "row = "+str(row)
             # All entries have a single key which is the name of the entity

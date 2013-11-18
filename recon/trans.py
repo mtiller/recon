@@ -58,6 +58,8 @@ def dsres2meld(df, mfp, verbose=False, compression=True):
     signal_map = {}
     alias_map = {}
 
+    DESC = "desc"
+
     # Definitions
     for block in mf.blocks():
         columns = {}
@@ -87,13 +89,16 @@ def dsres2meld(df, mfp, verbose=False, compression=True):
 
         tables[block] = meld.add_table("T"+str(block), signals=[aname]+signals)
         print "  Signals: "+str(tables[block].signals)
-        tables[block].set_var_metadata(aname, description=adesc)
+        tables[block].set_var_metadata(aname, **{DESC:adesc})
 
         for name in signals:
-            tables[block].set_var_metadata(name, description=mf.description(name))
+            tables[block].set_var_metadata(name,
+                                           **{DESC:mf.description(name)})
         for name in aliases:
-            tables[block].add_alias(alias=name[0], of=name[1], scale=name[2], offset=0.0)
-            tables[block].set_var_metadata(name, description=mf.description(name[0]))
+            tables[block].add_alias(alias=name[0], of=name[1],
+                                    scale=name[2], offset=0.0)
+            tables[block].set_var_metadata(name,
+                                           **{DESC:mf.description(name[0])})
 
     meld.finalize()
 

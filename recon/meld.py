@@ -33,9 +33,6 @@ V_OFFSET = "o"
 # Alias
 A_OF = "v"
 
-# Data
-D_DATA = "d"
-
 class MeldNotFinalized(Exception):
     """
     Thrown when data is written to a meld that hasn't been finalized.
@@ -80,12 +77,10 @@ class MeldWriter(object):
         self.fp = fp
         self.verbose = verbose
         self.compression = compression
-        #self.compression = False
         self.tables = {}
         self.objects = {}
         self.metadata = {}
         self.cur = None # Current object being written
-        #self.ser = BSONSerializer(compress=self.compression)
         self.ser = DEFSER(compress=self.compression)
 
         # Everything after here is set when finalized
@@ -138,7 +133,7 @@ class MeldWriter(object):
 
         # Header can never be compressed because it needs to
         # remain the same size on each write
-        bhead = self.ser.encode(self.header, uncomp=True)
+        bhead = self.ser.encode_obj(self.header, uncomp=True)
         blen = len(bhead)
         if self.verbose:
             print "len(bhead) = "+str(blen)
@@ -148,7 +143,6 @@ class MeldWriter(object):
                 print "Writing header for the first time"
             self.fp.write(MELD_ID)
             write_len(self.fp, blen)
-            print "BLEN -> "+str(blen)
             self.fp.write(bhead)
             self.start = self.fp.tell()
             self.headlen = blen
@@ -166,8 +160,17 @@ class MeldWriter(object):
 
     def _write_object(self, obj):
         base = self.fp.tell()
-        print "Writing @ = "+str(base)
-        bdata = self.ser.encode(obj)
+        bdata = self.ser.encode_obj(obj)
+        blen = len(bdata)
+        if self.verbose:
+            print "Binary data: "+str(repr(bdata))
+            print "Binary len: "+str(blen)
+        self.fp.write(bdata)
+        return (base, blen)
+
+    def _write_vector(self, vec):
+        base = self.fp.tell()
+        bdata = self.ser.encode_vec(vec)
         blen = len(bdata)
         if self.verbose:
             print "Binary data: "+str(repr(bdata))
@@ -261,7 +264,7 @@ class MeldTableWriter(object):
         # TODO: Make sure it is the correct size (matches any previous)
         # TODO: Perform type checks
 
-        (base, blen) = self.writer._write_object({D_DATA: data})
+        (base, blen) = self.writer._write_vector(data)
         self.writer._signal_header(self.name, sig)[V_INDEX] = long(base)
         self.writer._signal_header(self.name, sig)[V_LENGTH] = long(blen)
         for alias in self.aliases:
@@ -304,11 +307,9 @@ class MeldReader(object):
 
         blen = read_len(self.fp)
         self.headlen = blen
-        print "BLEN <- "+str(blen)
-        self.header = self.ser.decode(self.fp, length=blen)
+        self.header = self.ser.decode_obj(self.fp, length=blen)
         self.metadata = self.header[H_METADATA]
         self.compression = self.header[H_COMP]
-        #self.ser = BSONSerializer(compress=self.compression)
         self.ser = DEFSER(compress=self.compression)
         if self.verbose:
             print "Compression: "+str(self.compression)
@@ -350,10 +351,7 @@ class MeldReader(object):
         ind = self.header[H_OBJECTS][objname][V_INDEX]
         blen = self.header[H_OBJECTS][objname][V_LENGTH]
         self.fp.seek(ind)
-        print "Reading object: "+objname
-        print "  Index: "+str(ind)
-        print "  Length: "+str(blen)
-        return self.ser.decode(self.fp, blen)
+        return self.ser.decode_obj(self.fp, blen)
 
 class MeldTableReader(object):
     def __init__(self, reader, table):
@@ -376,5 +374,5 @@ class MeldTableReader(object):
         scale = self.indices[signal][V_SCALE]
         offset = self.indices[signal][V_OFFSET]
         self.reader.fp.seek(ind)
-        data = self.reader.ser.decode(self.reader.fp, blen)[D_DATA]
+        data = self.reader.ser.decode_vec(self.reader.fp, blen)
         return map(lambda x: x*scale+offset, data)
