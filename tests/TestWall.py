@@ -60,6 +60,9 @@ def read_wall(verbose=False):
         for tabname in wall.tables():
             table = wall.read_table(tabname)
             print "  "+tabname
+
+            vs = table.variables() # For coverage
+
             for signal in table.signals():
                 print "    #"+signal+": "+str(table.data(signal))
             for alias in table.aliases():
