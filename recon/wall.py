@@ -10,19 +10,20 @@ WALL_ID = "recon:wall:v1"
 DEFSER = MsgPackSerializer
 
 # Header
-METADATA = "metadata"
-TABLES = "tables"
-OBJECTS = "objects"
+H_METADATA = "metadata"
+H_TABLES = "tables"
+H_OBJECTS = "objects"
 
 # Table
-VMETADATA = "var_metadata"
-SIGNALS = "signals"
-ALIASES = "aliases"
+T_METADATA = "metadata"
+T_VMETADATA = "var_metadata"
+T_SIGNALS = "signals"
+T_ALIASES = "aliases"
 
 # Aliases
-OF = "of"
-SCALE = "scale"
-OFFSET = "offset"
+A_OF = "of"
+V_SCALE = "scale"
+V_OFFSET = "offset"
 
 
 class FinalizedWall(Exception):
@@ -128,10 +129,10 @@ class WallWriter(object):
         if self.verbose:
             print "Tables:"
         for table in self.tables:
-            tables[table] = {SIGNALS: self.tables[table].signals,
-                             ALIASES: self.tables[table].aliases,
-                             METADATA: self.tables[table].metadata,
-                             VMETADATA: self.tables[table]._vmd}
+            tables[table] = {T_SIGNALS: self.tables[table].signals,
+                             T_ALIASES: self.tables[table].aliases,
+                             T_METADATA: self.tables[table].metadata,
+                             T_VMETADATA: self.tables[table]._vmd}
             if self.verbose:
                 print table
                 print "Columns: "+str(self.tables[table].signals)
@@ -144,7 +145,8 @@ class WallWriter(object):
             objects.append(obj)
             if self.verbose:
                 print obj
-        header = {TABLES: tables, OBJECTS: objects, METADATA: self.metadata}
+        header = {H_TABLES: tables, H_OBJECTS: objects,
+                  H_METADATA: self.metadata}
         bhead = self.ser.encode(header)
         if self.verbose:
             print "Header = "+str(header)
@@ -215,7 +217,7 @@ class WallTableWriter(object):
             raise KeyError("Alias "+alias+" already defined for table "+name)
         if alias in self.signals:
             raise KeyError("'"+alias+"' is already the name of a signal, cannot be an alias")
-        self.aliases[alias] = {OF: of, SCALE: scale, OFFSET: offset}
+        self.aliases[alias] = {A_OF: of, V_SCALE: scale, V_OFFSET: offset}
     def add_row(self, *args, **kwargs):
         """
         This method transforms its arguments (in either positional or keyword form) into
@@ -280,7 +282,7 @@ class WallReader(object):
 
         self.headlen = read_len(self.fp)
         self.header = self.ser.decode(self.fp, length=self.headlen)
-        self.metadata = self.header[METADATA]
+        self.metadata = self.header[H_METADATA]
         if self.verbose:
             print "header = "+str(self.header)
         # Record where the end of the header is
@@ -290,13 +292,13 @@ class WallReader(object):
         """
         Returns the set of objects in this file.
         """
-        return self.header[OBJECTS]
+        return self.header[H_OBJECTS]
 
     def tables(self):
         """
         Returns the set of tabls in this file.
         """
-        return self.header[TABLES]
+        return self.header[H_TABLES]
 
     def _read_entries(self, name):
         """
@@ -327,9 +329,9 @@ class WallReader(object):
         This method extracts the named object.
         """
         ret = {}
-        if not name in self.header[OBJECTS]:
+        if not name in self.header[H_OBJECTS]:
             raise KeyError("No object named "+name+" present, options are: %s" % \
-                           (str(self.header[OBJECTS]),))
+                           (str(self.header[H_OBJECTS]),))
         for ent in self._read_entries(name):
             ret[ent[0]] = ent[1]
         return ret
@@ -338,43 +340,43 @@ class WallReader(object):
         """
         This method extracts the named table
         """
-        if not name in self.header[TABLES]:
+        if not name in self.header[H_TABLES]:
             raise KeyError("No table named "+name+" present, options are: %s" % \
-                           (str(self.header[TABLES]),))
-        return WallTableReader(self, name, self.header[TABLES][name])
+                           (str(self.header[H_TABLES]),))
+        return WallTableReader(self, name, self.header[H_TABLES][name])
 
 class WallTableReader(object):
     def __init__(self, reader, name, header):
         self.reader = reader
         self.name = name
         self.header = header
-        self.metadata = self.header[METADATA]
-        self.var_metadata = self.header[VMETADATA]
+        self.metadata = self.header[T_METADATA]
+        self.var_metadata = self.header[T_VMETADATA]
     def signals(self):
-        return self.header[SIGNALS]
+        return self.header[T_SIGNALS]
     def aliases(self):
-        return self.header[ALIASES].keys()
+        return self.header[T_ALIASES].keys()
     def variables(self):
         return self.signals()+self.aliases()
     def alias_of(self, name):
-        return self.header[ALIASES][name][OF]
+        return self.header[T_ALIASES][name][A_OF]
     def alias_scale(self, name):
-        return self.header[ALIASES][name][SCALE]
+        return self.header[T_ALIASES][name][V_SCALE]
     def alias_offset(self, name):
-        return self.header[ALIASES][name][OFFSET]
+        return self.header[T_ALIASES][name][V_OFFSET]
     def data(self, name):
-        if name in self.header[SIGNALS]:
+        if name in self.header[T_SIGNALS]:
             signal = name
             scale = 1.0
             offset = 0.0
-        elif name in self.header[ALIASES]:
-            signal = self.header[ALIASES][name][OF]
-            scale = self.header[ALIASES][name][SCALE]
-            offset = self.header[ALIASES][name][OFFSET]
+        elif name in self.header[T_ALIASES]:
+            signal = self.header[T_ALIASES][name][A_OF]
+            scale = self.header[T_ALIASES][name][V_SCALE]
+            offset = self.header[T_ALIASES][name][V_OFFSET]
         else:
             raise NameError("No signal or alias named "+name)
         ret = []
-        index = self.header[SIGNALS].index(signal)
+        index = self.header[T_SIGNALS].index(signal)
         for ent in self.reader._read_entries(self.name):
             ret.append(ent[index]*scale+offset)
         return ret
