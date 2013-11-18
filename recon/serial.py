@@ -27,10 +27,11 @@ class BSONSerializer(object):
         return data
 
 class MsgPackSerializer(object):
-    import msgpack
-    def __init__(self):
-        pass
-    def encode(self, x, verbose=False):
+    def __init__(self, compress=False):
+        self.compress = compress
+    def encode(self, x, verbose=False, nocomp=False):
+        import msgpack
         return msgpack.packb(x)
     def decode(self, fp, length=None, verbose=False):
+        import msgpack
         return msgpack.unpack(fp)

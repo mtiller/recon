@@ -1,6 +1,9 @@
 import sys
 
-from serial import BSONSerializer
+from serial import BSONSerializer, MsgPackSerializer
+
+DEFSER = BSONSerializer
+#DEFSER = MsgPackSerializer
 
 # This is a unique ID that every meld file starts with so
 # it can be identified/verified.
@@ -78,7 +81,8 @@ class MeldWriter(object):
         self.objects = {}
         self.metadata = {}
         self.cur = None # Current object being written
-        self.ser = BSONSerializer(compress=self.compression)
+        #self.ser = BSONSerializer(compress=self.compression)
+        self.ser = DEFSER(compress=self.compression)
 
         # Everything after here is set when finalized
         self.defined = False
@@ -277,11 +281,13 @@ class MeldReader(object):
         file_id = self.fp.read(len(MELD_ID))
         if file_id != MELD_ID:
             raise IOError("File is not a Meld file")
-        self.ser = BSONSerializer(compress=False)
+        #self.ser = BSONSerializer(compress=False)
+        self.ser = DEFSER(compress=False)
         (self.header, self.headlen) = self.ser.decode(self.fp)
         self.metadata = self.header[METADATA]
         self.compression = self.header[COMP]
-        self.ser = BSONSerializer(compress=self.compression)
+        #self.ser = BSONSerializer(compress=self.compression)
+        self.ser = DEFSER(compress=self.compression)
         if self.verbose:
             print "Compression: "+str(self.compression)
         if self.verbose:
