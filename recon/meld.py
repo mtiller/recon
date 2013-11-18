@@ -245,7 +245,7 @@ class MeldTableWriter(object):
 
     def set_var_metadata(self, name, **kwargs):
         if not name in self.signals and not name in self.aliases:
-            raise NameError("No such signal: "+name);
+            raise NameError("No such signal: "+str(name));
         if not name in self._vmd:
             self._vmd[name] = {}
 
