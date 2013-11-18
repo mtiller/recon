@@ -4,8 +4,8 @@ from serial import BSONSerializer, MsgPackSerializer
 
 from util import write_len, read_len
 
-DEFSER = BSONSerializer
-#DEFSER = MsgPackSerializer
+#DEFSER = BSONSerializer
+DEFSER = MsgPackSerializer
 
 # This is a unique ID that every meld file starts with so
 # it can be identified/verified.
@@ -90,6 +90,7 @@ class MeldWriter(object):
         self.defined = False
         self.header = None
         self.start = None
+        self.headlen = None
         self.closed = False
 
     def _check_names(self, name):
@@ -148,9 +149,12 @@ class MeldWriter(object):
             print "BLEN -> "+str(blen)
             self.fp.write(bhead)
             self.start = self.fp.tell()
+            self.headlen = blen
         else:
             if self.verbose:
                 print "Rewriting header"
+            if blen!=self.headlen:
+                raise IOError("Header length changed on rewrite")
             save = self.fp.tell()
             self.fp.seek(0)
             self.fp.write(MELD_ID)
@@ -160,6 +164,7 @@ class MeldWriter(object):
 
     def _write_object(self, obj):
         base = self.fp.tell()
+        print "Writing @ = "+str(base)
         bdata = self.ser.encode(obj)
         blen = len(bdata)
         if self.verbose:
@@ -175,17 +180,17 @@ class MeldWriter(object):
             table = self.tables[tname]
             index = {}
             for sig in table.signals:
-                index[sig] = {INDEX: -1, LENGTH: -1, SCALE: 1.0, OFFSET: 0.0}
+                index[sig] = {INDEX: -1L, LENGTH: -1L, SCALE: 1.0, OFFSET: 0.0}
             for alias in table.aliases:
-                index[alias] = {INDEX: -1,
-                                LENGTH: -1,
+                index[alias] = {INDEX: -1L,
+                                LENGTH: -1L,
                                 SCALE: table.aliases[alias][SCALE],
                                 OFFSET: table.aliases[alias][OFFSET]}
             self.header[TABLES][tname] = {VARIABLES: table.variables, INDICES: index,
                                           METADATA: table.metadata,
                                           VMETADATA: table._vmd}
         for oname in self.objects:
-            self.header[OBJECTS][oname] = {INDEX: -1, LENGTH: -1}
+            self.header[OBJECTS][oname] = {INDEX: -1L, LENGTH: -1L}
 
         self.header[COMP] = self.compression
 
@@ -250,12 +255,12 @@ class MeldTableWriter(object):
         # TODO: Perform type checks
 
         (base, blen) = self.writer._write_object({DATA: data})
-        self.writer._signal_header(self.name, sig)[INDEX] = base
-        self.writer._signal_header(self.name, sig)[LENGTH] = blen
+        self.writer._signal_header(self.name, sig)[INDEX] = long(base)
+        self.writer._signal_header(self.name, sig)[LENGTH] = long(blen)
         for alias in self.aliases:
             if self.aliases[alias][OF]==sig:
-                self.writer._signal_header(self.name, alias)[INDEX] = base
-                self.writer._signal_header(self.name, alias)[LENGTH] = blen
+                self.writer._signal_header(self.name, alias)[INDEX] = long(base)
+                self.writer._signal_header(self.name, alias)[LENGTH] = long(blen)
                 
         # Rewrite header with updated location information
         self.writer._write_header()
@@ -272,8 +277,8 @@ class MeldObjectWriter(object):
             raise WriteAfterClose("Object "+self.name+" is closed for writing")
 
         (base, blen) = self.writer._write_object(kwargs)
-        self.writer._object_header(self.name)[INDEX] = base
-        self.writer._object_header(self.name)[LENGTH] = blen
+        self.writer._object_header(self.name)[INDEX] = long(base)
+        self.writer._object_header(self.name)[LENGTH] = long(blen)
 
         # Rewrite header with updated location information
         self.writer._write_header()
@@ -284,14 +289,15 @@ class MeldReader(object):
         self.fp = fp
         self.verbose = verbose
 
+        self.ser = DEFSER(compress=False)
+
         file_id = self.fp.read(len(MELD_ID))
         if file_id != MELD_ID:
             raise IOError("File is not a Meld file")
+
         blen = read_len(self.fp)
         self.headlen = blen
         print "BLEN <- "+str(blen)
-        #self.ser = BSONSerializer(compress=False)
-        self.ser = DEFSER(compress=False)
         self.header = self.ser.decode(self.fp, length=blen)
         self.metadata = self.header[METADATA]
         self.compression = self.header[COMP]
@@ -337,6 +343,9 @@ class MeldReader(object):
         ind = self.header[OBJECTS][objname][INDEX]
         blen = self.header[OBJECTS][objname][LENGTH]
         self.fp.seek(ind)
+        print "Reading object: "+objname
+        print "  Index: "+str(ind)
+        print "  Length: "+str(blen)
         return self.ser.decode(self.fp, blen)
 
 class MeldTableReader(object):

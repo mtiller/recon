@@ -17,13 +17,10 @@ class BSONSerializer(object):
             data = a+b
         return data
     def decode(self, fp, length):
-        if length==None:
-            data = _read_nolen(fp, verbose=self.verbose)
+        if self.compress:
+            data = _read_compressed(fp, length, verbose=self.verbose)
         else:
-            if self.compress:
-                data = _read_compressed(fp, length, verbose=self.verbose)
-            else:
-                data = _read(fp, length, verbose=self.verbose)
+            data = _read(fp, length, verbose=self.verbose)
         return data
 
 class MsgPackSerializer(object):
@@ -31,8 +28,14 @@ class MsgPackSerializer(object):
         self.compress = compress
     def encode(self, x, verbose=False, uncomp=False):
         import msgpack
-        return msgpack.packb(x)
+        data = msgpack.packb(x)
+        print "SS "+str(x)+"("+str(len(data))+") => "+str(repr(data))
+        return data
     def decode(self, fp, length, verbose=False):
         import msgpack
+        print "Reading @"+str(fp.tell())
         bytes = fp.read(length)
-        return msgpack.unpackb(bytes)
+        print "SS "+str(repr(bytes))+"("+str(len(bytes))+") => ?"
+        data = msgpack.unpackb(bytes)
+        print "SS     => "+str(data)
+        return data
