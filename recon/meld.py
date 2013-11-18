@@ -12,28 +12,29 @@ DEFSER = MsgPackSerializer
 MELD_ID = "recon:meld:v1"
 
 # Meld
-TABLES = "tables"
-OBJECTS = "objects"
-COMP = "comp"
+H_TABLES = "tables"
+H_OBJECTS = "objects"
+H_COMP = "comp"
+H_METADATA = "metadata"
 
 # Tables
-INDICES = "indices"
-VARIABLES = "v"
-METADATA = "metadata"
-VMETADATA = "var_metadata"
+T_INDICES = "indices"
+T_VARIABLES = "v"
+T_METADATA = "metadata"
+T_VMETADATA = "var_metadata"
 
-# Signal
-INDEX = "ind"
-INDHOLD = b'\x00\x00\x00\x00'
-LENGTH = "len"
+# Variables
+V_INDEX = "ind"
+V_INDHOLD = b'\x00\x00\x00\x00'
+V_LENGTH = "len"
+V_SCALE = "scale"
+V_OFFSET = "offset"
 
 # Alias
-OF = "of"
-SCALE = "scale"
-OFFSET = "offset"
+A_OF = "of"
 
-# Columne
-DATA = "d"
+# Data
+D_DATA = "d"
 
 class MeldNotFinalized(Exception):
     """
@@ -123,12 +124,12 @@ class MeldWriter(object):
         return obj
 
     def _signal_header(self, table, signal):
-        t = self.header[TABLES][table][INDICES]
+        t = self.header[H_TABLES][table][T_INDICES]
         s = t[signal]
         return s
 
     def _object_header(self, objname):
-        return self.header[OBJECTS][objname]
+        return self.header[H_OBJECTS][objname]
 
     def _write_header(self):
         # Binary encoding of header
@@ -175,29 +176,30 @@ class MeldWriter(object):
         return (base, blen)
 
     def finalize(self):
-        self.header = {TABLES: {}, OBJECTS: {},
-                       METADATA: self.metadata}
+        self.header = {H_TABLES: {},
+                       H_OBJECTS: {},
+                       H_METADATA: self.metadata}
         for tname in self.tables:
             table = self.tables[tname]
             index = {}
             for sig in table.signals:
-                index[sig] = {INDEX: INDHOLD,
-                              LENGTH: INDHOLD,
-                              SCALE: 1.0, OFFSET: 0.0}
+                index[sig] = {V_INDEX: V_INDHOLD,
+                              V_LENGTH: V_INDHOLD,
+                              V_SCALE: 1.0, V_OFFSET: 0.0}
             for alias in table.aliases:
-                index[alias] = {INDEX: INDHOLD,
-                                LENGTH: INDHOLD,
-                                SCALE: table.aliases[alias][SCALE],
-                                OFFSET: table.aliases[alias][OFFSET]}
-            self.header[TABLES][tname] = {VARIABLES: table.variables,
-                                          INDICES: index,
-                                          METADATA: table.metadata,
-                                          VMETADATA: table._vmd}
+                index[alias] = {V_INDEX: V_INDHOLD,
+                                V_LENGTH: V_INDHOLD,
+                                V_SCALE: table.aliases[alias][V_SCALE],
+                                V_OFFSET: table.aliases[alias][V_OFFSET]}
+            self.header[H_TABLES][tname] = {T_VARIABLES: table.variables,
+                                            T_INDICES: index,
+                                            T_METADATA: table.metadata,
+                                            T_VMETADATA: table._vmd}
         for oname in self.objects:
-            self.header[OBJECTS][oname] = {INDEX: INDHOLD,
-                                           LENGTH: INDHOLD}
+            self.header[H_OBJECTS][oname] = {V_INDEX: V_INDHOLD,
+                                             V_LENGTH: V_INDHOLD}
 
-        self.header[COMP] = self.compression
+        self.header[H_COMP] = self.compression
 
         self._write_header()
         self.defined = True
@@ -208,10 +210,10 @@ class MeldWriter(object):
         missing = []
         for table in self.tables:
             for signal in self.tables[table].signals:
-                if self._signal_header(table, signal)[INDEX]==INDHOLD:
+                if self._signal_header(table, signal)[V_INDEX]==V_INDHOLD:
                     missing.append(signal)
         for obj in self.objects:
-            if self._object_header(obj)[INDEX]==INDHOLD:
+            if self._object_header(obj)[V_INDEX]==V_INDHOLD:
                 missing.append(name)
         if len(missing)>0:
             raise MissingData("Data not written for: "+str(missing))
@@ -236,7 +238,7 @@ class MeldTableWriter(object):
         if not of in self.signals:
             raise NameError("Alias "+alias+" refers to non-existant signal "+of)
         self.variables.append(alias)
-        self.aliases[alias] = {OF: of, SCALE: scale, OFFSET: offset};
+        self.aliases[alias] = {A_OF: of, V_SCALE: scale, V_OFFSET: offset};
 
     def set_var_metadata(self, name, **kwargs):
         if not name in self.signals and not name in self.aliases:
@@ -251,7 +253,7 @@ class MeldTableWriter(object):
             raise MeldNotFinalized("Meld must be finalized before writing data")
         if not sig in self.signals:
             raise NameError("Cannot write unknown signal "+sig+" to table")
-        if self.writer._signal_header(self.name, sig)[INDEX]!=INDHOLD:
+        if self.writer._signal_header(self.name, sig)[V_INDEX]!=V_INDHOLD:
             raise WriteAfterClose("Signal "+sig+" has already been written")
         if not type(data)==list:
             raise ValueError("Data for signal "+sig+" must be a list")
@@ -259,13 +261,13 @@ class MeldTableWriter(object):
         # TODO: Make sure it is the correct size (matches any previous)
         # TODO: Perform type checks
 
-        (base, blen) = self.writer._write_object({DATA: data})
-        self.writer._signal_header(self.name, sig)[INDEX] = long(base)
-        self.writer._signal_header(self.name, sig)[LENGTH] = long(blen)
+        (base, blen) = self.writer._write_object({D_DATA: data})
+        self.writer._signal_header(self.name, sig)[V_INDEX] = long(base)
+        self.writer._signal_header(self.name, sig)[V_LENGTH] = long(blen)
         for alias in self.aliases:
-            if self.aliases[alias][OF]==sig:
-                self.writer._signal_header(self.name, alias)[INDEX] = long(base)
-                self.writer._signal_header(self.name, alias)[LENGTH] = long(blen)
+            if self.aliases[alias][A_OF]==sig:
+                self.writer._signal_header(self.name, alias)[V_INDEX] = long(base)
+                self.writer._signal_header(self.name, alias)[V_LENGTH] = long(blen)
                 
         # Rewrite header with updated location information
         self.writer._write_header()
@@ -278,12 +280,12 @@ class MeldObjectWriter(object):
     def write(self, **kwargs):
         if not self.writer.defined:
             raise MeldNotFinalized("Meld must be finalized before writing data")
-        if self.writer._object_header(self.name)[INDEX] != INDHOLD:
+        if self.writer._object_header(self.name)[V_INDEX] != V_INDHOLD:
             raise WriteAfterClose("Object "+self.name+" is closed for writing")
 
         (base, blen) = self.writer._write_object(kwargs)
-        self.writer._object_header(self.name)[INDEX] = long(base)
-        self.writer._object_header(self.name)[LENGTH] = long(blen)
+        self.writer._object_header(self.name)[V_INDEX] = long(base)
+        self.writer._object_header(self.name)[V_LENGTH] = long(blen)
 
         # Rewrite header with updated location information
         self.writer._write_header()
@@ -304,8 +306,8 @@ class MeldReader(object):
         self.headlen = blen
         print "BLEN <- "+str(blen)
         self.header = self.ser.decode(self.fp, length=blen)
-        self.metadata = self.header[METADATA]
-        self.compression = self.header[COMP]
+        self.metadata = self.header[H_METADATA]
+        self.compression = self.header[H_COMP]
         #self.ser = BSONSerializer(compress=self.compression)
         self.ser = DEFSER(compress=self.compression)
         if self.verbose:
@@ -318,12 +320,12 @@ class MeldReader(object):
         ret["header"] = self.headlen
         
         for table in self.tables():
-            signals = self.header[TABLES][table][INDICES].keys()
+            signals = self.header[H_TABLES][table][T_INDICES].keys()
             signal_map = {}
             tl = 0
             for signal in signals:
-                ind = self.header[TABLES][table][INDICES][signal][INDEX]
-                blen = self.header[TABLES][table][INDICES][signal][LENGTH]
+                ind = self.header[H_TABLES][table][T_INDICES][signal][V_INDEX]
+                blen = self.header[H_TABLES][table][T_INDICES][signal][V_LENGTH]
                 if not ind in signal_map:
                     signal_map[ind] = [blen]
                     tl += blen
@@ -332,10 +334,10 @@ class MeldReader(object):
         return ret
 
     def tables(self):
-        return self.header[TABLES].keys()
+        return self.header[H_TABLES].keys()
 
     def objects(self):
-        return self.header[OBJECTS].keys()
+        return self.header[H_OBJECTS].keys()
 
     def read_table(self, table):
         if not table in self.tables():
@@ -345,8 +347,8 @@ class MeldReader(object):
     def read_object(self, objname):
         if not objname in self.objects():
             raise NameError("No object named "+table+" found");
-        ind = self.header[OBJECTS][objname][INDEX]
-        blen = self.header[OBJECTS][objname][LENGTH]
+        ind = self.header[H_OBJECTS][objname][V_INDEX]
+        blen = self.header[H_OBJECTS][objname][V_LENGTH]
         self.fp.seek(ind)
         print "Reading object: "+objname
         print "  Index: "+str(ind)
@@ -357,22 +359,22 @@ class MeldTableReader(object):
     def __init__(self, reader, table):
         self.reader = reader
         self.table = table
-        if not self.table in self.reader.header[TABLES]:
+        if not self.table in self.reader.header[H_TABLES]:
             raise NameError("Cannot find table "+self.table)
-        self.indices = self.reader.header[TABLES][table][INDICES]
-        self.signames = self.reader.header[TABLES][table][VARIABLES]
-        self.metadata = self.reader.header[TABLES][table][METADATA]
-        self.var_metadata = self.reader.header[TABLES][table][VMETADATA]
+        self.indices = self.reader.header[H_TABLES][table][T_INDICES]
+        self.signames = self.reader.header[H_TABLES][table][T_VARIABLES]
+        self.metadata = self.reader.header[H_TABLES][table][T_METADATA]
+        self.var_metadata = self.reader.header[H_TABLES][table][T_VMETADATA]
     def signals(self):
         return self.signames
 
     def data(self, signal):
         if not signal in self.indices:
             raise NameError("No signal named "+str(signal)+" found in table "+str(self.table))
-        ind = self.indices[signal][INDEX]
-        blen = self.indices[signal][LENGTH]
-        scale = self.indices[signal][SCALE]
-        offset = self.indices[signal][OFFSET]
+        ind = self.indices[signal][V_INDEX]
+        blen = self.indices[signal][V_LENGTH]
+        scale = self.indices[signal][V_SCALE]
+        offset = self.indices[signal][V_OFFSET]
         self.reader.fp.seek(ind)
-        data = self.reader.ser.decode(self.reader.fp, blen)[DATA]
+        data = self.reader.ser.decode(self.reader.fp, blen)[D_DATA]
         return map(lambda x: x*scale+offset, data)
