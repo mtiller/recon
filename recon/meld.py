@@ -80,7 +80,6 @@ class MeldWriter(object):
         self.tables = {}
         self.objects = {}
         self.metadata = {}
-        self.cur = None # Current object being written
         self.ser = DEFSER(compress=self.compression, single=True)
 
         # Everything after here is set when finalized
@@ -109,7 +108,6 @@ class MeldWriter(object):
         self._check_names(name)
         table = MeldTableWriter(self, name, signals)
         self.tables[name] = table
-        self.cur = table
         return table
 
     def add_object(self, name):
@@ -121,7 +119,6 @@ class MeldWriter(object):
         self._check_names(name)
         obj = MeldObjectWriter(self, name)
         self.objects[name] = obj
-        self.cur = obj
         return obj
 
     def _signal_header(self, table, signal):
@@ -329,9 +326,6 @@ class MeldTableWriter(object):
                 ahead = self.writer._signal_header(self.name, alias)
                 ahead[V_INDEX] = long(base)
                 ahead[V_LENGTH] = long(blen)
-                
-        # Rewrite header with updated location information
-        self.writer.cur = None
 
 class MeldObjectWriter(object):
     """
@@ -355,10 +349,6 @@ class MeldObjectWriter(object):
         (base, blen) = self.writer._write_object(kwargs)
         self.writer._object_header(self.name)[V_INDEX] = long(base)
         self.writer._object_header(self.name)[V_LENGTH] = long(blen)
-
-        # Rewrite header with updated location information
-        self.writer._write_header()
-        self.writer.cur = None
 
 class MeldReader(object):
     """
