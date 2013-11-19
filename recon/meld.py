@@ -247,6 +247,7 @@ class MeldWriter(object):
         """
         Close this meld for any more writing.
         """
+        self._write_header()
         if not self.defined:
             self.finalize()
         missing = []
@@ -330,7 +331,6 @@ class MeldTableWriter(object):
                 ahead[V_LENGTH] = long(blen)
                 
         # Rewrite header with updated location information
-        self.writer._write_header()
         self.writer.cur = None
 
 class MeldObjectWriter(object):
