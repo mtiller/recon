@@ -52,6 +52,8 @@ def wall2meld(wfp, mfp):
         for signal in wtable.signals():
             mtable.write(signal, wtable.data(signal));
 
+    meld.close()
+
 def dsres2meld(df, mfp, verbose=False, compression=True, single=True):
     """
     This function reads in a file in 'dsres' format and then write is
