@@ -271,7 +271,7 @@ class MeldTableWriter(object):
         self.writer = writer
         self.name = name
         self.variables = []
-        self.signals = signals
+        self.signals = set(signals) # Big performance gain from this
         self.aliases = {}
         self.metadata = {}
         self._vmd = {}
