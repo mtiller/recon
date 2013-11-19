@@ -24,6 +24,7 @@
 \newcommand{\recon}{\texttt{recon}}
 \newcommand{\wall}{\texttt{wall}}
 \newcommand{\meld}{\texttt{meld}}
+\newcommand{\msgpack}{\texttt{msgpack}}
 \newcommand{\code}[1]{\texttt{#1}} % make quoting code text a bit simpler
 
 \begin{document}
@@ -44,6 +45,36 @@
 
 \section*{Abstract}
 
+As an organization, the Modelica Association champions standards in
+the area of modeling and simulation.  This effort started with the
+Modelica language \cite{ModSpec} and Modelica Standard
+Library\cite{MSL} and has recently expanded to include the Functional
+Mockup Interface (FMI) standard \cite{FMI} as well.
+
+However, one thing that is conspicuously absent in the Modelica
+community is an accepted standard for exchange simulation results
+and/or tabular data.  In fact, many tools still rely on a proprietary
+format that dates back to MATLAB version 4.  It is remarkably ironic
+that most Modelica users are still using this proprietary format while
+The MathWorks themselves have abandoned it in favor of an open
+standard, HDF5\cite{HDF5}.
+
+This paper will introduce two different file formats.  The first
+format we call the \wall format and the other we call the \meld
+format.  Both of these were developed as part of a project ultimately
+dubbed the \recon project.
+
+It is important to note that we are {\b not} proposing to make these
+formats official Modelica standards.  These formats were created from
+some specific use cases shared by their developers but not necessary
+shared by the majority of Modelica users.  This paper will discuss the
+specific use cases which led to the development of these standards and
+some of the interesting features of these formats.
+
+In the open tradition of the Mdoelica Association, the authors have
+made implementations for these formats available as open source
+libraries with the hope that they will benefit the community as a
+whole.
 
 \paragraph{Keywords:}\emph{modelica, FMI, simulation results,
   cloud, web, open source}
@@ -51,8 +82,63 @@
 \section{Introduction}
 \label{sec:intro}
 
-\section{Background}
+Several groups have examined the issue of standardized file formats
+\cite{AndreasHDF5,GallHDF5} in the context of Modelica.  In keeping
+with the principals of the Modelica Association, an ideal choice would
+be a production ready format that is open source and cross-platform.
+Most people see HDF5 as a natural choice.  There are already open
+source implementations and the file format has been in use for some
+time.  As previously mentioned, it has even been adopted by The
+MathWorks for use in MATLAB.
+
+But HDF5 has some important drawbacks.  The first is that it is not
+truly cross-platform.  The reference implementation of HDF5 is written
+in C.  While there are various libraries available for reading HDF5 on
+the Java platform\cite{HDFJava}, they are incomplete and awkward to
+use.  Another issue with HDF5 is that for simple time-series data it
+is over engineered.  HDF5 is feature rich, of that there is no
+question, but these features come at the cost of complexity.  This is
+why you see very few implementations outside of the reference
+implementation.
+
+HDF5 (and many other potential contenders) were developed in an era
+when ``compatibility'' for a file format meant you could read and
+write it from both FORTRAN and C.  Of course, many simulation tools
+are still written using a mixture of FORTRAN and C.  But increasingly,
+modeling and simulation are moving more toward web and cloud based
+platforms.
+
+In fact, there are many, many standards for manipulating data in web
+or cloud based environments.  The most popular format, by far, is
+Javascript Object Notation (or JSON, for short).  In addition to other
+formats, like XML, you also have a number of different approaches to
+marshalling and unmarshalling data for consumption by cross-platform
+tools.  Approaches like Google Protocol Buffers\cite{GPB},
+Avro\cite{Avro}, Thrift\cite{Thrift} and others are working hard to
+try and knit together the various ``big data'' tools like
+Hadoop\cite{Hadoop}, Storm\cite{Storm} and ???.
+
+So where does that leave us?  Should we adopt the tried and true
+standards from the engineering world and simply live with their lack
+of interoperability with important platforms like Java or Javascript?
+Or should we try and adapt tools from the ``big data'' world, that
+were developed for quite different use cases, to work in the
+engineering world.
+
+In some sense, we've chosen a compromise.  As we will see shortly, the
+\wall and \meld formats are fundamentally derived from the
+\msgpack\cite{msgpack} specification.  This gives us excellent cross
+platform compatibility.  But \msgpack is simply a serialization
+protocol.  To address some of our more important concerns, to be
+discussed shortly, we needed to design a structural context in which
+to employ \msgpack. So in this sense, we've created a set of original
+file formats that leverage open standards but repurpose them for
+modeling and simulation applications.
+
+\section{Goals}
 \label{sec:background}
+
+As noted in the 
 
 Problems we want to solve:
 \begin{itemize}
