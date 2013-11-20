@@ -7,14 +7,14 @@ def write_len(fp, l):
     A frequently used utility function to write an integer
     to a given stream.
     """
-    fp.write(struct.pack('<L', l))
+    fp.write(struct.pack('!L', l))
 
 def conv_len(bytes):
     """
     This takes some bytes and converts them to an integer following
     the same conventions used by the other routines in this file.
     """
-    up = struct.unpack('<L', bytes)
+    up = struct.unpack('!L', bytes)
     return up[0]
 
 def read_len(fp, ignoreEOF=False):
@@ -29,5 +29,5 @@ def read_len(fp, ignoreEOF=False):
             return None
         else:
             raise IOError("Failed to read length data")
-    up = struct.unpack('<L', lbytes)
+    up = struct.unpack('!L', lbytes)
     return up[0]
