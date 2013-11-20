@@ -16,7 +16,7 @@ def decompress(data):
     c = bz2.BZ2Decompressor()
     return c.decompress(data)
 
-class BSONSerializer(object):
+class BSONSerializer(object): # pragma: no cover
     """
     This class supports BSON serialization.  We started with this
     but found it very inefficient for arrays.  So we dropped it
