@@ -9,7 +9,7 @@ DEFSER = MsgPackSerializer
 
 # This is a unique ID that every meld file starts with so
 # it can be identified/verified.
-MELD_ID = "recon:meld:v1"
+MELD_ID = "recon:meld:v01"
 
 # Meld
 H_TABLES = "t"

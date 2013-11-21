@@ -4,7 +4,7 @@ from util import write_len, read_len
 
 # This is a unique ID that every wall file starts with so
 # it can be identified/verified.
-WALL_ID = "recon:wall:v1"
+WALL_ID = "recon:wall:v01"
 
 #DEFSER = BSONSerializer
 DEFSER = MsgPackSerializer
