@@ -69,11 +69,11 @@ def read_wall(verbose=False):
             for signal in table.signals():
                 print "    #"+signal+": "+str(table.data(signal))
                 if signal=="time":
-                    assert_equals(table.var_metadata(signal), {"units": "s"})
+                    assert_equals(table.var_metadata[signal], {"units": "s"})
             for alias in table.aliases():
                 print "    @"+alias+": "+str(table.data(alias))
                 if alias=="a":
-                    assert_equals(table.var_metadata(alias), {"ax": "zed"})
+                    assert_equals(table.var_metadata[alias], {"ax": "zed"})
 
         assert_equals(table.signals(),["time", "x", "y"])
         assert_equals(table.data("time"),[0.0, 1.0, 2.0])
@@ -266,4 +266,4 @@ def testMetadata1():
         assert_equals(wall.metadata,{"a": "bar"})
         t = wall.read_table("T1")
         assert_equals(t.metadata,{"b": "foo"})
-        assert_equals(t.var_metadata("time"),{"units": "s"})
+        assert_equals(t.var_metadata["time"],{"units": "s"})

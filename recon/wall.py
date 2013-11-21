@@ -378,7 +378,7 @@ class WallTableReader(object):
         self.name = name
         self.header = header
         self.metadata = self.header[T_METADATA]
-        self._vmd = self.header[T_VMETADATA]
+        self.var_metadata = self.header[T_VMETADATA]
     def signals(self):
         """
         Signals in this table
@@ -414,9 +414,6 @@ class WallTableReader(object):
         Offset between alias and base signal
         """
         return self.header[T_ALIASES][name][V_OFFSET]
-
-    def var_metadata(self, name):
-        return self._vmd[name]
 
     def data(self, name):
         """
