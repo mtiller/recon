@@ -7,9 +7,7 @@ def wall2meld(wfp, mfp):
     meld file.
     """
     wall = WallReader(wfp)
-    meld = MeldWriter(mfp)
-
-    meld.metadata.update(wall.metadata)
+    meld = MeldWriter(mfp, metadata=wall.metadata)
 
     objects = {}
     tables = {}
@@ -20,21 +18,24 @@ def wall2meld(wfp, mfp):
     # Step 1: Create definitions for meld
     #   Start with objects...
     for objname in wall.objects():
-        objects[objname] = meld.add_object(objname)
+        obj = wall.read_object(objname)
+        objects[objname] = meld.add_object(objname, metadata=obj.metadata)
 
     #   ...then do tables
     for tabname in wall.tables():
         table = wall.read_table(tabname)
-        tables[tabname] = meld.add_table(name=tabname, signals=table.signals());
+        tables[tabname] = meld.add_table(name=tabname,
+                                         metadata=table.metadata)
         mtable = tables[tabname]
-        mtable.metadata.update(table.metadata)
-        for k in table.var_metadata:
-            mtable.set_var_metadata(k, **table.var_metadata[k])
+        for signal in table.signals():
+            mtable.add_signal(signal, metadata=table.var_metadata.get(signal, None))
+
         for alias in table.aliases():
             mtable.add_alias(alias, 
                              of=table.alias_of(alias),
                              scale=table.alias_scale(alias),
-                             offset=table.alias_offset(alias))
+                             offset=table.alias_offset(alias),
+                             metadata=table.var_metadata.get(alias, None))
     
     # Now that all definitions are made, we can finalize the meld
     meld.finalize()
@@ -43,14 +44,14 @@ def wall2meld(wfp, mfp):
     #   Again, objects first...
     for objname in wall.objects():
         obj = wall.read_object(objname)
-        objects[objname].write(**obj)
+        objects[objname].write(**(obj.data))
 
     #   ...then tables
     for tabname in wall.tables():
         wtable = wall.read_table(tabname)
         mtable = tables[tabname]
         for signal in wtable.signals():
-            mtable.write(signal, wtable.data(signal));
+            mtable.write(signal, wtable.data(signal))
 
     meld.close()
 
@@ -118,20 +119,19 @@ def dsres2meld(df, mfp, verbose=False, compression=True, single=True):
         alias_map[block] = aliases
 
         # Generate table for this block (and store it away for later)
-        tables[block] = meld.add_table("T"+str(block), signals=[aname]+signals)
-        tables[block].set_var_metadata(aname, **{DESC:adesc})
+        tables[block] = meld.add_table("T"+str(block))
 
-        # Add metadata for signals
-        for name in signals:
-            tables[block].set_var_metadata(name,
-                                           **{DESC:mf.description(name)})
+        # Add abscissa
+        tables[block].add_signal(aname, metadata={DESC: adesc})
 
-        # ...and then add aliases (and their metadata)
+        for signal in signals:
+            tables[block].add_signal(signal, metadata={DESC: mf.description(signal)})
+
+        # Add aliases (and their metadata)
         for alias in aliases:
             tables[block].add_alias(alias=alias[0], of=alias[2],
-                                    scale=alias[3], offset=0.0)
-            tables[block].set_var_metadata(alias[0],
-                                           **{DESC:mf.description(alias[0])})
+                                    scale=alias[3], offset=0.0,
+                                    metadata={DESC:mf.description(alias[0])})
 
     # Finalize structure
     meld.finalize()

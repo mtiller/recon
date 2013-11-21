@@ -7,7 +7,7 @@ def write_wall(verbose=False):
         wall = WallWriter(fp, metadata={"a": "bar"}, verbose=verbose)
 
         # Walls can contain tables, here is how we define one
-        t = wall.add_table(name="T1", metadata={"mode": "Foo"});
+        t = wall.add_table(name="T1", metadata={"model": "Foo"});
         t.add_signal("time", metadata={"units": "s"})
         t.add_signal("x")
         t.add_signal("y")
@@ -61,7 +61,7 @@ def read_wall(verbose=False):
         print "Tables:"
         for tabname in wall.tables():
             table = wall.read_table(tabname)
-            assert_equals(table.metadata, {"mode": "Foo"})
+            assert_equals(table.metadata, {"model": "Foo"})
             print "  "+tabname
 
             vs = table.variables() # For coverage
