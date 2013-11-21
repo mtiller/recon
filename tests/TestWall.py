@@ -8,13 +8,13 @@ def write_wall(verbose=False):
 
         # Walls can contain tables, here is how we define one
         t = wall.add_table(name="T1", metadata={"model": "Foo"});
-        t.add_signal("time", metadata={"units": "s"})
-        t.add_signal("x")
-        t.add_signal("y")
+        t.add_signal("time", metadata={"units": "s"}, vtype=float)
+        t.add_signal("x", vtype=int)
+        t.add_signal("y", vtype=str)
 
         # Tables can also have aliases, here is how we define a few
-        t.add_alias(alias="a", of="x", scale=1.0, offset=1.0, metadata={"ax": "zed"});
-        t.add_alias(alias="b", of="y", scale=-1.0, offset=0.0);
+        t.add_alias(alias="a", of="x", scale=-1.0, offset=2.0, metadata={"ax": "zed"});
+        t.add_alias(alias="b", of="y");
 
         # Walls can also have objects.
         obj1 = wall.add_object("obj1", metadata={"xyz": "ABC"});
@@ -25,11 +25,11 @@ def write_wall(verbose=False):
         # but we can add rows to tables and fields to objects.
         wall.finalize();
 
-        t.add_row(time=0.0, x=1.0, y=2.0)
+        t.add_row(time=0.0, x=1, y="2.0")
         wall.flush()  # We can write data out at any time
-        t.add_row(time=1.0, x=0.0, y=3.0)
+        t.add_row(time=1.0, x=0, y="3.0")
         wall.flush()
-        t.add_row(2.0, 1.0, 3.0)
+        t.add_row(2.0, 1, "3.0")
         wall.flush()
 
         # Here we are adding fields to our object
@@ -77,10 +77,10 @@ def read_wall(verbose=False):
 
         assert_equals(table.signals(),["time", "x", "y"])
         assert_equals(table.data("time"),[0.0, 1.0, 2.0])
-        assert_equals(table.data("x"),[1.0, 0.0, 1.0])
-        assert_equals(table.data("y"),[2.0, 3.0, 3.0])
-        assert_equals(table.data("a"),[2.0, 1.0, 2.0])
-        assert_equals(table.data("b"),[-2.0, -3.0, -3.0])
+        assert_equals(table.data("x"),[1, 0, 1])
+        assert_equals(table.data("y"),["2.0", "3.0", "3.0"])
+        assert_equals(table.data("a"),[1.0, 2.0, 1.0])
+        assert_equals(table.data("b"),["2.0", "3.0", "3.0"])
 
 def testValidFile():
     write_wall()
@@ -241,6 +241,42 @@ def testNotFinalRow():
         t.add_row(time=0.0, x=1.0, y=2.0)
         t.add_row(0.0, 1.0, 2.0)
         t.add_row(0.0, 1.0, y=2.0)
+
+@raises(TypeError)
+def testNotAType():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+        t = wall.add_table(name="T1")
+        t.add_signal("time", vtype="float")
+        t.add_row(time=0.0)
+
+@raises(TypeError)
+def testTypeMismatch1():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+        t = wall.add_table(name="T1")
+        t.add_signal("time", vtype=float)
+        t.add_row(time=1)
+
+@raises(TypeError)
+def testTypeMismatch2():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+        t = wall.add_table(name="T1")
+        t.add_signal("time", vtype=float)
+        t.add_row(1)
+
+@raises(TypeError)
+def testTypeMismatch3():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, verbose=True)
+        t = wall.add_table(name="T1")
+        t.add_signal("time", vtype=bool)
+        t.add_row(1)
 
 @raises(NotFinalized)
 def testNotFinalField():

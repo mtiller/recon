@@ -9,7 +9,7 @@ def write_meld(compression=False, verbose=False,n=0,name="sample"):
         # Need to identify all entities in the file first.  We don't need
         # their data.  We just need to enumerate them for the header.
         t = meld.add_table(name="T1", metadata={"model": "Foo"})
-        t.add_signal("time", metadata={"units": "s"})
+        t.add_signal("time", metadata={"units": "s"}, vtype=float)
         t.add_signal("x")
         t.add_signal("y")
         t.add_alias(alias="a", of="x", scale=1.0, offset=1.0, metadata={"ax": "zed"});
@@ -393,3 +393,84 @@ def testMetadata1():
         t = meld.read_table("T1")
         assert t.metadata == {"b": "foo"}
         assert t.var_metadata["time"]=={"units": "s"}
+
+@raises(TypeError)
+def testNotAType():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp, metadata={"a": "bar"})
+        t = meld.add_table(name="T1", metadata={"b": "foo"});
+        t.add_signal("time", metadata={"units": "s"}, vtype="float")
+        meld.finalize()
+        t.write("time", [0.0, 1.0, 2.0]);
+        meld.close()
+
+@raises(TypeError)
+def testTypeMismatch1():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp, metadata={"a": "bar"})
+        t = meld.add_table(name="T1", metadata={"b": "foo"});
+        t.add_signal("time", metadata={"units": "s"}, vtype=float)
+        meld.finalize()
+        t.write("time", [0.0, 1.0, 2]);
+        meld.close()
+
+@raises(TypeError)
+def testTypeMismatch2():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp, metadata={"a": "bar"})
+        t = meld.add_table(name="T1", metadata={"b": "foo"});
+        t.add_signal("time", metadata={"units": "s"}, vtype=int)
+        meld.finalize()
+        t.write("time", [0.0, 1.0, 2]);
+        meld.close()
+
+@raises(TypeError)
+def testTypeMismatch3():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp, metadata={"a": "bar"})
+        t = meld.add_table(name="T1", metadata={"b": "foo"});
+        t.add_signal("time", metadata={"units": "s"}, vtype=bool)
+        meld.finalize()
+        t.write("time", [0.0, 1.0, 2.0]);
+        meld.close()
+
+def testChecking1():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp, metadata={"a": "bar"})
+        t = meld.add_table(name="T1", metadata={"b": "foo"});
+        t.add_signal("time", metadata={"units": "s"}, vtype=bool)
+        meld.finalize()
+        t.write("time", [True, False, True]);
+        meld.close()
+
+def testChecking2():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp, metadata={"a": "bar"})
+        t = meld.add_table(name="T1", metadata={"b": "foo"});
+        t.add_signal("time", metadata={"units": "s"}, vtype=int)
+        meld.finalize()
+        t.write("time", [0, 1, 2]);
+        meld.close()
+
+def testChecking3():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp, metadata={"a": "bar"})
+        t = meld.add_table(name="T1", metadata={"b": "foo"});
+        t.add_signal("time", metadata={"units": "s"}, vtype=str)
+        meld.finalize()
+        t.write("time", ["this", "is", "a", "test"]);
+        meld.close()

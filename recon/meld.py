@@ -181,7 +181,7 @@ class MeldWriter(object):
             # If this is a rewrite of the header...
             if self.verbose:
                 print "Rewriting header"
-            if blen>self.headlen:
+            if blen>self.headlen: # pragma: no cover
                 raise IOError("Header length increased on rewrite")
             # Save where we are
             save = self.fp.tell()
@@ -234,13 +234,14 @@ class MeldWriter(object):
             index = {}
             for sig in table.signals:
                 index[sig] = {V_INDEX: V_INDHOLD,
-                              V_LENGTH: V_INDHOLD,
-                              V_SCALE: 1.0, V_OFFSET: 0.0}
+                              V_LENGTH: V_INDHOLD}
             for alias in table.aliases:
                 index[alias] = {V_INDEX: V_INDHOLD,
-                                V_LENGTH: V_INDHOLD,
-                                V_SCALE: table.aliases[alias][V_SCALE],
-                                V_OFFSET: table.aliases[alias][V_OFFSET]}
+                                V_LENGTH: V_INDHOLD}
+                if V_SCALE in table.aliases[alias]:
+                    index[alias][V_SCALE] = table.aliases[alias][V_SCALE]
+                if V_OFFSET in table.aliases[alias]:
+                    index[alias][V_OFFSET] = table.aliases[alias][V_OFFSET]
             self.header[H_TABLES][tname] = {T_VARIABLES: table.variables,
                                             T_INDICES: index,
                                             T_METADATA: table._metadata,
@@ -321,7 +322,7 @@ class MeldTableWriter(object):
                 raise TypeError("Type specifier '"+str(vtype)+"' is not a type")
             self._vtypes[name] = vtype
 
-    def add_alias(self, alias, of, scale=1.0, offset=0.0, metadata=None):
+    def add_alias(self, alias, of, scale=None, offset=None, metadata=None):
         """
         Code to add an alias to this table.
 
@@ -332,11 +333,22 @@ class MeldTableWriter(object):
         if not of in self.signals:
             raise NameError("Alias "+alias+" refers to non-existant signal "+of)
         self.variables.append(alias)
-        self.aliases[alias] = {A_OF: of, V_SCALE: scale, V_OFFSET: offset};
+
+        if of in self._vtypes and (scale!=None or offset!=None):
+            vtype = self._vtypes[of]
+            if vtype!=float and vtype!=long and vtype!=int:
+                raise TypeError("Transformations not allowed for non-numeric type %s" % \
+                                (str(vtype)))
+
+        self.aliases[alias] = {A_OF: of}
+        if scale!=None:
+            self.aliases[alias][V_SCALE] = scale
+        if offset!=None:
+            self.aliases[alias][V_OFFSET] = offset
         if metadata!=None:
             self._vmd[alias] = metadata
 
-    def write(self, sig, data, varType=None):
+    def write(self, sig, data):
         """
         Used to write data (i.e. a column) to this table.
         """
@@ -350,7 +362,11 @@ class MeldTableWriter(object):
             raise ValueError("Data for signal "+sig+" must be a list")
 
         # TODO: Make sure it is the correct size (matches any previous)
-        # TODO: Perform type checks
+        if sig in self._vtypes:
+            for val in data:
+                if type(val)!=self._vtypes[sig]:
+                    raise TypeError("Value in '%s' (%s) doesn't match expected type %s" % \
+                                    (sig, str(val), str(self._vtypes[sig])))
 
         (base, blen) = self.writer._write_vector(data)
         sighead = self.writer._signal_header(self.name, sig)
@@ -505,11 +521,20 @@ class MeldTableReader(object):
                                 " found in table "+str(self.table))
         ind = self.indices[signal][V_INDEX]
         blen = self.indices[signal][V_LENGTH]
-        scale = self.indices[signal][V_SCALE]
-        offset = self.indices[signal][V_OFFSET]
+        scale = self.indices[signal].get(V_SCALE, None)
+        offset = self.indices[signal].get(V_OFFSET, None)
         self.reader.fp.seek(ind)
         data = self.reader.ser.decode_vec(self.reader.fp, blen)
-        return map(lambda x: x*scale+offset, data)
+
+        def transform(x):
+            if scale!=None:
+                if offset!=None:
+                    return x*scale+offset
+                return x*scale
+            if offset!=None:
+                return x+offset
+            return x
+        return map(lambda x: transform(x), data)
 
 class MeldObjectReader(object):
     """

@@ -27,7 +27,7 @@ def read_len(fp, ignoreEOF=False):
     if len(lbytes)!=4:
         if ignoreEOF:
             return None
-        else:
+        else: # pragma no cover
             raise IOError("Failed to read length data")
     up = struct.unpack('!L', lbytes)
     return up[0]

@@ -38,9 +38,9 @@ def testWall2Meld():
         assert_equals(table.metadata, {"model": "Foo"})
         assert_equals(table.var_metadata["time"], {"units": "s"})
         assert_equals(table.data("x"), [1.0, 0.0, 1.0])
-        assert_equals(table.data("y"), [2.0, 3.0, 3.0])
-        assert_equals(table.data("a"), [2.0, 1.0, 2.0])
-        assert_equals(table.data("b"), [-2.0, -3.0, -3.0])
+        assert_equals(table.data("y"), ["2.0", "3.0", "3.0"])
+        assert_equals(table.data("a"), [1.0, 2.0, 1.0])
+        assert_equals(table.data("b"), ["2.0", "3.0", "3.0"])
 
 def testDsres2Meld():
     with open("dsres.mld", "w+") as fp:

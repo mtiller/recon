@@ -231,7 +231,7 @@ class WallTableWriter(object):
                 raise TypeError("Type specifier '"+str(vtype)+"' is not a type")
             self._vtypes[signal] = vtype
 
-    def add_alias(self, alias, of, scale=1.0, offset=0.0, metadata=None):
+    def add_alias(self, alias, of, scale=None, offset=None, metadata=None):
         """
         Defines an alias associated with a specific table.  The
         arguments are the name of the alias, the variable it is an
@@ -246,7 +246,18 @@ class WallTableWriter(object):
         if self.writer.defined:
             raise FinalizedWall()
         self._check_name(alias)
-        self.aliases[alias] = {A_OF: of, V_SCALE: scale, V_OFFSET: offset}
+
+        if of in self._vtypes and (scale!=None or offset!=None):
+            vtype = self._vtypes[of]
+            if vtype!=float and vtype!=long and vtype!=int:
+                raise TypeError("Transformations not allowed for non-numeric type %s" % \
+                                (str(vtype)))
+
+        self.aliases[alias] = {A_OF: of}
+        if scale!=None:
+            self.aliases[alias][V_SCALE] = scale
+        if offset!=None:
+            self.aliases[alias][V_OFFSET] = offset
         if metadata!=None:
             self._vmd[alias]=metadata
 
@@ -270,15 +281,29 @@ class WallTableWriter(object):
             if len(cset-aset)>0:
                 raise KeyError("Missing values for columns: "+(cset-aset))
             row = map(lambda x: kwargs[x], self.signals)
+
+            # Enforce any type constraints
+            for signal in self._vtypes:
+                if type(kwargs[signal])!=self._vtypes[signal]:
+                    raise TypeError("Value of '%s' (%s) doesn't match expected type %s" % \
+                                    (signal, str(kwargs[signal]), str(self._vtypes[signal])))
             self.writer._add_row(self.name, row)
         else:
             # For positional arguments, just make sure we have the
             # correct number.
 
-            # TODO: Type check...once we have types
             if len(args)!=len(self.signals):
                 raise ValueError("Expected %d values, got %d" % \
                                      (len(self.signals), len(args)))
+            
+            for idx in range(0,len(self.signals)):
+                signal = self.signals[idx]
+                if signal in self._vtypes:
+                    val = args[idx]
+                    if type(val)!=self._vtypes[signal]:
+                        raise TypeError("Value of '%s' (%s) doesn't match expected type %s" % \
+                                        (signal, str(val), str(self._vtypes[signal])))
+
             self.writer._add_row(self.name, args)
 
 class WallObjectWriter(object):
@@ -430,13 +455,13 @@ class WallTableReader(object):
         """
         Scale factor between alias and base signal
         """
-        return self.header[T_ALIASES][name][V_SCALE]
+        return self.header[T_ALIASES][name].get(V_SCALE, None)
 
     def alias_offset(self, name):
         """
         Offset between alias and base signal
         """
-        return self.header[T_ALIASES][name][V_OFFSET]
+        return self.header[T_ALIASES][name].get(V_OFFSET, None)
 
     def data(self, name):
         """
@@ -444,18 +469,23 @@ class WallTableReader(object):
         """
         if name in self.header[T_SIGNALS]:
             signal = name
-            scale = 1.0
-            offset = 0.0
+            scale = None
+            offset = None
         elif name in self.header[T_ALIASES]:
             signal = self.header[T_ALIASES][name][A_OF]
-            scale = self.header[T_ALIASES][name][V_SCALE]
-            offset = self.header[T_ALIASES][name][V_OFFSET]
+            scale = self.header[T_ALIASES][name].get(V_SCALE, None)
+            offset = self.header[T_ALIASES][name].get(V_OFFSET, None)
         else:
             raise NameError("No signal or alias named "+name)
         ret = []
         index = self.header[T_SIGNALS].index(signal)
         for ent in self.reader._read_entries(self.name):
-            ret.append(ent[index]*scale+offset)
+            val = ent[index]
+            if scale!=None:
+                val = val*scale
+            if offset!=None:
+                val = val+offset
+            ret.append(val)
         return ret
 
 class WallObjectReader(object):
