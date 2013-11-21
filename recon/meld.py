@@ -33,6 +33,9 @@ V_OFFSET = "o"
 # Alias
 A_OF = "v"
 
+# Object
+O_METADATA = "m"
+
 class MeldNotFinalized(Exception):
     """
     Thrown when data is written to a meld that hasn't been finalized.
@@ -73,13 +76,13 @@ class WriteAfterClose(Exception):
     pass
 
 class MeldWriter(object):
-    def __init__(self, fp, compression=False, verbose=False, single=False):
+    def __init__(self, fp, metadata={}, compression=False, verbose=False, single=False):
         self.fp = fp
         self.verbose = verbose
         self.compression = compression
         self.tables = {}
         self.objects = {}
-        self.metadata = {}
+        self._metadata = metadata
         self.ser = DEFSER(compress=self.compression, single=True)
 
         # Everything after here is set when finalized
@@ -99,26 +102,26 @@ class MeldWriter(object):
         if name in self.objects:
             raise NameError("Wall already contains an object named "+name)
 
-    def add_table(self, name, signals):
+    def add_table(self, name, metadata={}):
         """
         Method for adding a new table to the meld
         """
         if self.defined:
             raise FinalizedMeld()
         self._check_names(name)
-        table = MeldTableWriter(self, name, signals)
+        table = MeldTableWriter(self, name, metadata)
         self.tables[name] = table
         return table
 
-    def add_object(self, name):
+    def add_object(self, name, metadata={}):
         """
         Method for adding a new object to the meld
         """
         if self.defined:
             raise FinalizedMeld()
         self._check_names(name)
-        obj = MeldObjectWriter(self, name)
-        self.objects[name] = obj
+        obj = MeldObjectWriter(self, name, metadata)
+        self.objects[name] = metadata
         return obj
 
     def _signal_header(self, table, signal):
@@ -214,7 +217,7 @@ class MeldWriter(object):
         """
         self.header = {H_TABLES: {},
                        H_OBJECTS: {},
-                       H_METADATA: self.metadata}
+                       H_METADATA: self._metadata}
         for tname in self.tables:
             table = self.tables[tname]
             index = {}
@@ -229,11 +232,12 @@ class MeldWriter(object):
                                 V_OFFSET: table.aliases[alias][V_OFFSET]}
             self.header[H_TABLES][tname] = {T_VARIABLES: table.variables,
                                             T_INDICES: index,
-                                            T_METADATA: table.metadata,
+                                            T_METADATA: table._metadata,
                                             T_VMETADATA: table._vmd}
         for oname in self.objects:
             self.header[H_OBJECTS][oname] = {V_INDEX: V_INDHOLD,
-                                             V_LENGTH: V_INDHOLD}
+                                             V_LENGTH: V_INDHOLD,
+                                             O_METADATA: self.objects[oname]}
 
         self.header[H_COMP] = self.compression
 
@@ -263,7 +267,7 @@ class MeldTableWriter(object):
     """
     This class is used to write tables to a meld
     """
-    def __init__(self, writer, name, signals):
+    def __init__(self, writer, name, metadata={}):
         """
         Initialized by MeldWriter with information about
         this particular table.
@@ -271,37 +275,40 @@ class MeldTableWriter(object):
         self.writer = writer
         self.name = name
         self.variables = []
-        self.signals = set(signals) # Big performance gain from this
+        self.signals = set() # Big performance gain from this
         self.aliases = {}
-        self.metadata = {}
+        self._metadata = metadata
         self._vmd = {}
-        for s in signals:
-            self.variables.append(s)
-    def add_alias(self, alias, of, scale=1.0, offset=0.0):
+
+    def _check_name(self, name):
+        if name in self.signals:
+            raise NameError("Table already contains a signal named "+name)
+        if name in self.aliases:
+            raise NameError("Table already contains an alias named "+name)
+
+    def add_signal(self, name, metadata=None):
+        if self.writer.defined:
+            raise FinalizedMeld()
+
+        self._check_name(name)
+        self.variables.append(name)
+        self.signals.add(name)
+        if metadata!=None:
+            self._vmd[name] = metadata
+
+    def add_alias(self, alias, of, scale=1.0, offset=0.0, metadata=None):
         """
         Code to add an alias to this table.
         """
-        if alias in self.signals:
-            raise NameError("Table already contains a signal named "+alias)
-        if alias in self.aliases:
-            raise NameError("Table already contains an alias named "+alias)
+        self._check_name(alias)
         if not of in self.signals:
             raise NameError("Alias "+alias+" refers to non-existant signal "+of)
         self.variables.append(alias)
         self.aliases[alias] = {A_OF: of, V_SCALE: scale, V_OFFSET: offset};
+        if metadata!=None:
+            self._vmd[alias] = metadata
 
-    def set_var_metadata(self, name, **kwargs):
-        """
-        Routine to set metadata for a particular variable in this table.
-        """
-        if not name in self.signals and not name in self.aliases:
-            raise NameError("No such signal: "+str(name));
-        if not name in self._vmd:
-            self._vmd[name] = {}
-
-        self._vmd[name].update(kwargs)
-
-    def write(self, sig, data):
+    def write(self, sig, data, varType=None):
         """
         Used to write data (i.e. a column) to this table.
         """
@@ -331,12 +338,14 @@ class MeldObjectWriter(object):
     """
     Writes objects to a meld
     """
-    def __init__(self, writer, name):
+    def __init__(self, writer, name, metadata):
         """
         Initialized by a MeldWriter
         """
         self.writer = writer
         self.name = name
+        self.metadata = metadata
+
     def write(self, **kwargs):
         """
         Write keyword arguments as fields for the specified object.
@@ -432,8 +441,10 @@ class MeldReader(object):
             raise NameError("No object named "+table+" found");
         ind = self.header[H_OBJECTS][objname][V_INDEX]
         blen = self.header[H_OBJECTS][objname][V_LENGTH]
+        metadata = self.header[H_OBJECTS][objname][O_METADATA]
         self.fp.seek(ind)
-        return self.ser.decode_obj(self.fp, blen)
+        data = self.ser.decode_obj(self.fp, blen)
+        return MeldObjectReader(data, metadata)
 
 class MeldTableReader(object):
     """
@@ -471,3 +482,11 @@ class MeldTableReader(object):
         self.reader.fp.seek(ind)
         data = self.reader.ser.decode_vec(self.reader.fp, blen)
         return map(lambda x: x*scale+offset, data)
+
+class MeldObjectReader(object):
+    """
+    Class for reading objects from a meld
+    """
+    def __init__(self, data, metadata):
+        self.data = data
+        self.metadata = metadata

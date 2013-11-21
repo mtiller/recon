@@ -4,14 +4,17 @@ from recon.meld import MeldWriter, MeldReader
 
 def write_meld(compression=False, verbose=False,n=0,name="sample"):
     with open(name+".mld", "w+") as fp:
-        meld = MeldWriter(fp, verbose=verbose, compression=compression)
+        meld = MeldWriter(fp, metadata={"source": "x"}, verbose=verbose, compression=compression)
         
         # Need to identify all entities in the file first.  We don't need
         # their data.  We just need to enumerate them for the header.
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
-        t.add_alias(alias="a", of="x", scale=1.0, offset=1.0);
+        t = meld.add_table(name="T1", metadata={"model": "Foo"})
+        t.add_signal("time", metadata={"units": "s"})
+        t.add_signal("x")
+        t.add_signal("y")
+        t.add_alias(alias="a", of="x", scale=1.0, offset=1.0, metadata={"ax": "zed"});
         t.add_alias(alias="b", of="y", scale=-1.0, offset=0.0);
-        obj1 = meld.add_object("obj1");
+        obj1 = meld.add_object("obj1", metadata={"a": "bar"});
         obj2 = meld.add_object("obj2");
 
         # All the structural information has been specified (perhaps this
@@ -37,11 +40,14 @@ def write_meld(compression=False, verbose=False,n=0,name="sample"):
 def read_meld(verbose=True, name="sample"):
     with open(name+".mld", "rb") as fp:
         meld = MeldReader(fp, verbose=verbose)
+        assert_equals(meld.metadata, {"source": "x"})
 
         print "Objects:"
         for objname in meld.objects():
             obj = meld.read_object(objname)
             print "  "+objname+" = "+str(obj)
+            if objname=="obj1":
+                assert_equals(obj.metadata, {"a": "bar"})
 
         print "Tables:"
         for tabname in meld.tables():
@@ -49,6 +55,9 @@ def read_meld(verbose=True, name="sample"):
             print "  "+tabname
             for signal in table.signals():
                 print "    #"+signal+": "+str(table.data(signal))
+            assert_equals(table.metadata["model"], "Foo")
+            assert_equals(table.var_metadata["a"], {"ax": "zed"})
+            assert_equals(table.var_metadata["time"], {"units": "s"})
 
 def testUncompressedValidMeld1():
     write_meld(verbose=False,compression=False,n=100)
@@ -72,8 +81,14 @@ def testDuplicateTable1():
 
     with open("sample_test.mld", "w+") as fp:
         meld = MeldWriter(fp)
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
+        t = meld.add_table(name="T1")
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
 
 @raises(NameError)
 def testDuplicateTable2():
@@ -81,7 +96,10 @@ def testDuplicateTable2():
 
     with open("sample_test.mld", "w+") as fp:
         meld = MeldWriter(fp)
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         t = meld.add_object(name="T1")
 
 @raises(FinalizedMeld)
@@ -90,9 +108,27 @@ def testDuplicateTable3():
 
     with open("sample_test.mld", "w+") as fp:
         meld = MeldWriter(fp)
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         meld.finalize()
-        t = meld.add_table(name="T2", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T2")
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
+
+@raises(FinalizedMeld)
+def testDuplicateTable3b():
+    from recon.meld import MeldWriter
+
+    with open("sample_test.mld", "w+") as fp:
+        meld = MeldWriter(fp)
+        t = meld.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        meld.finalize()
+        t.add_signal("y")
 
 @raises(NameError)
 def testDuplicateTable4():
@@ -100,7 +136,10 @@ def testDuplicateTable4():
 
     with open("sample_test.mld", "w+") as fp:
         meld = MeldWriter(fp)
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         meld.finalize()
         t.write("time", [0.0, 1.0, 2.0]);
         t.write("x", [1.0, 0.0, 1.0]);
@@ -113,7 +152,10 @@ def testDuplicateTable5():
 
     with open("sample_test.mld", "w+") as fp:
         meld = MeldWriter(fp)
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         meld.finalize()
         t.write("time", [0.0, 1.0, 2.0]);
         t.write("x", [1.0, 0.0, 1.0]);
@@ -125,7 +167,10 @@ def testDuplicateTable6():
 
     with open("sample_test.mld", "w+") as fp:
         meld = MeldWriter(fp)
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T1")
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         meld.finalize()
         t.write("time", [0.0, 1.0, 2.0]);
         t.write("x", [1.0, 0.0, 1.0]);
@@ -139,7 +184,10 @@ def testDuplicateTable7():
 
     with open("sample_test.mld", "w+") as fp:
         meld = MeldWriter(fp)
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         meld.finalize()
         t.write("time", [0.0, 1.0, 2.0]);
         t.write("x", [1.0, 0.0, 1.0]);
@@ -154,7 +202,10 @@ def testDuplicateTable8():
 
     with open("sample_test.mld", "w+") as fp:
         meld = MeldWriter(fp)
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         meld.finalize()
         t.write("time", [0.0, 1.0, 2.0]);
         t.write("x", [1.0, 0.0, 1.0]);
@@ -168,7 +219,10 @@ def testDuplicateTable9():
 
     with open("sample_test.mld", "w+") as fp:
         meld = MeldWriter(fp)
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         meld.finalize()
         t.write("time", 2.0);
         meld.close()
@@ -179,7 +233,10 @@ def testDuplicateTable10():
 
     with open("sample_test.mld", "w+") as fp:
         meld = MeldWriter(fp)
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         meld.finalize()
         t.write("time", 2.0);
         meld.close()
@@ -191,7 +248,10 @@ def testDuplicateTable11():
 
     with open("sample_test.mld", "w+") as fp:
         meld = MeldWriter(fp)
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T1")
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         meld.finalize()
         t.write("time", [2.0, 1.0, 0.0]);
         t.write("time", [2.0, 1.0, 0.0]);
@@ -213,7 +273,10 @@ def testDuplicateObject2():
     with open("sample_test.mld", "w+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_object(name="T1")
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
 
 @raises(FinalizedMeld)
 def testDuplicateObject3():
@@ -253,7 +316,10 @@ def testNoSuchTable():
 
     with open("sample_test.mld", "w+") as fp:
         meld = MeldWriter(fp)
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         meld.finalize()
         t.write("time", [0.0, 1.0, 2.0]);
         t.write("x", [1.0, 0.0, 1.0]);
@@ -270,7 +336,10 @@ def testNoSuchSignal():
 
     with open("sample_test.mld", "w+") as fp:
         meld = MeldWriter(fp)
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         meld.finalize()
         t.write("time", [0.0, 1.0, 2.0]);
         t.write("x", [1.0, 0.0, 1.0]);
@@ -289,7 +358,10 @@ def testNoSuchObject():
 
     with open("sample_test.mld", "w+") as fp:
         meld = MeldWriter(fp)
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
+        t = meld.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         meld.finalize()
         t.write("time", [0.0, 1.0, 2.0]);
         t.write("x", [1.0, 0.0, 1.0]);
@@ -304,11 +376,11 @@ def testMetadata1():
     from recon.meld import MeldWriter
 
     with open("sample_test.mld", "w+") as fp:
-        meld = MeldWriter(fp)
-        meld.metadata["a"] = "bar"
-        t = meld.add_table(name="T1", signals=["time", "x", "y"]);
-        t.metadata["b"] = "foo"
-        t.set_var_metadata("time", units="s")
+        meld = MeldWriter(fp, metadata={"a": "bar"})
+        t = meld.add_table(name="T1", metadata={"b": "foo"});
+        t.add_signal("time", metadata={"units": "s"})
+        t.add_signal("x")
+        t.add_signal("y")
         meld.finalize()
         t.write("time", [0.0, 1.0, 2.0]);
         t.write("x", [1.0, 0.0, 1.0]);
