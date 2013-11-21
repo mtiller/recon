@@ -28,8 +28,7 @@ def wall2meld(wfp, mfp):
                                          metadata=table.metadata)
         mtable = tables[tabname]
         for signal in table.signals():
-            mtable.add_signal(signal, metadata=table.var_metadata.get(signal, None),
-                              vtype=type(table.data(signal)[0]))
+            mtable.add_signal(signal, metadata=table.var_metadata.get(signal, None))
 
         for alias in table.aliases():
             mtable.add_alias(alias, 
