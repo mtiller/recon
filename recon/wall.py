@@ -1,6 +1,6 @@
 from serial import BSONSerializer, MsgPackSerializer
 
-from util import write_len, read_len
+from util import write_len, read_len, check_transform
 
 # This is a unique ID that every wall file starts with so
 # it can be identified/verified.
@@ -247,11 +247,7 @@ class WallTableWriter(object):
             raise FinalizedWall()
         self._check_name(alias)
 
-        if of in self._vtypes and (scale!=None or offset!=None):
-            vtype = self._vtypes[of]
-            if vtype!=float and vtype!=long and vtype!=int:
-                raise TypeError("Transformations not allowed for non-numeric type %s" % \
-                                (str(vtype)))
+        check_transform(self._vtypes.get(of, None), scale, offset)
 
         self.aliases[alias] = {A_OF: of}
         if scale!=None:

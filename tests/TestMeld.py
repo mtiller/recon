@@ -13,7 +13,7 @@ def write_meld(compression=False, verbose=False,n=0,name="sample"):
         t.add_signal("x")
         t.add_signal("y")
         t.add_alias(alias="a", of="x", scale=1.0, offset=1.0, metadata={"ax": "zed"});
-        t.add_alias(alias="b", of="y", scale=-1.0, offset=0.0);
+        t.add_alias(alias="b", of="y");
         obj1 = meld.add_object("obj1", metadata={"a": "bar"});
         obj2 = meld.add_object("obj2");
 

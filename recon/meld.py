@@ -2,7 +2,7 @@ import sys
 
 from serial import BSONSerializer, MsgPackSerializer
 
-from util import write_len, read_len, conv_len
+from util import write_len, read_len, conv_len, check_transform
 
 #DEFSER = BSONSerializer
 DEFSER = MsgPackSerializer
@@ -334,11 +334,7 @@ class MeldTableWriter(object):
             raise NameError("Alias "+alias+" refers to non-existant signal "+of)
         self.variables.append(alias)
 
-        if of in self._vtypes and (scale!=None or offset!=None):
-            vtype = self._vtypes[of]
-            if vtype!=float and vtype!=long and vtype!=int:
-                raise TypeError("Transformations not allowed for non-numeric type %s" % \
-                                (str(vtype)))
+        check_transform(self._vtypes.get(of, None), scale, offset)
 
         self.aliases[alias] = {A_OF: of}
         if scale!=None:
@@ -365,8 +361,8 @@ class MeldTableWriter(object):
         if sig in self._vtypes:
             for val in data:
                 if type(val)!=self._vtypes[sig]:
-                    raise TypeError("Value in '%s' (%s) doesn't match expected type %s" % \
-                                    (sig, str(val), str(self._vtypes[sig])))
+                    raise TypeError("Value in '%s' (%s:%s) doesn't match expected type %s" % \
+                                    (sig, str(val), str(type(val)), str(self._vtypes[sig])))
 
         (base, blen) = self.writer._write_vector(data)
         sighead = self.writer._signal_header(self.name, sig)

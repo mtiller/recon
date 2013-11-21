@@ -31,3 +31,14 @@ def read_len(fp, ignoreEOF=False):
             raise IOError("Failed to read length data")
     up = struct.unpack('!L', lbytes)
     return up[0]
+
+def check_transform(vtype, scale, offset):
+    if vtype==None:
+        return
+    if scale==None and offset==None:
+        return
+    else:
+        if vtype!=float and vtype!=long and vtype!=int:
+            raise TypeError("Transformations not allowed for non-numeric type %s" % \
+                            (str(vtype)))
+
