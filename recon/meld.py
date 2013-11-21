@@ -77,6 +77,12 @@ class WriteAfterClose(Exception):
 
 class MeldWriter(object):
     def __init__(self, fp, metadata={}, compression=False, verbose=False, single=False):
+        """
+        This is the constructor for the meld writer.
+
+        Note: All metadata must be supplied at the time when the meld
+        is created.
+        """
         self.fp = fp
         self.verbose = verbose
         self.compression = compression
@@ -104,7 +110,9 @@ class MeldWriter(object):
 
     def add_table(self, name, metadata={}):
         """
-        Method for adding a new table to the meld
+        Method for adding a new table to the meld.
+
+        Note: All metadata must be supplied at the time the meld is created.
         """
         if self.defined:
             raise FinalizedMeld()
@@ -116,6 +124,9 @@ class MeldWriter(object):
     def add_object(self, name, metadata={}):
         """
         Method for adding a new object to the meld
+
+        Note: All metadata must be supplied at the time the object
+        is created.
         """
         if self.defined:
             raise FinalizedMeld()
@@ -281,12 +292,21 @@ class MeldTableWriter(object):
         self._vmd = {}
 
     def _check_name(self, name):
+        """
+        Checks to make sure any new name is unique.
+        """
         if name in self.signals:
             raise NameError("Table already contains a signal named "+name)
         if name in self.aliases:
             raise NameError("Table already contains an alias named "+name)
 
     def add_signal(self, name, metadata=None):
+        """
+        Used to add a signal to a table.
+
+        Note: All metadata must be supplied at the time the signal
+        is added.
+        """
         if self.writer.defined:
             raise FinalizedMeld()
 
@@ -299,6 +319,9 @@ class MeldTableWriter(object):
     def add_alias(self, alias, of, scale=1.0, offset=0.0, metadata=None):
         """
         Code to add an alias to this table.
+
+        Note: All metadata must be supplied at the time the alias
+        is added.
         """
         self._check_name(alias)
         if not of in self.signals:

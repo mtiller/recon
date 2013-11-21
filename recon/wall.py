@@ -49,6 +49,9 @@ class WallWriter(object):
         """
         Constructor for a WallWriter.  The file-like object fp only
         needs to support the 'write' method.
+
+        Note: all metadata must be supplied at the time the wall
+        file is created.
         """
         self.fp = fp
         self.verbose = verbose
@@ -78,6 +81,9 @@ class WallWriter(object):
         KeyError exception will be raised.  Otherwise, a
         WallTableWriter object will be returned by this method that
         can be used to populate the table.
+
+        Note: All metadata must be supplied at the time when the table
+        is created.
         """
         if self.defined:
             raise FinalizedWall()
@@ -94,6 +100,9 @@ class WallWriter(object):
         KeyError exception will be raised.  Otherwise, a
         WallObjectWriter object will be returned by this method that
         can be used to populate the fields of the object.
+
+        Note: All metadata must be supplied at the time the object
+        is created.
         """
         if self.defined:
             raise FinalizedWall()
@@ -206,6 +215,12 @@ class WallTableWriter(object):
             raise KeyError("'"+name+"' is already the name of a signal in table "+self.name)
 
     def add_signal(self, signal, metadata=None):
+        """
+        Used to add a signal to a table.
+
+        Note: All metadata must be supplied at the time the signal
+        is added.
+        """
         self._check_name(signal)
         self.signals.append(signal)
         if metadata!=None:
@@ -219,6 +234,9 @@ class WallTableWriter(object):
         offset value between the alias and base variable.  The value
         of the alias variable will be computed by multiplying the base
         variable by the scale factor and then adding the offset value.
+
+        Note: All metadata must be supplied at the time the alias
+        is added.
         """
         if self.writer.defined:
             raise FinalizedWall()
