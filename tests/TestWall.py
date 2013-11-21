@@ -4,8 +4,7 @@ from nose.tools import *
 def write_wall(verbose=False):
     with open("sample.wll", "w+") as fp:
         # Create the wall object with a file-like object to write to
-        wall = WallWriter(fp, verbose=verbose)
-        wall.metadata["a"] = "bar"
+        wall = WallWriter(fp, metadata={"a": "bar"}, verbose=verbose)
 
         # Walls can contain tables, here is how we define one
         t = wall.add_table(name="T1", metadata={"mode": "Foo"});
@@ -254,8 +253,7 @@ def testNotFinalField():
 def testMetadata1():
     with open("sample.wll", "w+") as fp:
         # Create the wall object with a file-like object to write to
-        wall = WallWriter(fp, verbose=True)
-        wall.metadata["a"] = "bar"
+        wall = WallWriter(fp, metadata={"a": "bar"}, verbose=True)
         t = wall.add_table(name="T1", metadata={"b": "foo"});
         t.add_signal("time", metadata={"units": "s"})
         t.add_signal("x")

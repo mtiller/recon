@@ -45,7 +45,7 @@ class WallWriter(object):
     largely pythonic API for doing so.
     """
 
-    def __init__(self, fp, verbose=False):
+    def __init__(self, fp, metadata={}, verbose=False):
         """
         Constructor for a WallWriter.  The file-like object fp only
         needs to support the 'write' method.
@@ -55,7 +55,7 @@ class WallWriter(object):
         self.defined = False
         self.tables = {}
         self.objects = {}
-        self.metadata = {}
+        self._metadata = metadata
         self.buffered_rows = []
         self.buffered_fields = []
         self.ser = DEFSER()
@@ -153,7 +153,7 @@ class WallWriter(object):
                 print obj
         header = {H_TABLES: tables,
                   H_OBJECTS: objects,
-                  H_METADATA: self.metadata}
+                  H_METADATA: self._metadata}
         bhead = self.ser.encode_obj(header)
         if self.verbose:
             print "Header = "+str(header)
