@@ -8,16 +8,17 @@ def write_wall(verbose=False):
         wall.metadata["a"] = "bar"
 
         # Walls can contain tables, here is how we define one
-        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
-        t.metadata["b"] = "foo"
-        t.set_var_metadata("time", units="s")
+        t = wall.add_table(name="T1", metadata={"mode": "Foo"});
+        t.add_signal("time", metadata={"units": "s"})
+        t.add_signal("x")
+        t.add_signal("y")
 
         # Tables can also have aliases, here is how we define a few
-        t.add_alias(alias="a", of="x", scale=1.0, offset=1.0);
+        t.add_alias(alias="a", of="x", scale=1.0, offset=1.0, metadata={"ax": "zed"});
         t.add_alias(alias="b", of="y", scale=-1.0, offset=0.0);
 
         # Walls can also have objects.
-        obj1 = wall.add_object("obj1");
+        obj1 = wall.add_object("obj1", metadata={"xyz": "ABC"});
         obj2 = wall.add_object("obj2");
 
         # Note, so far we have not specified the values of anything.
@@ -55,26 +56,32 @@ def read_wall(verbose=False):
         for objname in wall.objects():
             obj = wall.read_object(objname)
             print "  "+objname+" = "+str(obj)
+            if objname=="obj1":
+                assert_equals(obj.metadata, {"xyz": "ABC"})
 
         print "Tables:"
         for tabname in wall.tables():
             table = wall.read_table(tabname)
+            assert_equals(table.metadata, {"mode": "Foo"})
             print "  "+tabname
 
             vs = table.variables() # For coverage
 
             for signal in table.signals():
                 print "    #"+signal+": "+str(table.data(signal))
+                if signal=="time":
+                    assert_equals(table.var_metadata(signal), {"units": "s"})
             for alias in table.aliases():
                 print "    @"+alias+": "+str(table.data(alias))
+                if alias=="a":
+                    assert_equals(table.var_metadata(alias), {"ax": "zed"})
 
-        assert table.signals()==["time", "x", "y"]
-        assert table.data("time")==[0.0, 1.0, 2.0]
-        assert table.data("x")==[1.0, 0.0, 1.0]
-        assert table.data("y")==[2.0, 3.0, 3.0]
-        assert table.data("a")==[2.0, 1.0, 2.0]
-        assert table.data("b")==[-2.0, -3.0, -3.0]
-
+        assert_equals(table.signals(),["time", "x", "y"])
+        assert_equals(table.data("time"),[0.0, 1.0, 2.0])
+        assert_equals(table.data("x"),[1.0, 0.0, 1.0])
+        assert_equals(table.data("y"),[2.0, 3.0, 3.0])
+        assert_equals(table.data("a"),[2.0, 1.0, 2.0])
+        assert_equals(table.data("b"),[-2.0, -3.0, -3.0])
 
 def testValidFile():
     write_wall()
@@ -87,8 +94,14 @@ def testDuplicate1():
         wall = WallWriter(fp, verbose=True)
 
         # Walls can contain tables, here is how we define one
-        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
-        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        t = wall.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
+        t = wall.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
 
 @raises(KeyError)
 def testDuplicate2():
@@ -97,7 +110,10 @@ def testDuplicate2():
         wall = WallWriter(fp, verbose=True)
 
         # Walls can contain tables, here is how we define one
-        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        t = wall.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         t = wall.add_object(name="T1")
 
 @raises(KeyError)
@@ -108,7 +124,10 @@ def testDuplicate3():
 
         # Walls can contain tables, here is how we define one
         t = wall.add_object(name="T1")
-        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        t = wall.add_table(name="T1")
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
 
 @raises(KeyError)
 def testDuplicate4():
@@ -138,9 +157,17 @@ def testDuplicate6():
         wall = WallWriter(fp, verbose=True)
 
         # Walls can contain tables, here is how we define one
-        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        t = wall.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
+
         wall.finalize()
-        t = wall.add_table(name="T2", signals=["time", "x", "y"]);
+        t = wall.add_table(name="T2");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
+
 
 @raises(KeyError)
 def testDuplicate7():
@@ -149,7 +176,11 @@ def testDuplicate7():
         wall = WallWriter(fp, verbose=True)
 
         # Walls can contain tables, here is how we define one
-        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        t = wall.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
+
         t.add_alias("time", of="x")
         wall.finalize()
 
@@ -157,7 +188,10 @@ def testEmpty():
     with open("sample.wll", "w+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
-        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        t = wall.add_table(name="T1");
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         wall.finalize()
 
     with open("sample.wll", "rb") as fp:
@@ -170,7 +204,10 @@ def testMissingSignal():
     with open("sample.wll", "w+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
-        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        t = wall.add_table(name="T1")
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         wall.finalize()
         t.add_row(time=0.0, x=1.0, y=2.0)
 
@@ -184,7 +221,10 @@ def testBadArgs():
     with open("sample.wll", "w+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
-        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        t = wall.add_table(name="T1")
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         wall.finalize()
         t.add_row(time=0.0, x=1.0, y=2.0)
         t.add_row(0.0, 1.0, 2.0)
@@ -195,7 +235,10 @@ def testNotFinalRow():
     with open("sample.wll", "w+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
-        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
+        t = wall.add_table(name="T1")
+        t.add_signal("time")
+        t.add_signal("x")
+        t.add_signal("y")
         t.add_row(time=0.0, x=1.0, y=2.0)
         t.add_row(0.0, 1.0, 2.0)
         t.add_row(0.0, 1.0, y=2.0)
@@ -213,27 +256,16 @@ def testMetadata1():
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
         wall.metadata["a"] = "bar"
-        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
-        t.metadata["b"] = "foo"
-        t.set_var_metadata("time", units="s")
+        t = wall.add_table(name="T1", metadata={"b": "foo"});
+        t.add_signal("time", metadata={"units": "s"})
+        t.add_signal("x")
+        t.add_signal("y")
         wall.finalize()
         t.add_row(time=0.0, x=1.0, y=2.0)
 
     with open("sample.wll", "rb") as fp:
         wall = WallReader(fp)
-        assert wall.metadata=={"a": "bar"}
+        assert_equals(wall.metadata,{"a": "bar"})
         t = wall.read_table("T1")
-        assert t.metadata=={"b": "foo"}
-        assert t.var_metadata["time"]=={"units": "s"}
-
-@raises(NameError)
-def testMetadata2():
-    with open("sample.wll", "w+") as fp:
-        # Create the wall object with a file-like object to write to
-        wall = WallWriter(fp, verbose=True)
-        wall.metadata["a"] = "bar"
-        t = wall.add_table(name="T1", signals=["time", "x", "y"]);
-        t.metadata["b"] = "foo"
-        t.set_var_metadata("z", units="s")
-        wall.finalize()
-        t.add_row(time=0.0, x=1.0, y=2.0)
+        assert_equals(t.metadata,{"b": "foo"})
+        assert_equals(t.var_metadata("time"),{"units": "s"})

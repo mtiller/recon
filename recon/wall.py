@@ -70,7 +70,7 @@ class WallWriter(object):
         if name in self.objects:
             raise KeyError("Wall already contains an object named "+name)
 
-    def add_table(self, name, signals):
+    def add_table(self, name, metadata=None):
         """
         This adds a new table to the wall.  If the wall has been
         finalized, this will generated a FinalizedWall exception.  If
@@ -82,11 +82,11 @@ class WallWriter(object):
         if self.defined:
             raise FinalizedWall()
         self._check_name(name)
-        table = WallTableWriter(self, name, signals)
+        table = WallTableWriter(self, name, metadata)
         self.tables[name] = table
         return table
 
-    def add_object(self, name):
+    def add_object(self, name, metadata=None):
         """
         This adds a new object to the wall.  If the wall has been
         finalized, this will generated a FinalizedWall exception.  If
@@ -98,7 +98,7 @@ class WallWriter(object):
         if self.defined:
             raise FinalizedWall()
         self._check_name(name)
-        obj = WallObjectWriter(self, name)
+        obj = WallObjectWriter(self, name, metadata)
         self.objects[name] = obj
         return obj
 
@@ -128,27 +128,31 @@ class WallWriter(object):
         fields until the wall has been finalized.
         """
         tables = {}
-        objects = []
+        objects = {}
         if self.verbose:
             print "Tables:"
         for table in self.tables:
             tables[table] = {T_SIGNALS: self.tables[table].signals,
                              T_ALIASES: self.tables[table].aliases,
-                             T_METADATA: self.tables[table].metadata,
+                             T_METADATA: self.tables[table]._metadata,
                              T_VMETADATA: self.tables[table]._vmd}
             if self.verbose:
                 print table
                 print "Columns: "+str(self.tables[table].signals)
                 print "Aliases: "+str(self.tables[table].aliases)
-                print "Metadata: "+str(self.tables[table].metadata)
+                print "Metadata: "+str(self.tables[table]._metadata)
                 print "Var Metadata: "+str(self.tables[table]._vmd)
         if self.verbose:
             print "Objects:"
         for obj in self.objects:
-            objects.append(obj)
+            if self.objects[obj]._metadata!=None:
+                objects[obj] = self.objects[obj]._metadata
+            else:
+                objects[obj] = {}
             if self.verbose:
                 print obj
-        header = {H_TABLES: tables, H_OBJECTS: objects,
+        header = {H_TABLES: tables,
+                  H_OBJECTS: objects,
                   H_METADATA: self.metadata}
         bhead = self.ser.encode_obj(header)
         if self.verbose:
@@ -184,32 +188,30 @@ class WallTableWriter(object):
     """
     This class is used to add rows to a given wall.
     """
-    def __init__(self, writer, name, signals):
+    def __init__(self, writer, name, metadata):
         """
         This constructor is only called by the WallWriter class.
         """
         self.writer = writer
-        self.signals = signals
+        self.signals = []
         self.aliases = {}
-        self.metadata = {}
+        self._metadata = metadata
         self._vmd = {}
         self.name = name
 
-    def set_var_metadata(self, name, **kwargs):
-        """
-        This sets the variable specific metadata for a given
-        signal.
-        """
-        if not name in self.signals and not name in self.aliases:
-            raise NameError("No such signal: "+name);
-        if not name in self._vmd:
-            self._vmd[name] = {}
+    def _check_name(self, name):
+        if name in self.aliases:
+            raise KeyError("'"+name+"' is already the name of an alias in table "+self.name)
+        if name in self.signals:
+            raise KeyError("'"+name+"' is already the name of a signal in table "+self.name)
 
-        self._vmd[name].update(kwargs)
-        if self.writer.verbose:
-            print "Current var_metadata = "+str(self._vmd)
+    def add_signal(self, signal, metadata=None):
+        self._check_name(signal)
+        self.signals.append(signal)
+        if metadata!=None:
+            self._vmd[signal]=metadata
 
-    def add_alias(self, alias, of, scale=1.0, offset=0.0):
+    def add_alias(self, alias, of, scale=1.0, offset=0.0, metadata=None):
         """
         Defines an alias associated with a specific table.  The
         arguments are the name of the alias, the variable it is an
@@ -220,12 +222,11 @@ class WallTableWriter(object):
         """
         if self.writer.defined:
             raise FinalizedWall()
-        if alias in self.aliases:
-            raise KeyError("Alias "+alias+" already defined for table "+name)
-        if alias in self.signals:
-            raise KeyError("'"+alias+"' is already the name of a signal"+\
-                               ", cannot be an alias")
+        self._check_name(alias)
         self.aliases[alias] = {A_OF: of, V_SCALE: scale, V_OFFSET: offset}
+        if metadata!=None:
+            self._vmd[alias]=metadata
+
     def add_row(self, *args, **kwargs):
         """
         This method transforms its arguments (in either positional or
@@ -261,12 +262,13 @@ class WallObjectWriter(object):
     """
     This class is used to write object fields back to a wall.
     """
-    def __init__(self, writer, name):
+    def __init__(self, writer, name, metadata):
         """
         This constructor is only called by the TableWriter class.
         """
         self.writer = writer
         self.name = name
+        self._metadata = metadata
     def add_field(self, key, value):
         """
         This calls the TableWriter and instructs it to add a field.
@@ -308,7 +310,7 @@ class WallReader(object):
         """
         Returns the set of objects in this file.
         """
-        return self.header[H_OBJECTS]
+        return self.header[H_OBJECTS].keys()
 
     def tables(self):
         """
@@ -347,14 +349,11 @@ class WallReader(object):
         """
         This method extracts the named object.
         """
-        ret = {}
         if not name in self.header[H_OBJECTS]:
             raise KeyError("No object named "+name+ \
                                " present, options are: %s" % \
                                (str(self.header[H_OBJECTS]),))
-        for ent in self._read_entries(name):
-            ret[ent[0]] = ent[1]
-        return ret
+        return WallObjectReader(self, name, self.header[H_OBJECTS][name])
 
     def read_table(self, name):
         """
@@ -379,7 +378,7 @@ class WallTableReader(object):
         self.name = name
         self.header = header
         self.metadata = self.header[T_METADATA]
-        self.var_metadata = self.header[T_VMETADATA]
+        self._vmd = self.header[T_VMETADATA]
     def signals(self):
         """
         Signals in this table
@@ -416,6 +415,9 @@ class WallTableReader(object):
         """
         return self.header[T_ALIASES][name][V_OFFSET]
 
+    def var_metadata(self, name):
+        return self._vmd[name]
+
     def data(self, name):
         """
         Get the data for a given variable (signal or alias)
@@ -435,3 +437,13 @@ class WallTableReader(object):
         for ent in self.reader._read_entries(self.name):
             ret.append(ent[index]*scale+offset)
         return ret
+
+class WallObjectReader(object):
+    def __init__(self, reader, name, header):
+        self.name = name
+        self.reader = reader
+        self.metadata = header
+        self.data = {}
+        for ent in self.reader._read_entries(name):
+            self.data[ent[0]] = ent[1]
+        
