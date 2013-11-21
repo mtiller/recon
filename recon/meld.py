@@ -290,6 +290,7 @@ class MeldTableWriter(object):
         self.aliases = {}
         self._metadata = metadata
         self._vmd = {}
+        self._vtypes = {}
 
     def _check_name(self, name):
         """
@@ -300,7 +301,7 @@ class MeldTableWriter(object):
         if name in self.aliases:
             raise NameError("Table already contains an alias named "+name)
 
-    def add_signal(self, name, metadata=None):
+    def add_signal(self, name, metadata=None, vtype=None):
         """
         Used to add a signal to a table.
 
@@ -315,6 +316,10 @@ class MeldTableWriter(object):
         self.signals.add(name)
         if metadata!=None:
             self._vmd[name] = metadata
+        if vtype!=None:
+            if type(vtype)!=type:
+                raise TypeError("Type specifier '"+str(vtype)+"' is not a type")
+            self._vtypes[name] = vtype
 
     def add_alias(self, alias, of, scale=1.0, offset=0.0, metadata=None):
         """

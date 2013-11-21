@@ -206,6 +206,7 @@ class WallTableWriter(object):
         self.aliases = {}
         self._metadata = metadata
         self._vmd = {}
+        self._vtypes = {}
         self.name = name
 
     def _check_name(self, name):
@@ -214,7 +215,7 @@ class WallTableWriter(object):
         if name in self.signals:
             raise KeyError("'"+name+"' is already the name of a signal in table "+self.name)
 
-    def add_signal(self, signal, metadata=None):
+    def add_signal(self, signal, metadata=None, vtype=None):
         """
         Used to add a signal to a table.
 
@@ -225,6 +226,10 @@ class WallTableWriter(object):
         self.signals.append(signal)
         if metadata!=None:
             self._vmd[signal]=metadata
+        if vtype!=None:
+            if type(vtype)!=type:
+                raise TypeError("Type specifier '"+str(vtype)+"' is not a type")
+            self._vtypes[signal] = vtype
 
     def add_alias(self, alias, of, scale=1.0, offset=0.0, metadata=None):
         """
