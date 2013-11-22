@@ -1,4 +1,5 @@
 all:
+	-mkdir test_output
 	nosetests --with-coverage --cover-package=recon --cover-html
 
 doctests:

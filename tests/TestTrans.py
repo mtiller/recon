@@ -6,15 +6,16 @@ from recon.meld import MeldReader, MeldWriter
 from TestWall import write_wall
 
 from nose.tools import *
+import os
 
 def testWall2Meld():
     write_wall(verbose=True);
 
-    with open("sample.wll", "rb") as wfp:
-        with open("sample.mld", "w+") as mfp:
+    with open(os.path.join("test_output","sample.wll"), "rb") as wfp:
+        with open(os.path.join("test_output","sample.mld"), "w+") as mfp:
             wall2meld(wfp, mfp)
 
-    with open("sample.mld", "rb") as fp:
+    with open(os.path.join("test_output","sample.mld"), "rb") as fp:
         meld = MeldReader(fp, verbose=True)
 
         print "Objects:"
@@ -43,36 +44,34 @@ def testWall2Meld():
         assert_equals(table.data("b"), ["2.0", "3.0", "3.0"])
 
 def testDsres2Meld():
-    with open("dsres.mld", "w+") as fp:
+    with open(os.path.join("test_output","dsres.mld"), "w+") as fp:
         dsres2meld("tests/dsres.mat", fp, verbose=True, compression=False)
 
-    with open("dsres.mld", "rb") as fp:
+    with open(os.path.join("test_output","dsres.mld"), "rb") as fp:
         meld = MeldReader(fp, verbose=True)
         print str(meld.report())
 
 def testDsres2Meld_Compression():
-    with open("dsres_comp.mld", "w+") as fp:
+    with open(os.path.join("test_output","dsres_comp.mld"), "w+") as fp:
         dsres2meld("tests/dsres.mat", fp, verbose=True, compression=True)
 
-    with open("dsres_comp.mld", "rb") as fp:
+    with open(os.path.join("test_output","dsres_comp.mld"), "rb") as fp:
         meld = MeldReader(fp, verbose=True)
         print str(meld.report())
 
-#@nottest
 def testDsres2Meld_Robot():
-    with open("dsres_robot.mld", "w+") as fp:
+    with open(os.path.join("test_output","dsres_robot.mld"), "w+") as fp:
         dsres2meld("tests/fullRobot.mat", fp, verbose=False, compression=False)
 
-    with open("dsres.mld", "rb") as fp:
+    with open(os.path.join("test_output","dsres.mld"), "rb") as fp:
         meld = MeldReader(fp, verbose=False)
         print str(meld.report())
 
-#@nottest
 def testDsres2Meld_Compression_Robot():
-    with open("dsres_robot_comp.mld", "w+") as fp:
+    with open(os.path.join("test_output","dsres_robot_comp.mld"), "w+") as fp:
         dsres2meld("tests/fullRobot.mat", fp, verbose=False)
 
-    with open("dsres_comp.mld", "rb") as fp:
+    with open(os.path.join("test_output","dsres_comp.mld"), "rb") as fp:
         meld = MeldReader(fp, verbose=False)
         print str(meld.report())
 
