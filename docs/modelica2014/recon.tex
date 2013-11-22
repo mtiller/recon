@@ -138,37 +138,51 @@ modeling and simulation applications.
 \section{Goals}
 \label{sec:background}
 
-As noted in the 
 
-Problems we want to solve:
-\begin{itemize}
-\item one
-\item another one
-\item and a third one
-\end{itemize}
+% 1) It should be easy to append data to a file.
+% 2) It must be possible to extract individual signals with a minimum of I/O.
+% 3) The format must work across languages.
+% 4) It must be possible to define aliases.
+% 5) It should be possible to organize information hierarchically.
+% 6) It must be possible to associate metadata with entities in the file.
+% 7) It should be possible to store "structures/dictionaries" as well as regular array types.
 
-\subsection{Exisiting solutions}
-\label{sec:exist-sol}
+% Support for heterogenous data (no strict type constraints)
 
-\subsection{New approach}
-\label{sec:exist-sol}
-Foo
+\section{Approach}
+
+% Started with BSON, switched to MsgPack
+
+\section{Specification}
+\label{sec:spec}
+
+\subsection{Wall Format}
+\label{sec:wall_spec}
+
+\subsection{Meld Format}
+\label{sec:meld_spec}
+
 \lstset{language=python}
 \begin{lstlisting}[frame=single]  % Start your code-block
 f()
 \end{lstlisting}
 
-
-Search for librararies is done by executed by doing:
-\lstset{language=bash}
-\begin{lstlisting}[frame=shadowbox]  % Start your code-block
-
-% command
-\end{lstlisting}
-
 \section{Discussion}
 \label{sec:discussion}
-%TODO
+
+\subsection{Performance}
+
+% Space efficiency
+
+\subsection{Use Case}
+
+% # of reads
+
+\subsection{Metadata}
+
+% Metadata connected to everything
+
+\subsection{Transforms}
 
 \section{Conclusion}
 \label{sec:conclusion}
