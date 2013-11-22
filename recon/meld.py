@@ -333,11 +333,23 @@ class MeldTableWriter(object):
             raise NameError("Alias "+alias+" refers to non-existant signal "+of)
         self.variables.append(alias)
 
+        # Base info data
         self.aliases[alias] = {A_OF: of}
+
+        # Add this alias to the list of aliases associated with the
+        # 'of' signal
+        if not of in self.alias_map:
+            self.alias_map[of] = []
+        self.alias_map[of].append(alias)
+
+        # Process any transformation associated with this alias
         if transform!=None:
             if parse_transform(transform)==None:
-                raise ValueError("Transform '"+str(transform)+"' could not be parsed")
+                raise ValueError("Transform '"+str(transform)+ \
+                                     "' could not be parsed")
             self.aliases[alias][V_TRANS] = transform
+
+        # If metadata was supplied, associated it with the alias name
         if metadata!=None:
             self._vmd[alias] = metadata
 
@@ -361,15 +373,20 @@ class MeldTableWriter(object):
                     raise TypeError("Value in '%s' (%s:%s) doesn't match expected type %s" % \
                                     (sig, str(val), str(type(val)), str(self._vtypes[sig])))
 
+        # Write the data to disk and return the index and length
         (base, blen) = self.writer._write_vector(data)
+
+        # Get the header for this signal and fill in the index and length
         sighead = self.writer._signal_header(self.name, sig)
         sighead[V_INDEX] = long(base)
         sighead[V_LENGTH] = long(blen)
-        for alias in self.aliases:
-            if self.aliases[alias][A_OF]==sig:
-                ahead = self.writer._signal_header(self.name, alias)
-                ahead[V_INDEX] = long(base)
-                ahead[V_LENGTH] = long(blen)
+
+        # Any aliases associated with this signal can now have their
+        # index and length filled in as well
+        for alias in self.alias_map.get(sig, []):
+            ahead = self.writer._signal_header(self.name, alias)
+            ahead[V_INDEX] = long(base)
+            ahead[V_LENGTH] = long(blen)
 
 class MeldObjectWriter(object):
     """
