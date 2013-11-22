@@ -1,7 +1,5 @@
 dev
 *.pyc
-./*.wll
-sample*
 cover
 .coverage
-dsres*
+test_output
