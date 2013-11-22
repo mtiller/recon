@@ -11,10 +11,12 @@ def write_wall(verbose=False):
         t.add_signal("time", metadata={"units": "s"}, vtype=float)
         t.add_signal("x", vtype=int)
         t.add_signal("y", vtype=str)
+        t.add_signal("active")
 
         # Tables can also have aliases, here is how we define a few
         t.add_alias(alias="a", of="x", transform="affine(-1.0,2.0)", metadata={"ax": "zed"});
         t.add_alias(alias="b", of="y");
+        t.add_alias(alias="inactive", of="active", transform="not");
 
         # Walls can also have objects.
         obj1 = wall.add_object("obj1", metadata={"xyz": "ABC"});
@@ -25,11 +27,11 @@ def write_wall(verbose=False):
         # but we can add rows to tables and fields to objects.
         wall.finalize();
 
-        t.add_row(time=0.0, x=1, y="2.0")
+        t.add_row(time=0.0, x=1, y="2.0", active=True)
         wall.flush()  # We can write data out at any time
-        t.add_row(time=1.0, x=0, y="3.0")
+        t.add_row(time=1.0, x=0, y="3.0", active=False)
         wall.flush()
-        t.add_row(2.0, 1, "3.0")
+        t.add_row(2.0, 1, "3.0", True)
         wall.flush()
 
         # Here we are adding fields to our object
@@ -75,12 +77,14 @@ def read_wall(verbose=False):
                 if alias=="a":
                     assert_equals(table.var_metadata[alias], {"ax": "zed"})
 
-        assert_equals(table.signals(),["time", "x", "y"])
+        assert_equals(table.signals(),["time", "x", "y", "active"])
         assert_equals(table.data("time"),[0.0, 1.0, 2.0])
         assert_equals(table.data("x"),[1, 0, 1])
         assert_equals(table.data("y"),["2.0", "3.0", "3.0"])
+        assert_equals(table.data("active"),[True, False, True])
         assert_equals(table.data("a"),[1.0, 2.0, 1.0])
         assert_equals(table.data("b"),["2.0", "3.0", "3.0"])
+        assert_equals(table.data("inactive"),[False, True, False])
 
 def testValidFile():
     write_wall()
