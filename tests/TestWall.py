@@ -307,3 +307,14 @@ def testMetadata1():
         t = wall.read_table("T1")
         assert_equals(t.metadata,{"b": "foo"})
         assert_equals(t.var_metadata["time"],{"units": "s"})
+
+@raises(ValueError)
+def testBadTransform1():
+    with open("sample.wll", "w+") as fp:
+        # Create the wall object with a file-like object to write to
+        wall = WallWriter(fp, metadata={"a": "bar"}, verbose=True)
+        t = wall.add_table(name="T1", metadata={"b": "foo"});
+        t.add_signal("time", metadata={"units": "s"})
+        t.add_alias("a", of="time", transform=1.0)
+        wall.finalize()
+        t.add_row(time=0.0)

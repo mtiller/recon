@@ -39,7 +39,7 @@ class NotTransform:
         def afunc(x):
             if type(x)==bool:
                 return not x
-            else:
+            else: # pragma: no cover
                 return x
         return map(lambda x: afunc(x), data)
 
@@ -49,10 +49,10 @@ class AffineTransform:
         self.offset = offset
     def apply(self, data):
         def sfunc(x):
-            # TODO: Are these sufficient
+            # TODO: Are these sufficient?
             if type(x)==float or type(x)==int or type(x)==long:
                 return x*self.scale+self.offset
-            else:
+            else: # pragma: no cover
                 return x
         return map(lambda x: sfunc(x), data)
 
@@ -72,5 +72,3 @@ def parse_transform(t):
             return AffineTransform(s, o)
         except:
             return None
-    return None
-
