@@ -75,7 +75,8 @@ class WriteAfterClose(Exception):
     pass
 
 class MeldWriter(object):
-    def __init__(self, fp, metadata={}, compression=False, verbose=False, single=False):
+    def __init__(self, fp, metadata={}, compression=False,
+                 verbose=False, single=False):
         """
         This is the constructor for the meld writer.
 
@@ -85,8 +86,8 @@ class MeldWriter(object):
         self.fp = fp
         self.verbose = verbose
         self.compression = compression
-        self.tables = {}
-        self.objects = {}
+        self.tables = {} # table name -> MeldTableWriter
+        self.objects = {} # object name -> MeldObjectWriter
         self._metadata = metadata
         self.ser = DEFSER(compress=self.compression, single=True)
 
@@ -230,7 +231,7 @@ class MeldWriter(object):
                        H_METADATA: self._metadata}
         for tname in self.tables:
             table = self.tables[tname]
-            index = {}
+            index = {} # var name -> header info
             for sig in table.signals:
                 index[sig] = {V_INDEX: V_INDHOLD,
                               V_LENGTH: V_INDHOLD}
@@ -285,10 +286,11 @@ class MeldTableWriter(object):
         self.name = name
         self.variables = []
         self.signals = set() # Big performance gain from this
-        self.aliases = {}
+        self.aliases = {} # alias -> alias info
+        self.alias_map = {} # signal -> list(aliases)
         self._metadata = metadata
-        self._vmd = {}
-        self._vtypes = {}
+        self._vmd = {} # signal -> metadata
+        self._vtypes = {} # signal -> type
 
     def _check_name(self, name):
         """
