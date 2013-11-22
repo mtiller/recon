@@ -2,7 +2,7 @@ import sys
 
 from serial import BSONSerializer, MsgPackSerializer
 
-from util import write_len, read_len, conv_len, check_transform
+from util import write_len, read_len, conv_len, parse_transform
 
 #DEFSER = BSONSerializer
 DEFSER = MsgPackSerializer
@@ -27,8 +27,7 @@ T_VMETADATA = "v"
 V_INDEX = "i"
 V_INDHOLD = b'\x00\x00\x00\x00'
 V_LENGTH = "l"
-V_SCALE = "s"
-V_OFFSET = "o"
+V_TRANS = "t"
 
 # Alias
 A_OF = "v"
@@ -238,10 +237,8 @@ class MeldWriter(object):
             for alias in table.aliases:
                 index[alias] = {V_INDEX: V_INDHOLD,
                                 V_LENGTH: V_INDHOLD}
-                if V_SCALE in table.aliases[alias]:
-                    index[alias][V_SCALE] = table.aliases[alias][V_SCALE]
-                if V_OFFSET in table.aliases[alias]:
-                    index[alias][V_OFFSET] = table.aliases[alias][V_OFFSET]
+                if V_TRANS in table.aliases[alias]:
+                    index[alias][V_TRANS] = table.aliases[alias][V_TRANS]
             self.header[H_TABLES][tname] = {T_VARIABLES: table.variables,
                                             T_INDICES: index,
                                             T_METADATA: table._metadata,
@@ -322,7 +319,7 @@ class MeldTableWriter(object):
                 raise TypeError("Type specifier '"+str(vtype)+"' is not a type")
             self._vtypes[name] = vtype
 
-    def add_alias(self, alias, of, scale=None, offset=None, metadata=None):
+    def add_alias(self, alias, of, transform=None, metadata=None):
         """
         Code to add an alias to this table.
 
@@ -334,13 +331,11 @@ class MeldTableWriter(object):
             raise NameError("Alias "+alias+" refers to non-existant signal "+of)
         self.variables.append(alias)
 
-        check_transform(self._vtypes.get(of, None), scale, offset)
-
         self.aliases[alias] = {A_OF: of}
-        if scale!=None:
-            self.aliases[alias][V_SCALE] = scale
-        if offset!=None:
-            self.aliases[alias][V_OFFSET] = offset
+        if transform!=None:
+            if parse_transform(transform)==None:
+                raise ValueError("Transform '"+str(transform)+"' could not be parsed")
+            self.aliases[alias][V_TRANS] = transform
         if metadata!=None:
             self._vmd[alias] = metadata
 
@@ -517,20 +512,14 @@ class MeldTableReader(object):
                                 " found in table "+str(self.table))
         ind = self.indices[signal][V_INDEX]
         blen = self.indices[signal][V_LENGTH]
-        scale = self.indices[signal].get(V_SCALE, None)
-        offset = self.indices[signal].get(V_OFFSET, None)
+        trans = parse_transform(self.indices[signal].get(V_TRANS, None))
         self.reader.fp.seek(ind)
         data = self.reader.ser.decode_vec(self.reader.fp, blen)
 
-        def transform(x):
-            if scale!=None:
-                if offset!=None:
-                    return x*scale+offset
-                return x*scale
-            if offset!=None:
-                return x+offset
-            return x
-        return map(lambda x: transform(x), data)
+        if trans==None:
+            return data
+        else:
+            return trans.apply(data)
 
 class MeldObjectReader(object):
     """

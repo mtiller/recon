@@ -32,13 +32,45 @@ def read_len(fp, ignoreEOF=False):
     up = struct.unpack('!L', lbytes)
     return up[0]
 
-def check_transform(vtype, scale, offset):
-    if vtype==None:
-        return
-    if scale==None and offset==None:
-        return
-    else:
-        if vtype!=float and vtype!=long and vtype!=int:
-            raise TypeError("Transformations not allowed for non-numeric type %s" % \
-                            (str(vtype)))
+class NotTransform:
+    def __init__(self):
+        pass
+    def apply(self, data):
+        def afunc(x):
+            if type(x)==bool:
+                return not x
+            else:
+                return x
+        return map(lambda x: afunc(x), data)
+
+class AffineTransform:
+    def __init__(self, scale, offset):
+        self.scale = scale
+        self.offset = offset
+    def apply(self, data):
+        def sfunc(x):
+            # TODO: Are these sufficient
+            if type(x)==float or type(x)==int or type(x)==long:
+                return x*self.scale+self.offset
+            else:
+                return x
+        return map(lambda x: sfunc(x), data)
+
+def parse_transform(t):
+    if t==None:
+        return None
+    if type(t)!=str:
+        return None
+
+    trans = t.replace(" ","")
+
+    if trans=="not":
+        return NotTransform()
+    if trans.startswith("affine(") and trans.endswith(")"):
+        try:
+            (s, o) = map(lambda x: float(x), trans[7:-1].split(","))
+            return AffineTransform(s, o)
+        except:
+            return None
+    return None
 

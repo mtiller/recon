@@ -1,6 +1,6 @@
 from serial import BSONSerializer, MsgPackSerializer
 
-from util import write_len, read_len, check_transform
+from util import write_len, read_len, parse_transform
 
 # This is a unique ID that every wall file starts with so
 # it can be identified/verified.
@@ -22,8 +22,7 @@ T_ALIASES = "a"
 
 # Aliases
 A_OF = "v"
-V_SCALE = "s"
-V_OFFSET = "o"
+V_TRANS = "t"
 
 
 class FinalizedWall(Exception):
@@ -231,29 +230,28 @@ class WallTableWriter(object):
                 raise TypeError("Type specifier '"+str(vtype)+"' is not a type")
             self._vtypes[signal] = vtype
 
-    def add_alias(self, alias, of, scale=None, offset=None, metadata=None):
+    def add_alias(self, alias, of, transform=None, metadata=None):
         """
         Defines an alias associated with a specific table.  The
         arguments are the name of the alias, the variable it is an
-        alias of (cannot be an alias itself), the scale factor and the
-        offset value between the alias and base variable.  The value
-        of the alias variable will be computed by multiplying the base
-        variable by the scale factor and then adding the offset value.
+        alias of (cannot be an alias itself), the transform variable
+        defines the transform between the alias and base variable.
+        The value of the alias variable will be computed by
+        applying the transform (as defined in the specification).
 
         Note: All metadata must be supplied at the time the alias
         is added.
+
         """
         if self.writer.defined:
             raise FinalizedWall()
         self._check_name(alias)
 
-        check_transform(self._vtypes.get(of, None), scale, offset)
-
         self.aliases[alias] = {A_OF: of}
-        if scale!=None:
-            self.aliases[alias][V_SCALE] = scale
-        if offset!=None:
-            self.aliases[alias][V_OFFSET] = offset
+        if transform!=None:
+            if parse_transform(transform)==None:
+                raise ValueError("Transform '"+str(transform)+"' could not be parsed")
+            self.aliases[alias][V_TRANS] = transform
         if metadata!=None:
             self._vmd[alias]=metadata
 
@@ -447,17 +445,17 @@ class WallTableReader(object):
         """
         return self.header[T_ALIASES][name][A_OF]
 
-    def alias_scale(self, name):
+    def alias_transform(self, name):
         """
-        Scale factor between alias and base signal
+        Transformation **object** between alias and base signal
         """
-        return self.header[T_ALIASES][name].get(V_SCALE, None)
+        return parse_transform(self.header[T_ALIASES][name].get(V_TRANS, None))
 
-    def alias_offset(self, name):
+    def alias_transform_string(self, name):
         """
-        Offset between alias and base signal
+        Transformation **object** between alias and base signal
         """
-        return self.header[T_ALIASES][name].get(V_OFFSET, None)
+        return self.header[T_ALIASES][name].get(V_TRANS, None)
 
     def data(self, name):
         """
@@ -465,23 +463,20 @@ class WallTableReader(object):
         """
         if name in self.header[T_SIGNALS]:
             signal = name
-            scale = None
-            offset = None
+            trans = None
         elif name in self.header[T_ALIASES]:
             signal = self.header[T_ALIASES][name][A_OF]
-            scale = self.header[T_ALIASES][name].get(V_SCALE, None)
-            offset = self.header[T_ALIASES][name].get(V_OFFSET, None)
+            trans = self.alias_transform(name)
         else:
             raise NameError("No signal or alias named "+name)
         ret = []
         index = self.header[T_SIGNALS].index(signal)
-        for ent in self.reader._read_entries(self.name):
-            val = ent[index]
-            if scale!=None:
-                val = val*scale
-            if offset!=None:
-                val = val+offset
-            ret.append(val)
+        ret = map(lambda x: x[index],
+                  self.reader._read_entries(self.name))
+        if trans==None:
+            return ret
+        else:
+            return trans.apply(ret)
         return ret
 
 class WallObjectReader(object):

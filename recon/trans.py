@@ -33,8 +33,7 @@ def wall2meld(wfp, mfp):
         for alias in table.aliases():
             mtable.add_alias(alias, 
                              of=table.alias_of(alias),
-                             scale=table.alias_scale(alias),
-                             offset=table.alias_offset(alias),
+                             transform=table.alias_transform_string(alias),
                              metadata=table.var_metadata.get(alias, None))
     
     # Now that all definitions are made, we can finalize the meld
@@ -130,7 +129,7 @@ def dsres2meld(df, mfp, verbose=False, compression=True, single=True):
         # Add aliases (and their metadata)
         for alias in aliases:
             tables[block].add_alias(alias=alias[0], of=alias[2],
-                                    scale=alias[3], offset=0.0,
+                                    transform="affine("+str(alias[3])+",0.0)",
                                     metadata={DESC:mf.description(alias[0])})
 
     # Finalize structure

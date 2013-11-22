@@ -13,7 +13,7 @@ def write_wall(verbose=False):
         t.add_signal("y", vtype=str)
 
         # Tables can also have aliases, here is how we define a few
-        t.add_alias(alias="a", of="x", scale=-1.0, offset=2.0, metadata={"ax": "zed"});
+        t.add_alias(alias="a", of="x", transform="affine(-1.0,2.0)", metadata={"ax": "zed"});
         t.add_alias(alias="b", of="y");
 
         # Walls can also have objects.
