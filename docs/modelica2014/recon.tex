@@ -1,6 +1,6 @@
 % sample file for Modelica Conference paper
 
-\documentclass[11pt,a4paper,onecolumn]{article}
+\documentclass[11pt,a4paper,twocolumn]{article}
 \usepackage{graphicx}
 \graphicspath{{fig/}}
 \usepackage[T1]{fontenc}
@@ -478,7 +478,8 @@ rewrite their data into the \meld\ format.
 Each \wall\ file starts with the following sequence of bytes:
 
 \begin{verbatim}
-0x72 0x65 0x63 0x6f 0x6e 0x3a 0x77 0x61 0x6c 0x6c 0x3a 0x76 0x30 0x31
+0x72 0x65 0x63 0x6f 0x6e 0x3a 0x77
+0x61 0x6c 0x6c 0x3a 0x76 0x30 0x31
 \end{verbatim}
 
 This is a hex encoding of the ASCII string \code{recon:wall:v01}.
@@ -523,7 +524,7 @@ as follows:
 \begin{verbatim}
 {
   "tmeta": {<table-level metadata>},
-  "sigs": [<list of signals contained in the table>],
+  "sigs": [<list of signals>],
   "als": {
     "<aliasname>": {
       "s": <base signal name>,
@@ -531,7 +532,9 @@ as follows:
     }
   },
   "vmeta": {
-    "<varname>": {<variable-level metadata} // OPTIONAL
+    "<varname>": {
+      <variable-level metadata
+    } // OPTIONAL
   }
 }
 \end{verbatim}
@@ -629,14 +632,17 @@ far:
 %\lstset{language=javascript}
 %\begin{lstlisting}[frame=single]  % Start your code-block
 \begin{verbatim}
-0x72 0x65 0x63 0x6f 0x6e 0x3a 0x77 0x61 0x6c 0x6c 0x3a 0x76 0x30 0x31 // ID
-0x?? 0x?? 0x?? 0x?? // Header length, network order
+// ID
+0x72 0x65 0x63 0x6f 0x6e 0x3a 0x77
+0x61 0x6c 0x6c 0x3a 0x76 0x30 0x31
+// Header length, network order
+0x?? 0x?? 0x?? 0x??
 {
   "fmeta": {<file-level metadata>},
   "tabs": {
     <table name>: {
       "tmeta": {<table-level metadata>},
-      "sigs": [<list of signals contained in the table>],
+      "sigs": [<list of signals>],
       "als": {
         <aliasname>: {
           "s": <base signal name>,
@@ -644,7 +650,9 @@ far:
         }
       },
       "vmeta": {
-        <varname>: {<variable-level metadata} // OPTIONAL
+        <varname>: {
+          <variable-level metadata>
+        } // OPTIONAL
       }
     },
   },
@@ -653,17 +661,20 @@ far:
   }
 }
 
-// Followed by zero or more entries which can
-// be either field entries...
-0x?? 0x?? 0x?? 0x?? // Field entry length
+// Followed by zero or more entries
+// which can be either...
+
+// ...field entries...
+0x?? 0x?? 0x?? 0x?? // entry length
 {
   <object name>: {
     <field name>: <field value>,
     <field name>: <field value>
   },
 }
+
 // ...or row entries
-0x?? 0x?? 0x?? 0x?? // Row entry length
+0x?? 0x?? 0x?? 0x?? // entry length
 {
   <table name>: [list of signal values]  
 }
@@ -680,7 +691,8 @@ where all maps are encoded in \msgpack.
 Each \meld\ file starts with the following sequence of bytes:
 
 \begin{verbatim}
-0x72 0x65 0x63 0x6f 0x6e 0x3a 0x6d 0x65 0x6c 0x64 0x3a 0x76 0x30 0x31
+0x72 0x65 0x63 0x6f 0x6e 0x3a 0x6d
+0x65 0x6c 0x64 0x3a 0x76 0x30 0x31
 \end{verbatim}
 
 This is a hex encoding of the ASCII string \code{recon:meld:v01}.
@@ -739,11 +751,13 @@ is different in the \meld\ header than in the \wall\ header.  In a
     "<varname>": {
       "i": <index of variable data>,
       "l": <length of variable data>,
-      "t": <variable transformation> // OPTIONAL
+      "t": <transform string> // OPTIONAL
     }
   },
   "vmeta": {
-    "<varname">: {<variable level metadata} // OPTIONAL
+    "<varname">: {
+      <variable level metadata
+    } // OPTIONAL
   }
 }
 \end{verbatim}
@@ -821,8 +835,11 @@ The following outline attempts to summarize all the details presented so
 far:
 
 \begin{verbatim}
-0x72 0x65 0x63 0x6f 0x6e 0x3a 0x6d 0x65 0x6c 0x64 0x3a 0x76 0x30 0x31   // ID
-0x?? 0x?? 0x?? 0x?? // Header length, network order
+// ID
+0x72 0x65 0x63 0x6f 0x6e 0x3a 0x6d
+0x65 0x6c 0x64 0x3a 0x76 0x30 0x31
+// Header length, network order
+0x?? 0x?? 0x?? 0x??
 {
   "fmeta": {<file-level metadata>},
   "tabs": {
@@ -833,11 +850,13 @@ far:
         "<varname>": {
           "i": <index of variable data>,
           "l": <length of variable data>,
-          "t": <variable transformation> // OPTIONAL
+          "t": <transform string> // OPTIONAL
         }
       },
       "vmeta": {
-        "<varname">: {<variable level metadata} // OPTIONAL
+        "<varname">: {
+          <variable level metadata
+        } // OPTIONAL
       }
     }
   },
@@ -851,11 +870,14 @@ far:
   "comp": true|false // Compression flag
 }
 
-// Followed by any padding resulting from header shrinkage
+// Followed by any padding
+// resulting from header shrinkage
 
-// Followed by zero or more blocks of msgpacked data
-// representing either vectors or objects whose offsets
-// and lengths are specified in the header)
+// Followed by zero or more blocks
+// of msgpacked data representing
+// either vectors or objects whose
+// offsets and lengths are specified
+// in the header)
 \end{verbatim}
 
 \subsection{Transformations}
@@ -1058,9 +1080,9 @@ load the \code{data\_2} matrix and then extracted the $0^{th}$ column
 %\lstset{language=python}
 %\begin{lstlisting}[frame=single]  % Start your code-block
 \begin{verbatim}
-  mat = loadmat("tests/fullRobot.mat")
-  T2 = mat["data\_2"]
-  time = T2[0,:]
+mat = loadmat("tests/fullRobot.mat")
+T2 = mat["data_2"]
+time = T2[0,:]
 \end{verbatim}
 %\end{lstlisting}
 
@@ -1077,10 +1099,10 @@ follows,
 %\lstset{language=python}
 %\begin{lstlisting}[frame=single]  % Start your code-block
 \begin{verbatim}
-  with open("test\_output/dsres\_robot.mld", "rb") as fp:
-    meld = MeldReader(fp)
-    dt = meld.read\_table("T2")
-    time = dt.data("Time")
+with open("dsres_robot.mld", "rb") as fp:
+  meld = MeldReader(fp)
+  dt = meld.read_table("T2")
+  time = dt.data("Time")
 \end{verbatim}
 %\end{lstlisting}
 
@@ -1102,11 +1124,11 @@ the following script to extract the same signals from the dsres file
 format:
 
 \begin{verbatim}
-  ret = {}
-  mf = dymat.DyMatFile("tests/fullRobot.mat")
-  for signal in mf.names(2):
-      ret[signal] = mf.data(signal)
-  ret["Time"] = mf.abscissa(2)
+ret = {}
+mf = dymat.DyMatFile("tests/fullRobot.mat")
+for signal in mf.names(2):
+    ret[signal] = mf.data(signal)
+ret["Time"] = mf.abscissa(2)
 \end{verbatim}
 
 This code uses the \code{dymat} library which, in turn, leverages
@@ -1118,12 +1140,12 @@ The script for performing this benchmark using the \meld\ format looks
 as follows:
 
 \begin{verbatim}
-  ret = {}
-  with open("test\_output/dsres_robot.mld", "rb") as fp:
-      meld = MeldReader(fp)
-      dt = meld.read\_table("T2")
-      for signal in dt.signals():
-          ret[signal] = dt.data(signal)
+ret = {}
+with open("dsres_robot.mld", "rb") as fp:
+  meld = MeldReader(fp)
+  dt = meld.read_table("T2")
+  for signal in dt.signals():
+      ret[signal] = dt.data(signal)
 \end{verbatim}
 
 Running this script 5 times, we record execution times (in
