@@ -478,7 +478,6 @@ class MeldReader(object):
         List of objects in this meld
         """
         return self.header[H_OBJECTS].keys()
-
     def read_table(self, table):
         """
         Reads a table from the meld

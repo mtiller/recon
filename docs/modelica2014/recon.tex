@@ -1017,9 +1017,87 @@ signals via an affine transformation with the \meld\ format.
 Unfortunately, we do yet have any data on the potential savings this
 might offer.
 
+% extracting a single signal
+
+Another benchmark worth considering is the time it takes to extract
+one particular trajectory from a results file.  For extracting results
+from a dsres file, we used the \code{scipy.io.loadmat} function to
+load the \code{data\_2} matrix and then extracted the $0^{th}$ column
+(Time).  In other words,
+
+\lstset{language=python}
+\begin{lstlisting}[frame=single]  % Start your code-block
+  mat = loadmat("tests/fullRobot.mat")
+  T2 = mat["data\_2"]
+  time = T2[0,:]
+  return time
+\end{lstlisting}
+
+Running this script 5 times gave the following times (in
+milliseconds): 18.111, 18.143, 20.076, 19.309, 21.773 for an average time
+of 19.482 milliseconds.
+
+In the case of the \meld\ file, we opened the results file, created a
+\code{MeldReader} object to read it.  Extracted the \code{data\_2}
+table (called \code{T2} in the translated file) and then extracted the
+data associated with the \code{Time} signal.  That code looks as
+follows,
+
+\lstset{language=python}
+\begin{lstlisting}[frame=single]  % Start your code-block
+  with open("test\_output/dsres_robot.mld", "rb") as fp:
+    meld = MeldReader(fp)
+    dt = meld.read\_table("T2")
+    time = dt.data("Time")
+    return time
+\end{lstlisting}
+
+Running this script 5 times gave the following times (again, in
+milliseconds): 17.260, 18.074, 16.882, 14.608, 14.572 for an average
+time of 16.280 milliseconds.
+
+It is worth noting the SciPy implementation is very mature and
+utilizes numpy internally.  So one would expect excellent performance
+from that implementation.  Nevertheless, extracting data based in the
+\meld\ format was over 15\% faster on average.
+
 % reading everything into memory
 
-% extracting a single signal
+The last benchmark will be reading multiple signals.  In fact, our
+benchmark in this case will be to extract all transient signals into a
+Python dictionary.  We will do this again for both formats.  The
+script for doing this with the \meld\ format looks as follows:
+
+\lstset{language=python}
+\begin{lstlisting}[frame=single]
+  ret = {}
+  with open("test\_output/dsres_robot.mld", "rb") as fp:
+      meld = MeldReader(fp)
+      dt = meld.read\_table("T2")
+      for signal in dt.signals():
+          ret[signal] = dt.data(signal)
+\end{lstlisting}
+
+Running this script 5 times, we record execution times (in
+milliseconds) of: 886.35, 890.70, 897.53, 889.79, 891.42 for an
+average of 891.16 milliseconds.
+
+Similarly, we used the following script to extract the same signals
+from the dsres file format:
+
+\lstset{language=python}
+\begin{lstlisting}[frame=single]
+  ret = {}
+  mf = dymat.DyMatFile("tests/fullRobot.mat")
+  for signal in mf.names(2):
+      ret[signal] = mf.data(signal)
+  ret["Time"] = mf.abscissa(2)
+\end{lstlisting}
+
+This code uses the \code{dymat} library which, in turn, leverages
+SciPy and numpy.  Running this code 5 times gave the following
+execution times (in milliseconds): 519.50, 495.38, 483.60, 476.69 and
+481.15 for an average execution time of 491.26 milliseconds.
 
 \subsection{Conversion}
 

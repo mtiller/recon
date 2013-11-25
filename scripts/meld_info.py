@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+import sys
+sys.path.append(".")
+
+from recon.meld import MeldReader
+
+for file in sys.argv[1:]:
+    with open(file, "rb") as fp:
+        meld = MeldReader(fp)
+
+        print "File: "+str(file)
+        print "  Tables: "+str(meld.tables())
+        for tabname in meld.tables():
+            print "    Table: "+str(tabname)
+            table = meld.read_table(tabname)
+            print "      Signals: "+str(table.signals())
+        print "  Objects: "+str(meld.objects())
+        for objname in meld.objects():
+            print "    Object: "+str(objname)
+            obj = meld.read_object(objname)
+            print "      Fields: "+str(obj.keys())
