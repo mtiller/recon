@@ -429,6 +429,8 @@ remember that the \wall format is optimized for writing, not reading
 and that if network access is required tools will typically rewrite
 their data into the \meld format.
 
+\subsubsection{Leading Bytes}
+
 Each \wall file starts with the following sequence of bytes:
 
 \begin{lstlisting}[frame=single]  % Start your code-block
@@ -443,6 +445,8 @@ The next four bytes are a binary encoding of the length of the header.
 This encoding is done in so-called ``network byte order''
 (big-endian).
 
+\subsubsection{Header}
+
 Once the length of the header is known, the bytes for the header are
 read in.  These bytes are assumed to have been serialized in \msgpack
 format so we must next unpack these bytes.  Once unpacked, the header
@@ -451,51 +455,110 @@ should contain the following information:
 \lstset{language=javascript}
 \begin{lstlisting}[frame=single]  % Start your code-block
 {
-  "m": {<file-level metadata>},
-  "t": [<list of table objects]>,
-  "o": [<list of objects>]
+  "fmeta": {<file-level metadata>},
+  "tabs": [<list of table objects]>,
+  "objs": {
+    <objname>: {<object metadata>}
+  }
 }
 \end{lstlisting}
 
-The \code{"m"} key is associated with the value for any file level
+The \code{"fmeta"} key is associated with the value for any file level
 metadata.  This metadata is, itself, represented as a map in \msgpack
 and will be deserialized as such into the implementation language.
-The \code{"t"} key is associated with the list of tables present in
+The \code{"tabs"} key is associated with the list of tables present in
 the file.  Each of these table objects is serialized as follows:
 
 \lstset{language=javascript}
 \begin{lstlisting}[frame=single]  % Start your code-block
 {
-  "m": {<table-level metadata>},
-  "s": [<list of signals contained in the table>],
-  "a": {
+  "tmeta": {<table-level metadata>},
+  "sigs": [<list of signals contained in the table>],
+  "als": {
     <aliasname>: {
-      "v": <base signal name>,
-      "t": <transform string>
+      "s": <base signal name>,
+      "t": <transform string> // OPTIONAL
     }
   },
-  "v": {
+  "vmeta": {
     <varname>: {<variable-level metadata}
   }
 }
 \end{lstlisting}
 
-Again, the \code{"m"} key is associated with metadata (represented as
-a \msgpack map) but this time it is metadata associated with the
-table.  In addition, we have the \code{"s"} key which represents an
-ordered list of signals.  A signal represents an actual solution
-trajectory and the order is important because the order in this list
-indicates the order in which the data will be stored in successive
-rows (to be discussed shortly).
+The \code{"tmeta"} key is associated with metadata (represented as a
+\msgpack map) but this time it is metadata associated with the table.
+In addition, we have the \code{"sigs"} key which represents an ordered
+list of signals.  A signal represents an actual solution trajectory
+and the order is important because the order in this list indicates
+the order in which the data will be stored in successive rows (to be
+discussed shortly).
 
-The \code{"a"} key represents any aliases present in the table.
+The \code{"als"} key represents any aliases present in the table.
 Again, this is a \msgpack map where the name of the alias is the key.
 There are two essential pieces of information associated with each of
-the aliases.  The first, stored under the \code{"v"} key is the name
-of the base signal 
+the aliases.  The first, stored under the \code{"s"} key (which stands
+for ``signal'') is the name of the base signal that this alias is
+based on.  The \code{"t"} key is used to represent the transformation
+that should be applied to the base signal to compute the value of the
+alias signal.  Note that this transformation {\b is optional}.  The
+possible values will be described shortly in \ref{sec:trans}.
 
-Finally, we have the \code{"v"} key which is a map where the keys are
-the names of variables (*i.e.,* both signals and aliases)
+Finally, we have the \code{"vmeta"} key which is a map where the keys
+are the names of variables (*i.e.,* both signals and aliases) and the
+values are any metadata (again, stored as a \msgpack map) associated
+with the named variable.  Note that keys are only present in the
+\code{"vmeta"} map if there is metadata associated with that variable.
+
+Returning to the header level entries, the \code{"objs"} key is
+associated with a value which is, in turn, a \msgpack map.  The keys
+in this map represent the names of objects present in the \wall file
+and the values represent the metadata associated with those objects.
+{\b Note}, the metadata values here are not optional (like it is with
+variables in tables).  If there is no metadata associated with a given
+object, an empty map must be included as a value.
+
+\subsubsection{Data Entries}
+
+After the header, the remainder of the file are ``data entry''
+values.  Each entry starts with a 4 byte network order integer
+representing the length of the entry followed by that number of bytes
+stored as a serialized \msgpack map.
+
+There are two types of entries.  The first type is a ``row entry''
+which details a new row for a specified table.  The format of a row
+entry is as follows:
+
+\lstset{language=javascript}
+\begin{lstlisting}[frame=single]  % Start your code-block
+{
+  <table name>: [list of signal values]
+}
+\end{lstlisting}
+
+where the table name must be a key in the \code{"tabs"} map found in
+the header and the order of values in the list of signal values must
+correspond to the order defined by the list associated with the
+\code{"sigs"} key value within that table.
+
+The other entry type is a ``field entry''.  These represent updates to
+the values of fields in objects and has the following format:
+
+\lstset{language=javascript}
+\begin{lstlisting}[frame=single]  % Start your code-block
+{
+  <object name>: [<field name>, <field value>]
+}
+\end{lstlisting}
+
+Note that the 
+
+The complete value of a given object
+is determined by processing all field entries associated with that
+object in the order they appear in the \wall file.  One consequence of
+this is that it is therefore possible to have the values of individual
+fields change while writing the file.  The true value is simply the
+once associated with the final entry.
 
 % Summary
 
@@ -508,6 +571,7 @@ f()
 \end{lstlisting}
 
 \subsection{Transformations}
+\label{sec:trans}
 
 % Discuss transformation grammar
 
