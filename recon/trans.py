@@ -129,7 +129,7 @@ def dsres2meld(df, mfp, verbose=False, compression=True, single=True):
         # Add aliases (and their metadata)
         for alias in aliases:
             tables[block].add_alias(alias=alias[0], of=alias[2],
-                                    transform="affine("+str(alias[3])+",0.0)",
+                                    transform="aff("+str(alias[3])+",0.0)",
                                     metadata={DESC:mf.description(alias[0])})
 
     # Finalize structure

@@ -14,8 +14,8 @@ def write_meld(name,compression=False,verbose=False,n=0):
         t.add_signal("time", metadata={"units": "s"}, vtype=float)
         t.add_signal("x")
         t.add_signal("y")
-        t.add_alias(alias="a", of="x", transform="affine(1.0,1.0)", metadata={"ax": "zed"});
-        t.add_alias(alias="b", of="y");
+        t.add_alias(alias="a", of="x", transform="aff(1.0,1.0)", metadata={"ax": "zed"});
+        t.add_alias(alias="b", of="y", transform="inv");
         obj1 = meld.add_object("obj1", metadata={"a": "bar"});
         obj2 = meld.add_object("obj2");
 

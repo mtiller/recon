@@ -32,13 +32,24 @@ def read_len(fp, ignoreEOF=False):
     up = struct.unpack('!L', lbytes)
     return up[0]
 
-class NotTransform:
+# Transforms
+
+T_INV = "inv"
+T_AFF = "aff"
+
+class InvTransform:
     def __init__(self):
         pass
     def apply(self, data):
         def afunc(x):
             if type(x)==bool:
                 return not x
+            if type(x)==float:
+                return -x
+            if type(x)==int: # pragma: no cover
+                return -x
+            if type(x)==long: # pragma: no cover
+                return -x
             else: # pragma: no cover
                 return x
         return map(lambda x: afunc(x), data)
@@ -64,11 +75,11 @@ def parse_transform(t):
 
     trans = t.replace(" ","")
 
-    if trans=="not":
-        return NotTransform()
-    if trans.startswith("affine(") and trans.endswith(")"):
+    if trans==T_INV:
+        return InvTransform()
+    if trans.startswith(T_AFF+"(") and trans.endswith(")"):
         try:
-            (s, o) = map(lambda x: float(x), trans[7:-1].split(","))
+            (s, o) = map(lambda x: float(x), trans[4:-1].split(","))
             return AffineTransform(s, o)
         except:
             return None
