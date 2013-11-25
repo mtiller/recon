@@ -432,9 +432,72 @@ their data into the \meld format.
 Each \wall file starts with the following sequence of bytes:
 
 \begin{lstlisting}[frame=single]  % Start your code-block
-
+0x72 0x65 0x63 0x6f 0x6e 0x31 0x77 0x61 0x6c 0x6c 0x3a 0x76 0x30 0x31
 \end{lstlisting}
 
+This is a hex encoding of the ASCII string \code{recon:wall:v01}.
+This allows us to identify whether this is a \recon \wall file and, if
+so, what version of the specification should be applied.
+
+The next four bytes are a binary encoding of the length of the header.
+This encoding is done in so-called ``network byte order''
+(big-endian).
+
+Once the length of the header is known, the bytes for the header are
+read in.  These bytes are assumed to have been serialized in \msgpack
+format so we must next unpack these bytes.  Once unpacked, the header
+should contain the following information:
+
+\lstset{language=javascript}
+\begin{lstlisting}[frame=single]  % Start your code-block
+{
+  "m": {<file-level metadata>},
+  "t": [<list of table objects]>,
+  "o": [<list of objects>]
+}
+\end{lstlisting}
+
+The \code{"m"} key is associated with the value for any file level
+metadata.  This metadata is, itself, represented as a map in \msgpack
+and will be deserialized as such into the implementation language.
+The \code{"t"} key is associated with the list of tables present in
+the file.  Each of these table objects is serialized as follows:
+
+\lstset{language=javascript}
+\begin{lstlisting}[frame=single]  % Start your code-block
+{
+  "m": {<table-level metadata>},
+  "s": [<list of signals contained in the table>],
+  "a": {
+    <aliasname>: {
+      "v": <base signal name>,
+      "t": <transform string>
+    }
+  },
+  "v": {
+    <varname>: {<variable-level metadata}
+  }
+}
+\end{lstlisting}
+
+Again, the \code{"m"} key is associated with metadata (represented as
+a \msgpack map) but this time it is metadata associated with the
+table.  In addition, we have the \code{"s"} key which represents an
+ordered list of signals.  A signal represents an actual solution
+trajectory and the order is important because the order in this list
+indicates the order in which the data will be stored in successive
+rows (to be discussed shortly).
+
+The \code{"a"} key represents any aliases present in the table.
+Again, this is a \msgpack map where the name of the alias is the key.
+There are two essential pieces of information associated with each of
+the aliases.  The first, stored under the \code{"v"} key is the name
+of the base signal 
+
+Finally, we have the \code{"v"} key which is a map where the keys are
+the names of variables (*i.e.,* both signals and aliases)
+
+% Summary
 
 \subsection{Meld Format}
 \label{sec:meld_spec}
@@ -443,6 +506,10 @@ Each \wall file starts with the following sequence of bytes:
 \begin{lstlisting}[frame=single]  % Start your code-block
 f()
 \end{lstlisting}
+
+\subsection{Transformations}
+
+% Discuss transformation grammar
 
 \section{Discussion}
 \label{sec:discussion}
