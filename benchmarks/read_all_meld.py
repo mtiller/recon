@@ -1,4 +1,5 @@
 import sys
+import cProfile
 import time
 
 sys.path.append(".")
@@ -15,8 +16,11 @@ def extract_time():
             ret[signal] = dt.data(signal)
     return ret
 
-start = time.time()
-x = extract_time()
-# print str(x)
-end = time.time()
-print "Time: "+str(end-start)
+if True:
+    start = time.time()
+    x = extract_time()
+    # print str(x)
+    end = time.time()
+    print "Time: "+str(end-start)
+else:
+    cProfile.run('extract_time()')
