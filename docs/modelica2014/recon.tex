@@ -150,7 +150,7 @@ file formats that leverage open standards but re-purpose them for
 modeling and simulation applications.
 
 \section{Goals}
-\label{sec:background}
+\label{sec:goals}
 
 After independently reviewing various file formats, the authors were
 not happy with the existing options for web and cloud based modeling
@@ -426,6 +426,34 @@ deserialized using \msgpack.
 
 % tables and objects
 
+Before we get into the specifications for each of these formats, it
+will be useful to introduce a few topics that are common to both
+formats.  For example, what exactly are we storing in these file
+formats?  Both formats support the storing of tables and objects.
+Tables are, as the name implies, a structure for storing tabular
+data.  It is worth noting that there are no restrictions on what kind
+of data can be stored in a table except those imposed by the
+underlying \msgpack\ format (*i.e.,* very few).  This means tables can
+mix integers, floats, doubles, longs, short ints, strings, booleans
+and even objects across different columns in the same table.
+
+In addition to tables, we can register objects to be stored in our
+results file.  These are essentially free-format pieces of data.  The
+objects can be used to create arbitrarily deeply nested data
+structures that mix all varieties of data.  Once again, the only
+limitations are those imposed by \msgpack\ and/or the source language.
+
+When storing tables and objects in a file, they must be referred to by
+names.  The same namespace is used for both objects and tables (in
+other words, you cannot have a table with the same name as an
+object).  It also means that no two tables and no two objects can
+share the same name either.  The columns of each table are also named
+and no two columns within the same table can share the same name.  But
+there is no such restriction between columns in different tables (or
+fields in different objects, for that matter).
+
+With that background out of the way, let's proceed with our
+explanation of the two file formats.
 
 \subsection{Wall Format}
 \label{sec:wall_spec}
@@ -833,22 +861,169 @@ far:
 
 % Discuss transformation grammar
 
+In the previous sections, there were several mentions of a so-called
+``transform string''.  This is an optional piece of information
+associated with an alias (in the case of the \wall\ format) or a
+variable (in the case of the \meld\ format).  It defines the
+transformation, if any, that must be performed over some base data in
+order to retrieve the true value of the referenced data.  There are
+presently only two allowed transformation types that are supported by
+the \recon\ formats.
+
+The first transformation type is the ``inverse'' transformation.  This
+transformation is indicated when the transform string has a value of
+\code{"inv"}.  The impact of the inverse transformation depends on the
+data type.  For numeric data types, the inverse transformation causes
+the data to have its sign inverted.  For boolean data, the inverse
+transformation applies a logical not operation to the data.  With this
+simple transform alone, it is possible to avoid strong a significant
+amount of data.
+
+The other transform type is the ``affine'' transform.  This
+transformation is indicated when the transform string has a value of
+\code{"aff(s,o)"} where \code{s} represents a scale factor and
+\code{o} represents an offset value.  In the presence of this
+transformation, all {\b numeric} values in the base data should be
+multiplied by the scale factor, \code{s}, and then added to the offset
+value, \code{o}.
+
+If no transform string is present, no transformation is applied and
+the data is left ``as is''.  If there is a transform string but it is
+not recognized, the data should also be left ``as is''.  If the
+transform string is recognized but the transform.
+
 \section{Discussion}
 \label{sec:discussion}
 
+\subsection{Use Case}
+
+Although it is implicit in the requirements listed in Section
+\ref{sec:goals}, it is worth elaborating a bit more on the specific
+use case that drove these requirements.
+
+For web and cloud based simulation, the bulk of the computational work
+is done remotely.  In cloud services, there is an effect some times
+called ``data gravity'' which dictates to improve overall throughput,
+the computing platforms tends to gravitate to where the data is stored
+(*i.e.,* the same service provider or at least ones that are connected
+with low latency, high bandwidth connections).
+
+So if one seeks an optimal configuration where the computing and
+storage are well connected, it makes sense that it is easy to store
+the complete simulation results without any significant concerns for
+latency or bandwidth.
+
+The complication comes from having to access that data via a
+``normal'' network connection.  A typical use case (and the one that
+we imagined while formulating our requirements) is one where a web
+application, running in a web browser, needs to display simulation
+results.  The question then is how could such an application make
+effective use of simulations results generated ``in the cloud''?
+
+One approach to this could be for the web browser to download the
+complete simulation results.  Without consideration for web and cloud
+based applications, such results might very likely be stored in
+formats like HDF5 or MATLAB version 4 format.  The first problem is
+that these formats are not well supported in a Javascript environment.
+In fact, the authors are not aware of a single Javascript
+implementation that can read either format.
+
+Even if you had Javascript implementations for these formats, this
+approach would necessitate having to download the entire file into
+some kind of ``in memory'' representation to be parsed.  This is
+because these formats do not provide a simple way to extract the
+required data via a few simple reads.
+
+The other approach, the one we've taken for the \recon\ project, is to
+use a format (of our own design, the \meld\ format) that is designed
+for remote access.  Given access to header information (more on this
+in a moment), we can extract a single table column or single object
+with a single read.  Furthermore, we can use the HTTP \code{Range}
+header to specify exactly which range of bytes we require.  In this
+way, we only have to endure the latency of a single network request
+and we avoid transmitting any extraneous data which minimizes the
+impact of bandwidth limitations.
+
+% # of rea<ds
+
+Note the previous paragraph presumes we already have the header
+information from the files.  The worst case scenario for getting
+header information is to make two addition (one time only) network
+requests.  The first request would be the first 18 bytes (again,
+utilizing the \code{Range} header) to establish the size of the
+header.  The next request would be to read the binary header data
+which includes information about the locations of all table columns
+and objects.  Once these two requests had been made, the client would
+be able to access any object or column with only one additional
+request.
+
 % Caching
+
+One of the things we've tried to do in this project is avoid solving
+problems that have already been solved.  This was the motivation
+behind the use of \msgpack\ but we are also assuming that most network
+requests for data will be made using HTTP.  This is a safe assumption
+given the ubiquitous nature of HTTP (or HTTPS, for that matter).  But
+if we assume the requests are made via HTTP we also gain that
+additional benefits of caching.
+
+Most networks are already equipped to efficiently handle caching
+transparently.  Of course, within a given application, we might
+maintain a cache of headers for different results files that we may be
+interested in.  But what about multiple users accessing these results
+across the same network?  As it turns out, once one user accesses the
+file, it is quite likely that the header information will be stored in
+a caching proxy between the users network and the storage provider.
+This is a caching scenario that we cannot address within an
+application, but nevertheless it is very likely that in such a
+multi-user environment the existing network proxies would
+transparently act to improve overall performance and enhance the user
+experience.
 
 \subsection{Performance}
 
+It is worth taking a moment to discuss the actual performance of this
+approach vs. existing approaches.  As a baseline, we have generated a
+``representative results file'' by simulating the R3 robot example
+from the Modelica Standard Library.  This results file, produced by
+Dymola and written in the ``dsres'' format, will serve as our
+baseline.
+
 % Space efficiency
+
+The first issue we will example is space efficiency.  The baseline
+results take up 3,069,623 bytes of storage (for the storage options we
+selected).  When stored in the \meld\ format {\b without compression}
+those same results take up 3,169,994 bytes.  Note that this
+translation process from the dsres format to the \meld\ format
+preserves variable names and description strings as well as numerical
+trajectories.  This means the \meld\ format is only 3.3\% larger than
+the corresponding dsres file.  If we enable compression, the
+\meld\ file is only 2,787,467 bytes which means it is almost 10\%
+smaller than the dsres file.
+
+So, in terms of storage, the \meld\ format is quite comparable to the
+dsres format.  At first, this may seem counter-intuitive since we
+know, from our earlier discussion of \msgpack\ that arrays of floating
+point numbers incur an extra byte for storage.  However, it is worth
+pointing out that the dsres format cannot store strings very
+efficiently at all and that long descriptions will result in enormous
+amounts of padding.  So it would appear that, on net, these two
+effects cancel each other out.  However, one advantage that the
+\meld\ format has that the dsres format doesn't (and an advantage that
+is not capitalized on in these benchmarks at all) is the wider range
+of alias transformations.  In particular, it is possible to relate two
+signals via an affine transformation with the \meld\ format.
+Unfortunately, we do yet have any data on the potential savings this
+might offer.
+
+% reading everything into memory
+
+% extracting a single signal
 
 \subsection{Conversion}
 
 % Conversions
-
-\subsection{Use Case}
-
-% # of rea<ds
 
 \subsection{Metadata}
 
@@ -858,7 +1033,22 @@ far:
 
 \section{Conclusion}
 \label{sec:conclusion}
-%TODO
+
+% richer alias transformations
+
+% easy to implement on a wide range of platforms
+
+% comparable storage requirements
+
+% efficient network access
+
+% first-class metadata
+
+% mixed data-type tables
+
+% first class and efficient treatment for strings
+
+% ability to store objects/structures as well as tables.
 
 \bibliography{recon}
 \end{document}
