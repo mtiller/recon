@@ -59,7 +59,7 @@ class WallWriter(object):
         self.objects = {}
         self._metadata = metadata
         self.buffered_rows = []
-        self.buffered_fields = []
+        self.buffered_fields = [] # [{objname -> {field -> value}}]
         self.ser = DEFSER()
 
     def _check_name(self, name):
@@ -119,14 +119,14 @@ class WallWriter(object):
             raise NotFinalized("Must finalize the wall before adding rows")
         self.buffered_rows.append((name, row))
 
-    def _add_field(self, name, key, value):
+    def _add_fields(self, name, kwargs):
         """
         This is an internal method called by the WallObjectWriter
         object to add a new field value to the wall.
         """
         if not self.defined:
             raise NotFinalized("Must finalize the wall before adding fields")
-        self.buffered_fields.append((name, key, value))
+        self.buffered_fields.append((name, kwargs))
 
     def finalize(self):
         """
@@ -186,7 +186,7 @@ class WallWriter(object):
         for field in self.buffered_fields:
             if self.verbose:
                 print field
-            fielddata = self.ser.encode_obj({field[0]: field[1:]})
+            fielddata = self.ser.encode_obj({field[0]: field[1]})
             write_len(self.fp, len(fielddata))
             self.fp.write(fielddata)
         self.buffered_rows = []
@@ -311,11 +311,11 @@ class WallObjectWriter(object):
         self.writer = writer
         self.name = name
         self._metadata = metadata
-    def add_field(self, key, value):
+    def add_fields(self, **kwargs):
         """
         This calls the TableWriter and instructs it to add a field.
         """
-        self.writer._add_field(self.name, key, value)
+        self.writer._add_fields(self.name, kwargs)
 
 class WallReader(object):
     """
@@ -486,5 +486,4 @@ class WallObjectReader(object):
         self.metadata = header
         self.data = {}
         for ent in self.reader._read_entries(name):
-            self.data[ent[0]] = ent[1]
-        
+            self.data.update(ent)

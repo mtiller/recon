@@ -36,18 +36,17 @@ def write_wall(verbose=False):
         wall.flush()
 
         # Here we are adding fields to our object
-        obj1.add_field("name", "Mike");
-        obj2.add_field("name", "Pete");
+        obj1.add_fields(name="Mike");
         wall.flush();
 
         # Adding more fields
-        obj1.add_field("nationality", "American");
-        obj2.add_field("nationality", "UKLander");
+        obj1.add_fields(nationality="American");
+        obj2.add_fields(name="Pete", nationality="UKLander");
         wall.flush();
 
         # Question, should we be allowed to overwrite fields?
         # If we are really journaling, this should be ok, e.g.,
-        obj2.add_field("nationality", "GreatBritisher");
+        obj2.add_fields(nationality="GreatBritisher");
         wall.flush();
 
 def read_wall(verbose=False):
@@ -289,7 +288,7 @@ def testNotFinalField():
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
         o = wall.add_object(name="O1");
-        o.add_field("x", 12.0)
+        o.add_fields(x=12.0)
 
 def testMetadata1():
     with open(os.path.join("test_output","sample_17.wll"), "w+") as fp:
