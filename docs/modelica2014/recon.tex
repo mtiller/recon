@@ -980,6 +980,34 @@ multi-user environment the existing network proxies would
 transparently act to improve overall performance and enhance the user
 experience.
 
+\subsection{Metadata}
+
+% Metadata connected to everything
+
+As discussed throughout Section \ref{sec:spec}, the \wall\ and
+\meld\ formats have extensive support for metadata.  This provides a
+clean mechanisms for including metadata in files without the need to
+mix it in or conflate it with actual data.  Furthermore, metadata is
+supported for a wide range of entities represented in the file.
+
+There are many potential applications for such metadata.  For example,
+file level metadata can be used to store very useful information such
+as who ran a simulation, what particular model they ran, what
+modifications (if any) were applied to the model or even a complete
+listing of all the parameter values that used to simulate the model.
+In addition, general experimental data could also be stored in the
+results file.
+
+Metadata at the signal level could be used to specify not just
+descriptions of those variables along with their physical units but
+they could also be used to include other attributes like start values,
+nominal values, *etc.*.
+
+In summary, the \recon\ formats make metadata a first class citizen
+within the file formats and this opens the door to many very useful
+applications involving metadata.
+
+
 \subsection{Performance}
 
 It is worth taking a moment to discuss the actual performance of this
@@ -1045,7 +1073,7 @@ follows,
 
 \lstset{language=python}
 \begin{lstlisting}[frame=single]  % Start your code-block
-  with open("test\_output/dsres_robot.mld", "rb") as fp:
+  with open("test\_output/dsres\_robot.mld", "rb") as fp:
     meld = MeldReader(fp)
     dt = meld.read\_table("T2")
     time = dt.data("Time")
@@ -1065,25 +1093,9 @@ from that implementation.  Nevertheless, extracting data based in the
 
 The last benchmark will be reading multiple signals.  In fact, our
 benchmark in this case will be to extract all transient signals into a
-Python dictionary.  We will do this again for both formats.  The
-script for doing this with the \meld\ format looks as follows:
-
-\lstset{language=python}
-\begin{lstlisting}[frame=single]
-  ret = {}
-  with open("test\_output/dsres_robot.mld", "rb") as fp:
-      meld = MeldReader(fp)
-      dt = meld.read\_table("T2")
-      for signal in dt.signals():
-          ret[signal] = dt.data(signal)
-\end{lstlisting}
-
-Running this script 5 times, we record execution times (in
-milliseconds) of: 246.34, 240.66, 225.58, 224.22, 222.65 for an
-average of 231.89 milliseconds.
-
-Similarly, we used the following script to extract the same signals
-from the dsres file format:
+Python dictionary.  We will do this again for both formats.  We used
+the following script to extract the same signals from the dsres file
+format:
 
 \lstset{language=python}
 \begin{lstlisting}[frame=single]
@@ -1099,34 +1111,84 @@ SciPy and numpy.  Running this code 5 times gave the following
 execution times (in milliseconds): 519.50, 495.38, 483.60, 476.69 and
 481.15 for an average execution time of 491.26 milliseconds.
 
-\subsection{Conversion}
+The script for performing this benchmark using the \meld\ format looks
+as follows:
 
-% Conversions
+\lstset{language=python}
+\begin{lstlisting}[frame=single]
+  ret = {}
+  with open("test\_output/dsres_robot.mld", "rb") as fp:
+      meld = MeldReader(fp)
+      dt = meld.read\_table("T2")
+      for signal in dt.signals():
+          ret[signal] = dt.data(signal)
+\end{lstlisting}
 
-\subsection{Metadata}
+Running this script 5 times, we record execution times (in
+milliseconds) of: 246.34, 240.66, 225.58, 224.22, 222.65 for an
+average of 231.89 milliseconds (over 50\% faster compared to the dsres
+version of the benchmark).
 
-% Metadata connected to everything
+In fairness, it is worth pointing out that we generally expect
+simulation tools to write output results in the \wall\ format first
+and then convert them into the \meld\ format.  As such, they will some
+penalty as a one-time cost when regenerating their results in the
+\meld\ format and this penalty is not taken into account here.
+Furthermore, this benchmark doesn't include any writing performance
+benchmarks (primarily because we have not connected any of these codes
+to actual simulation tools to measure write performance).
 
-\subsection{Transforms}
+In summary, we do not any benchmarks that compare write performance.
+But in terms of storage efficiency, the \meld\ file format was only
+3\% larger when compared to our baseline results in dsres format.  On
+the other hand, in terms of read performance, the \meld\ format was
+between 15 and 50\% faster depending on the amount of data to be read.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-% richer alias transformations
-
+In conclusion, the \recon\ file formats support many important features:
+\begin{enumerate}
 % easy to implement on a wide range of platforms
-
-% comparable storage requirements
-
-% efficient network access
-
+\item {\b easy to implement on a wide range of platforms} - An open
+  source reference implementation is available in Python with
+  implementations in C and Java already planned.
+% efficient disk and network access
+\item {\b efficient disk and network access} - These formats have been
+  optimizes for efficient network performance.  But as the benchmarks
+  show, these formats also perform very well for when results are
+  stored locally on hard disks.
 % first-class metadata
-
+\item {\b first-class metadata} - With metadata available at all
+  structural levels, results files can embed metadata in a clean and
+  practical way.  This has the potential to open up many new and
+  interesting applications.
 % mixed data-type tables
-
+\item {\b tables containing mixed data types} - All data types are
+  given equal treatment within the \recon\ formats.  As a result, it
+  is possible to embed a wide variety of data and still maintain all
+  the other benefits associated with these formats.
+% richer alias transformations
+\item {\b richer alias transformations} - The \recon\ formats support
+  not only the common ``inverse'' transform, but a richer set of
+  affine transformations.  This could lead to further space
+  efficiencies.
 % first class and efficient treatment for strings
-
+\item {\b efficient treatment of strings} - MATLAB version 4 files are
+  very inefficient for storing collections of strings.  By using
+  \msgpack\ for serialization, we get very efficient handling of
+  string data.
 % ability to store objects/structures as well as tables.
+\item {\b ability to store objects/structures} - Not all data is
+  tabular.  For example, parameter data used as input to simulations
+  is more naturally represented as an object.  There are many other
+  examples of potential applications that need to represent data as
+  objects.  The \recon\ formats even allow these objects to be
+  embedded within tables.
+\end{enumaration}
+
+The \recon\ formats provide all these benefits without any significant
+compromise in storage efficiency.
 
 \bibliography{recon}
 \end{document}
