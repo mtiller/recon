@@ -9,6 +9,6 @@ def testDsres2Meld_Robot():
     with open(os.path.join("test_output","dsres_robot.mld"), "w+") as fp:
         dsres2meld("tests/fullRobot.mat", fp, verbose=False, compression=False)
 
-    with open(os.path.join("test_output","dsres.mld"), "rb") as fp:
+    with open(os.path.join("test_output","dsres_robot.mld"), "rb") as fp:
         meld = MeldReader(fp, verbose=False)
         print str(meld.report())
