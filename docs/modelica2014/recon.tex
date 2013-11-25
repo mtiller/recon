@@ -274,6 +274,31 @@ approximately the same size, regardless of format).
 
 \section{Approach}
 
+In reviewing these requirements, the main design challenge was trying
+to reconcile requirements #1 and #2.  Implementing requirement #1
+typically involves the need to write data out one row at a time where
+each row represents the values of all the variables for successive
+solution times.  As such, the solution values for any particular {\i
+  variable} are widely spaced.  However, requirement #2 requires us to
+be able to extract a given variable with a minimum number of I/O
+operations.  In other words, requirement #1 typically results in data
+being ``fragmented'' while requirement #2 depends on that data being
+clustered together.
+
+% Two formats
+% clocks
+
+Our solution to this design problem was to design two file formats.
+The first, the \wall format, is designed for writing.  Not only does
+it make adding data fast and efficient, it also supports, unlike the
+\code{dsres} approach, adding data for multiple ``tables'' at once.
+In practice, what this means is that if you have variables in your
+simulation that are partitioned such that they have different
+independent variables (as with the new clock semantics in Modelica
+3.3), this format supports writing out new data for any of these
+variables.  In other words, you can add results that may have
+completely different time bases.
+
 % Started with BSON, switched to MsgPack
 
 \section{Specification}
