@@ -1,3 +1,6 @@
+recon.pdf: recon.dvi
+	dvipdf recon.dvi
+
 recon.ps: recon.dvi
 	dvips recon.dvi
 
