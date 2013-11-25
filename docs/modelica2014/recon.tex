@@ -449,7 +449,7 @@ their data into the \meld\ format.
 Each \wall\ file starts with the following sequence of bytes:
 
 \begin{verbatim}
-0x72 0x65 0x63 0x6f 0x6e 0x31 0x77 0x61 0x6c 0x6c 0x3a 0x76 0x30 0x31
+0x72 0x65 0x63 0x6f 0x6e 0x3a 0x77 0x61 0x6c 0x6c 0x3a 0x76 0x30 0x31
 \end{verbatim}
 
 This is a hex encoding of the ASCII string \code{recon:wall:v01}.
@@ -502,7 +502,7 @@ as follows:
     }
   },
   "vmeta": {
-    "<varname>": {<variable-level metadata}
+    "<varname>": {<variable-level metadata} // OPTIONAL
   }
 }
 \end{verbatim}
@@ -533,11 +533,22 @@ with the named variable.  Note that keys are only present in the
 \code{"vmeta"} map if there is metadata associated with that variable.
 
 Returning to the header level entries, the \code{"objs"} key is
-associated with a value which is, in turn, a \msgpack\ map.
+associated with a value which is, in turn, a \msgpack\ map.  Each key
+in that map represents and object name and the value associated with
+those object name keys represents the metadata associated with the
+named object.
 
-There are two types of entries.  The first type is a ``row entry''
-which details a new row for a specified table.  The format of a row
-entry is as follows:
+\subsubsection{Entries}
+
+Following the header, the remainder of the file consists of
+``entries''.  Each entry is preceded by 4 bytes in network byte order
+indicating the length of the entry.  All entries are encoded maps in
+\msgpack\ format.  There are two types of possible entries and there
+are no rules about which will be present (*i.e.,* they can appear in
+any order and be interleaved).
+
+The first type is a ``row entry'' which details a new row for a
+specified table.  The format of a row entry is as follows:
 
 %\lstset{language=javascript}
 %\begin{lstlisting}[frame=single]  % Start your code-block
@@ -582,13 +593,13 @@ while writing the file.
 
 % Summary
 
-The following table attempts to summarize all the details presented so
+The following outline attempts to summarize all the details presented so
 far:
 
 %\lstset{language=javascript}
 %\begin{lstlisting}[frame=single]  % Start your code-block
 \begin{verbatim}
-0x72 0x65 0x63 0x6f 0x6e 0x31 0x77 0x61 0x6c 0x6c 0x3a 0x76 0x30 0x31 // ID
+0x72 0x65 0x63 0x6f 0x6e 0x3a 0x77 0x61 0x6c 0x6c 0x3a 0x76 0x30 0x31 // ID
 0x?? 0x?? 0x?? 0x?? // Header length, network order
 {
   "fmeta": {<file-level metadata>},
@@ -603,7 +614,7 @@ far:
         }
       },
       "vmeta": {
-        <varname>: {<variable-level metadata}
+        <varname>: {<variable-level metadata} // OPTIONAL
       }
     },
   },
@@ -612,7 +623,8 @@ far:
   }
 }
 
-// Followed by zero or more field entries:
+// Followed by zero or more entries which can
+// be either field entries...
 0x?? 0x?? 0x?? 0x?? // Field entry length
 {
   <object name>: {
@@ -620,7 +632,7 @@ far:
     <field name>: <field value>
   },
 }
-// And or row entries
+// ...or row entries
 0x?? 0x?? 0x?? 0x?? // Row entry length
 {
   <table name>: [list of signal values]  
@@ -633,10 +645,188 @@ where all maps are encoded in \msgpack.
 \subsection{Meld Format}
 \label{sec:meld_spec}
 
-\lstset{language=python}
-\begin{lstlisting}[frame=single]  % Start your code-block
-f()
-\end{lstlisting}
+\subsubsection{Leading Bytes}
+
+Each \meld\ file starts with the following sequence of bytes:
+
+\begin{verbatim}
+0x72 0x65 0x63 0x6f 0x6e 0x3a 0x6d 0x65 0x6c 0x64 0x3a 0x76 0x30 0x31
+\end{verbatim}
+
+This is a hex encoding of the ASCII string \code{recon:meld:v01}.
+This allows us to identify whether this is a \recon\ \meld\ file and, if
+so, what version of the specification should be applied.
+
+The next four bytes are a binary encoding of the length of the header.
+This encoding is done in so-called ``network byte order''
+(big-endian).
+
+\subsubsection{Header}
+\label{sec:meld_head}
+
+Once the length of the header is known, the bytes for the header are
+read in.  These bytes are assumed to have been serialized in
+\msgpack\ format so we must next unpack these bytes.  Once unpacked,
+the header should contain the following information:
+
+\begin{verbatim}
+{
+  "fmeta": {<file-level metadata>},
+  "tabs": {
+    "<table name>": <table data>
+  },
+  "objs": {
+    "<object name>": <object data>
+  },
+  "comp": true|false // Compression flag
+}
+\end{verbatim}
+
+This is very similar to the \wall\ format presented in Section
+\ref{sec:wall_spec}.  Again, we see file level metadata exactly as it
+is used in the \wall\ format.  We also have the \code{"tabs"} and
+\code{"objs"} keys, also present in the \wall\ format but with in
+important distinction which is that the data that follows them has a
+different format, as we shall see shortly.
+
+But we also have a new key, the \code{"comp"} key, which isn't present
+at all in the \wall\ format.  The value associated with the
+\code{"comp"} key indicates whether the remainder of the file (after
+the header) is not just encoded (using \msgpack) but also encoded.  If
+the value associated with the \code{"comp"} key is \code{true}, then
+all remaining \msgpack\ encodings present in the file after the header
+are compressed using bz2\cite{BZ2} compression.
+
+For reasons that will become obvious, the data for tables and objects
+is different in the \meld\ header than in the \wall\ header.  In a
+\meld\ file, the table data has the following format:
+
+\begin{verbatim}
+{
+  "tmeta": {<table level metadata>},
+  "vars": <list of variable names>,
+  "toff": {
+    "<varname>": {
+      "i": <index of variable data>,
+      "l": <length of variable data>,
+      "t": <variable transformation> // OPTIONAL
+    }
+  },
+  "vmeta": {
+    "<varname">: {<variable level metadata} // OPTIONAL
+  }
+}
+\end{verbatim}
+
+The \code{"tmeta"} is, again, the table level metadata.  Similarly,
+the \code{"vmeta"} key is associated with variable level metadata
+which is a map where the variable name is the key and the associated
+value is the variable level metadata (again, only present if there
+actually is metadata associated with the specified variable).
+
+The \code{"vars"} key is associated with an ordered list of the
+variables present in the file.  The \code{"toff"} key is associated
+with a map that specifies important information about the location of
+the variables within the file.  It is the \code{"toff"} data that
+makes it easy for us to extract individual signals.  The \code{"i"}
+key is associated with the starting byte, within the file, of the data
+associated with the variable and the \code{"l"} key is associated with
+the length of that data.  The optional \code{"t"} key defines any
+transformation, in any, to be applied to the variable data (see
+Section \ref{sec:trans} for more details).
+
+Returning to the header data, the object data associated with the
+\code{"objs"} key has the following format in a \meld\ file:
+
+\begin{verbatim}
+{
+  "ometa": {<object level metadata>},
+  "i": <index of object data>,
+  "l": <length of object data>
+}
+\end{verbatim}
+
+The \code{"ometa"} key is associated with the metadata of the
+associated object.  The \code{"i"} and \code{"l"} keys are used just
+as they are within tables, to define the index and length,
+respectively, of the object data within the file.
+
+\subsubsection{Variable Data}
+
+As discussed in Section \ref{sec:meld_held}, both variables
+(conceptually, columns in tables) and objects have an offset and a
+length provided in the header.  In the case of a variable, the data
+that is extracted from that location in the file will be {\b list} of
+values in \msgpack\ format.  The values in that list represent the
+values for the specified solution variables (first row first, last row
+last).  In the case of an object, the data that is extracted from that
+location in the file will be a {\b map} where the keys in the map
+represent the fields present in the object and the values associated
+with those keys are the field values.
+
+\subsubsection{Header Size}
+
+% Shrinkage
+
+It is worth pointing out that when writing the exactly length of the
+header (when encoded in \msgpack\ format) cannot be known *a priori*.
+For this reason, a collection of bytes representing the ``worst case
+scenario'' (largest possible size) must be reserved for the header.
+The size of this header depends on the number of tables and objects as
+well as the number of signals in each table.
+
+However, when the final version of the header is written out (once the
+location of all the data can be determined), it's size may be less
+than originally anticipated.  For this reason, there may be a few
+unused bytes present between the end of the table and the first
+variable or object data in the file.  This is a result of the
+\msgpack\ format's aggressive compression of small integers.  While it
+is true that a few bytes will be wasted as a result it basically means
+that \msgpack's aggresive optimizations will be wasted in this case
+(and this case only).
+
+\subsubsection{Meld Format Summary}
+
+The following outline attempts to summarize all the details presented so
+far:
+
+\begin{verbatim}
+0x72 0x65 0x63 0x6f 0x6e 0x3a 0x6d 0x65 0x6c 0x64 0x3a 0x76 0x30 0x31   // ID
+0x?? 0x?? 0x?? 0x?? // Header length, network order
+{
+  "fmeta": {<file-level metadata>},
+  "tabs": {
+    "<table name>": {
+      "tmeta": {<table level metadata>},
+      "vars": <list of variable names>,
+      "toff": {
+        "<varname>": {
+          "i": <index of variable data>,
+          "l": <length of variable data>,
+          "t": <variable transformation> // OPTIONAL
+        }
+      },
+      "vmeta": {
+        "<varname">: {<variable level metadata} // OPTIONAL
+      }
+    }
+  },
+  "objs": {
+    "<object name>": {
+      "ometa": {<object level metadata>},
+      "i": <index of object data>,
+      "l": <length of object data>
+    }
+  },
+  "comp": true|false // Compression flag
+}
+
+// Followed by any padding resulting from header shrinkage
+
+// Followed by zero or more blocks of msgpacked data
+// representing either vectors or objects whose offsets
+// and lengths are specified in the header)
+\end{verbatim}
 
 \subsection{Transformations}
 \label{sec:trans}
@@ -658,7 +848,7 @@ f()
 
 \subsection{Use Case}
 
-% # of reads
+% # of rea<ds
 
 \subsection{Metadata}
 
