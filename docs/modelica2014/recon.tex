@@ -45,36 +45,36 @@
 
 \section*{Abstract}
 
-As an organization, the Modelica Association champions standards in
-the area of modeling and simulation.  This effort started with the
-Modelica language \cite{ModSpec} and Modelica Standard
-Library\cite{MSL} and has recently expanded to include the Functional
-Mockup Interface (FMI) standard \cite{FMI} as well.
+There are many different commonly used file formats for storing time
+series data.  Most of these file formats are designed with the
+assumption that the file itself will be locally available to the
+software that will be reading or writing the data stored in them.
+While this assumption is an excellent one for desktop based tools with
+direct access to disk drives capable of moving virtually
+instantaneously around from sector to sector, there are growing number
+of applications for which local access is not necessarily available.
+For these applications, we've initiated the \recon project to develop
+more suitable formats.
 
-However, one thing that is conspicuously absent in the Modelica
-community is an accepted standard for exchange simulation results
-and/or tabular data.  In fact, many tools still rely on a proprietary
-format that dates back to MATLAB version 4.  It is remarkably ironic
-that most Modelica users are still using this proprietary format while
-The MathWorks themselves have abandoned it in favor of an open
-standard, HDF5\cite{HDF5}.
+With the emergence of web and cloud based modeling and simulation
+technologies, the time has come to explore file formats specifically
+optimized for non-desktop applications.  In this paper, we present a
+new set of file formats that are specifically designed for web and
+cloud based approaches.  This paper reviews the key requirements for
+web and cloud enabled applications and then presents a specification
+for two file formats that address those requirements.
 
-This paper will introduce two different file formats.  The first
-format we call the \wall format and the other we call the \meld
-format.  Both of these were developed as part of a project ultimately
-dubbed the \recon project.
-
-It is important to note that we are {\b not} proposing to make these
-formats official Modelica standards.  These formats were created from
-some specific use cases shared by their developers but not necessary
-shared by the majority of Modelica users.  This paper will discuss the
-specific use cases which led to the development of these standards and
-some of the interesting features of these formats.
+When considering the various use cases that drove our requirements, we
+recognized that two different file formats were actually required.
+The first format, the \wall format, is optimized for writing.  The
+other format, the \meld format, is optimized for reading over a
+network.  We will discuss the importance of each of these formats and
+describe the use cases for which they are most appropriate.
 
 In the open tradition of the Mdoelica Association, the authors have
-made implementations for these formats available as open source
-libraries with the hope that they will benefit the community as a
-whole.
+made specifications and implementations for these formats available as
+open source libraries with the hope that they will benefit the
+community as a whole.
 
 \paragraph{Keywords:}\emph{modelica, FMI, simulation results,
   cloud, web, open source}
@@ -86,44 +86,43 @@ Several groups have examined the issue of standardized file formats
 \cite{AndreasHDF5,GallHDF5} in the context of Modelica.  In keeping
 with the principals of the Modelica Association, an ideal choice would
 be a production ready format that is open source and cross-platform.
-Most people see HDF5 as a natural choice.  There are already open
-source implementations and the file format has been in use for some
-time.  As previously mentioned, it has even been adopted by The
+With this requirements in mind, most people consider HDF5 a natural
+choice.  There are already open source implementations and the file
+format has been widely used.  In fact, it has even been adopted by The
 MathWorks for use in MATLAB.
 
 But HDF5 has some important drawbacks.  The first is that it is not
 truly cross-platform.  The reference implementation of HDF5 is written
-in C.  While there are various libraries available for reading HDF5 on
-the Java platform\cite{HDFJava}, they are incomplete and awkward to
-use.  Another issue with HDF5 is that for simple time-series data it
-is over engineered.  HDF5 is feature rich, of that there is no
-question, but these features come at the cost of complexity.  This is
-why you see very few implementations outside of the reference
-implementation.
+in C.  The implementation is primarily targeted for use with in C, C++
+or Fortran applications.  While there are various libraries available
+for reading HDF5 on the Java platform\cite{HDFJava}, they are
+incomplete and awkward to use.
 
-HDF5 (and many other potential contenders) were developed in an era
-when ``compatibility'' for a file format meant you could read and
-write it from both FORTRAN and C.  Of course, many simulation tools
-are still written using a mixture of FORTRAN and C.  But increasingly,
-modeling and simulation are moving more toward web and cloud based
-platforms.
+Another issue with HDF5 is that for simple time-series data it is over
+engineered.  HDF5 is feature rich, of that there is no question, but
+these features come at the cost of complexity.  This is why you see
+very few implementations outside of the reference implementation.
+Furthermore, the file format makes extensive use of ``seek''
+operations and assumes they are relatively in expensive.  This
+assumption is reasonable if you are able to communicate directly with
+the hard drive that the files are stored on, but it isn't reasonable
+when these files are only available through the network.
 
-In fact, there are many, many standards for manipulating data in web
-or cloud based environments.  The most popular format, by far, is
-Javascript Object Notation (or JSON, for short).  In addition to other
-formats, like XML, you also have a number of different approaches to
-marshalling and unmarshalling data for consumption by cross-platform
-tools.  Approaches like Google Protocol Buffers\cite{GPB},
-Avro\cite{Avro}, Thrift\cite{Thrift} and others are working hard to
-try and knit together the various ``big data'' tools like
-Hadoop\cite{Hadoop}, Storm\cite{Storm} and ???.
+There are, of course, many standards for manipulating data in web or
+cloud based environments.  The most popular formats, by far, are
+Javascript Object Notation (or JSON, for short) and XML.  There are a
+number of different approaches to marshalling and unmarshalling data
+for consumption by cross-platform tools.  Approaches like Google
+Protocol Buffers\cite{GPB}, Avro\cite{Avro}, Thrift\cite{Thrift} and
+others are working hard to try and knit together the various ``big
+data'' tools like Hadoop\cite{Hadoop}, Storm\cite{Storm} and ???.
 
 So where does that leave us?  Should we adopt the tried and true
 standards from the engineering world and simply live with their lack
-of interoperability with important platforms like Java or Javascript?
-Or should we try and adapt tools from the ``big data'' world, that
-were developed for quite different use cases, to work in the
-engineering world.
+of interoperability with important platforms like Java or Javascript
+and poor performance when accessed remotely?  Or, should we try and
+adapt tools from the ``big data'' world, that were developed for quite
+different use cases, to work in the engineering world.
 
 In some sense, we've chosen a compromise.  As we will see shortly, the
 \wall and \meld formats are fundamentally derived from the
@@ -138,16 +137,140 @@ modeling and simulation applications.
 \section{Goals}
 \label{sec:background}
 
+After independently reviewing various file formats, the authors were
+not happy with the existing options for web and cloud based modeling
+and simulation.  The \recon project started as a discussion about
+requirements.  For our applications, the following requirements were
+identified:
+
+\subsection{#1 - Adding Data}
 
 % 1) It should be easy to append data to a file.
+
+Simulations are constantly producing additional data.  For this
+reason, adding new data to an existing file is an operation performed
+many times during a simulation.  For this reason, adding data to an
+existing file should be fast and easy.  The key thing is to avoid having to
+rewrite previous data or, even worse, move data around within the
+file.  For this reason, the ideal solution is to have the ability to
+simply append new data at the end of the file.
+
+\subsection{#2 - Minimizing I/O}
+
 % 2) It must be possible to extract individual signals with a minimum of I/O.
+
+In web and cloud based applications, it is not always practice to
+download the complete set of results for a simulation into the browser
+environment.  There are many use cases where it would be best to be
+able to access results ``on demand''.  In these environments, such
+requests for data will be done via HTTP\cite{HTTP}.  However, each of
+these requests will come with far greater latency than a simple
+request to read from a disk drive and far less bandwidth.  As such, we
+would want to minimize the number of such requests and the amount of
+data necessary to transmit in each request.  This means we need a way
+to ``cluster'' the data we are interested in so as to minimize both
+the number of requests required and minimize the amount of data in
+each response.
+
+\subsection{#3 - Cross Platform Support}
+
 % 3) The format must work across languages.
+
+The file formats developed as part of the \recon project are targeted
+at web and cloud based applications.  Client side web programming is
+dominated by Javascript.  On the other hand, server side programming
+is done in a wide variety of languages (*e.g.,* Java, Python,
+Javascript).  Meanwhile, numerical analyses such as simulation are
+typically done in languages like C, C++ and FORTRAN.  For this reason,
+it should be possible to implement libraries in all of these languages
+for generating and extracting simulation results.
+
+\subsection{#4 - Aliasing}
+
 % 4) It must be possible to define aliases.
-% 5) It should be possible to organize information hierarchically.
-% 6) It must be possible to associate metadata with entities in the file.
-% 7) It should be possible to store "structures/dictionaries" as well as regular array types.
+
+One of the common patterns in component-oriented modeling approaches
+like Modelica is that many variables end up with exactly the same
+solution trajectories.  When storing simulation results from such
+tools, it is useful to recognize that considerable disk space can be
+saved by recognizing the fact that these variables all share a common
+underlying solution trajectory.  Typically, the data for each unique
+solution trajectory is stored once and each variable is simply a
+reference to the underlying solution trajectory.  Even more storage
+can be saved by recognizing that some trajectories are related to
+other trajectories by very simple transformations (*.e.g.,* a simple
+sign change).
+
+For this reason, it is very useful if these kinds of relationships are
+directly represented in the file format itself.
+
+\subsection{#5 - Data Types}
+
+% 5) It should be possible to store "structures/dictionaries" as well
+% as regular array types.
+
+When dealing with simulation results that come from the solution of
+differential equations, the main type of result is a solution
+trajectory.  In these cases, both the dependent and independent
+variables are typically represented as floating point numbers.
+
+But these are not the only types of data a simulation or other
+numerical analysis might yield.  From the Modelica world, we might
+easily have results that are either integers, booleans or strings
+(since these are all fundamental built-in types in Modelica).  But why
+not hierarchical data structures (as represented by records in
+Modelica) as well?
+
+\subsection{#6 - Metadata}
+
+% 6) It must be possible to associate metadata with entities in the
+% file.
+
+One issue with data files is that if you don't provide a means for
+associating metadata with entities in the file, the metadata will {\b
+become} entities in the file.  For this reason, we deemed it important
+that metadata should be treated in a ``first-class'' way.
+Specifically, it should be possible to associated metadata with the
+file as a whole, with data structures in the file all the way down to
+individual signals.  This would allow tools to persist other important
+information, beyond the solution, in these data files.  For example,
+information about common plots or plotting options, descriptions of
+the signals, units or display units could all be managed in a
+structured way without being confused with data and without needing to
+be a formal part of the file format specification.
+
+\subsection{#7 - Hierarchy}
+
+% 7) It should be possible to organize information hierarchically.
+
+Many tools create structures that are hierarchical.  In the Modelica
+world, we have deep hierarchies of instances in simulated models.  We
+also have hierarchies for packages and the definitions contained in
+them.  So it is important the a file format can represent this
+hierarchies in some way.
+
+In our experience, trying to organize results according to an instance
+hierarchy creates quite a bit of complexity.  While tools could
+exploit some of the previous requirements (primarily #5 and #6) to
+achieve a hierarchical representation, we've found that simply
+encoding hierarchy in the names of variables (*e.g.*
+\code{car.engine.crankshaft.tau}) is typically sufficient and can
+avoid considerable complexity.
+
+\subsection{#8 - Easy Translation}
 
 % Support for heterogenous data (no strict type constraints)
+
+Even though our goal is to have a format that is well suited to web
+and cloud based application, it should also be capable of representing
+the kinds of simulation results as we normally think of them.  For
+this reason, we include as a requirement the ability to represent the
+widely used ``dsres'' format used by many tools including Dymola and
+OpenModelica.  In particular, it should be possible to preserve all
+the data normally contained in these formats when translating them
+into the \recon formats.  Furthermore, the \recon formats should have
+comparable storage efficiency (*i.e.,* the files should be
+approximately the same size, regardless of format).
 
 \section{Approach}
 
@@ -169,6 +292,8 @@ f()
 
 \section{Discussion}
 \label{sec:discussion}
+
+% Caching
 
 \subsection{Performance}
 
