@@ -274,6 +274,8 @@ approximately the same size, regardless of format).
 
 \section{Approach}
 
+\subsection{Reading vs. Writing}
+
 In reviewing these requirements, the main design challenge was trying
 to reconcile requirements #1 and #2.  Implementing requirement #1
 typically involves the need to write data out one row at a time where
@@ -299,13 +301,140 @@ independent variables (as with the new clock semantics in Modelica
 variables.  In other words, you can add results that may have
 completely different time bases.
 
+The other format, the \meld format, is optimized for reading.
+Specifically, it is optimized for requirement #2.  For an ideal
+format, it would be possible to extract a single result trajectory in
+a single read.  This would act to minimize the impact of latency.
+Furthermore, the bytes read should contain only data associated with
+the desired signal.  This would minimize the impact of limited
+bandwidth.  As we will discuss shortly, the \meld file manages to
+achieve these performance characteristics for all but the first signal
+read.
+
+Our expectation is that tools will write data out (during simulation)
+in the \wall format.  Tools may choose to keep the data in this
+format.  For platforms where network access is not a requirement, the
+write optimized nature of the \wall format will probably be adequate
+for both reading and writing.  However, for cases where data will be
+read over a network we expect that tools will, upon completing a
+simulation, rewrite their data into the \meld format.
+
+\subsection{Serialization}
+
 % Started with BSON, switched to MsgPack
+
+There are really two aspects each \recon format.  The first is the
+structure of the file (where different pieces of information reside in
+the file, something we'll discuss in Section \ref{sec:spec}) and the
+other is how the actual data is represented.
+
+Obviously, the data is represented as individual bytes.  So we must
+define the process by which multi-byte pieces of information (*e.g.,*
+floating point numbers) are ``serialized'' into bytes.  One of the
+implicit goals of this project was to make a file format that was easy
+to read and write.  Since serializing and deserializing data was a big
+part of the implementation, we could make the implementation much
+easier if we leveraged existing standards for serialization and
+deserialization.
+
+One of the interesting things about coming from the web and cloud
+based application side is the ubiquity of JSON notation.  While the
+Javascript language itself has many ``unusual'' semantics, the syntax
+and semantics around serialization and deserialization are
+surprisingly simple and intuitive.  Unlike XML, for example, writing a
+parser for JSON and then mapping into a native language representation
+is surprisingly easy and widely supported.
+
+However, JSON is a textual representation.  The problem with a textual
+representation is the additional overhead of having to parse and
+interpret the text and convert, without any loss of precision, into a
+binary representation.  For this reason, we didn't consider JSON by
+itself a practice approach to serialization and deserialization.
+
+While we wanted to avoid the parsing aspect of JSON, the JSON data
+model \cite{JSON} is well suited to our purposes and many different
+groups have attended to create a binary representation that follows
+the JSON data model.  So our initial approach was to consider BSON
+\cite{BSON} which is a binary format the is formally specified and
+widely implemented because it is one of the cornerstones of the
+MongoDB database\cite{MongoDB}.
+
+Unfortunately, the BSON serialization scheme has a significant
+drawback.  The way it serializes arrays is very space inefficient.
+This is because JSON itself supports sparse indexing of arrays.  As a
+result, a serialization must include, for each value in the array, the
+index as well.  This adds significant overhead.  There is no way to
+specify that all elements in the array or sequential.  As such, there
+is no way to avoid this significant penalty.
+
+Fortunately, our reference implementation in Python\cite{pyRecon} had
+a clean separation between the serialization scheme and the structural
+aspects.  This made it very easy for us to experiment without other
+serialization techniques.  We investigated other similar serialization
+schemes like Smile\cite{Smile}, BJSON\cite{BJSON} and
+UBJSON\cit{UBJSON}.  However, none of them seemed to have a critical
+mass behind them.  Indeed, the landscape of binary JSON
+representations seemed to be surprisingly fragmented.
+
+As part of our investigation, we also looked at \msgpack.  It turned
+out that, like BSON, \msgpack was formally specified and implemented
+for a wide variety of platforms\cite{MsgPack}.  Furthermore, in
+testing \msgpack, we found that it had much better storage efficiency
+compared to BSON.  So, in the end, we moved forward using the \msgpack
+serialization scheme.
+
+The \msgpack approach had a couple of unanticipated benefits.  In
+\msgpack, floating point numbers can be encoded in either single or
+double precision representations.  Also, the specification identifies
+and formally specifies several different optimizations to minimize the
+number of bytes required to store short integers or short strings.
+The underlying ``types'' permitted in this format map very easily into
+the JSON format which, in turn, means that it maps well into the
+native data types common across all the languages we are interested
+in.  Finally, the \msgpack serialization scheme includes an extension
+mechanism for including additional data types beyond those in the
+specification.  While we don't have any immediate use for these
+extensions, it is nice to have that feature if we ever find that
+\msgpack's serialization is a constraint.
 
 \section{Specification}
 \label{sec:spec}
 
+With the motivation behind us, let's turn to the actual specification
+of these formats.  In this section we will describe the layout of both
+the \wall format and the \meld format.  As mentioned in the previous
+section, the serialization is done using \msgpack.  So we will focus
+mainly on the layout of data within the file.  When describing the
+actual data being stored we will use JSON notation document the data
+with the implicit understanding that this data will be serialized and
+deserialized using \msgpack.
+
+% tables and objects
+
+
 \subsection{Wall Format}
 \label{sec:wall_spec}
+
+Recall that the \wall format is optimized for reading and that this,
+in turn, means being able to easily add data.  You can think of the
+\wall format is being similar to a brick wall where each brick (new
+piece of data) is staggered with respect to others.  As you will see,
+we are {\b not} storing information in homogenous arrays and this means
+that we cannot predict the index of data simply based on information
+about which row or column it is in.  Also note that it is possible to
+have data from two different tables interleaved between each other.
+This allows us to add data with two distinct time bases.  But it makes
+the location of data even more difficult to predict.  However,
+remember that the \wall format is optimized for writing, not reading
+and that if network access is required tools will typically rewrite
+their data into the \meld format.
+
+Each \wall file starts with the following sequence of bytes:
+
+\begin{lstlisting}[frame=single]  % Start your code-block
+
+\end{lstlisting}
+
 
 \subsection{Meld Format}
 \label{sec:meld_spec}
@@ -323,6 +452,10 @@ f()
 \subsection{Performance}
 
 % Space efficiency
+
+\subsection{Conversion}
+
+% Conversions
 
 \subsection{Use Case}
 
