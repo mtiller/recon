@@ -10,18 +10,18 @@ WALL_ID = "recon:wall:v01"
 DEFSER = MsgPackSerializer
 
 # Header
-H_METADATA = "m"
-H_TABLES = "t"
-H_OBJECTS = "o"
+H_METADATA = "fmeta"
+H_TABLES = "tabs"
+H_OBJECTS = "objs"
 
 # Table
-T_METADATA = "m"
-T_VMETADATA = "v"
-T_SIGNALS = "s"
-T_ALIASES = "a"
+T_METADATA = "tmeta"
+T_VMETADATA = "vmeta"
+T_SIGNALS = "sigs"
+T_ALIASES = "als"
 
 # Aliases
-A_OF = "v"
+A_OF = "s"
 V_TRANS = "t"
 
 

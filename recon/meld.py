@@ -12,16 +12,16 @@ DEFSER = MsgPackSerializer
 MELD_ID = "recon:meld:v01"
 
 # Meld
-H_TABLES = "t"
-H_OBJECTS = "o"
-H_COMP = "c"
-H_METADATA = "m"
+H_METADATA = "fmeta"
+H_TABLES = "tabs"
+H_OBJECTS = "objs"
+H_COMP = "comp"
 
 # Tables
-T_INDICES = "i"
-T_VARIABLES = "V"
-T_METADATA = "m"
-T_VMETADATA = "v"
+T_INDICES = "toff"
+T_VARIABLES = "vars"
+T_METADATA = "tmeta"
+T_VMETADATA = "vmeta"
 
 # Variables
 V_INDEX = "i"
@@ -30,10 +30,10 @@ V_LENGTH = "l"
 V_TRANS = "t"
 
 # Alias
-A_OF = "v"
+A_OF = "s"
 
 # Object
-O_METADATA = "m"
+O_METADATA = "ometa"
 
 class MeldNotFinalized(Exception):
     """
