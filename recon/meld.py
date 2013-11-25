@@ -417,12 +417,18 @@ class MeldReader(object):
     """
     This class is used for reading melds
     """
-    def __init__(self, fp, verbose=False):
+    def __init__(self, fp, verbose=False, inmemory=False):
         """
         Reads the header information (two reads, one for size and one
         for rest of header).
         """
-        self.fp = fp
+        # Note, the inmemory option didn't seem to make any difference
+        # in my basic benchmarks
+        if inmemory:
+            import StringIO
+            self.fp = StringIO.StringIO(fp.read())
+        else:
+            self.fp = fp
         self.verbose = verbose
 
         self.ser = DEFSER(compress=False)
