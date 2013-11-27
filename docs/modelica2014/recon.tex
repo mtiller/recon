@@ -119,7 +119,7 @@ engineered.  HDF5 is feature rich, of that there is no question, but
 these features come at the cost of complexity.  This is why you see
 very few implementations outside of the reference implementation.
 Furthermore, the file format makes extensive use of ``seek''
-operations and assumes they are relatively in expensive.  This
+operations and assumes they are relatively inexpensive.  This
 assumption is reasonable if you are able to communicate directly with
 the hard drive that the files are stored on, but it isn't reasonable
 when these files are only available through the network.
@@ -175,7 +175,7 @@ simply append new data at the end of the file.
 
 % 2) It must be possible to extract individual signals with a minimum of I/O.
 
-In web and cloud based applications, it is not always practice to
+In web and cloud based applications, it is not always practical to
 download the complete set of results for a simulation into the browser
 environment.  There are many use cases where it would be best to be
 able to access results ``on demand''.  In these environments, such
@@ -734,7 +734,7 @@ different format, as we shall see shortly.
 But we also have a new key, the \code{"comp"} key, which isn't present
 at all in the \wall\ format.  The value associated with the
 \code{"comp"} key indicates whether the remainder of the file (after
-the header) is not just encoded (using \msgpack) but also encoded.  If
+the header) is not just encoded (using \msgpack) but also compressed.  If
 the value associated with the \code{"comp"} key is \code{true}, then
 all remaining \msgpack\ encodings present in the file after the header
 are compressed using bz2\cite{BZ2} compression.
