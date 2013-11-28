@@ -4,3 +4,7 @@ recon.log
 recon.out
 recon.pdf
 recon.ps
+recon.bbl
+recon.blg
+recon.fdb_latexmk
+recon.synctex.gz
