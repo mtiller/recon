@@ -102,7 +102,7 @@ Several groups have examined the issue of standardized file formats
 \cite{AndreasHDF5,GallHDF5} in the context of Modelica.  In keeping
 with the principals of the Modelica Association, an ideal choice would
 be a production ready format that is open source and cross-platform.
-With this requirements in mind, most people consider HDF5 a natural
+With these requirements in mind, most people consider HDF5 a natural
 choice.  There are already open source implementations and the file
 format has been widely used.  In fact, it has even been adopted by The
 MathWorks for use in MATLAB.
@@ -371,7 +371,7 @@ While we wanted to avoid the parsing aspect of JSON, the JSON data
 model \cite{JSON} is well suited to our purposes and many different
 groups have attended to create a binary representation that follows
 the JSON data model.  So our initial approach was to consider BSON
-\cite{BSON} which is a binary format the is formally specified and
+\cite{BSON} which is a binary format that is formally specified and
 widely implemented because it is one of the cornerstones of the
 MongoDB database\cite{MongoDB}.
 
@@ -380,12 +380,12 @@ drawback.  The way it serializes arrays is very space inefficient.
 This is because JSON itself supports sparse indexing of arrays.  As a
 result, a serialization must include, for each value in the array, the
 index as well.  This adds significant overhead.  There is no way to
-specify that all elements in the array or sequential.  As such, there
+specify that all elements in the array are sequential.  As such, there
 is no way to avoid this significant penalty.
 
 Fortunately, our reference implementation in Python\cite{pyRecon} had
 a clean separation between the serialization scheme and the structural
-aspects.  This made it very easy for us to experiment without other
+aspects.  This made it very easy for us to experiment with other
 serialization techniques.  We investigated other similar serialization
 schemes like Smile\cite{Smile}, BJSON\cite{BJSON} and
 UBJSON\cite{UBJSON}.  However, none of them seemed to have a critical
