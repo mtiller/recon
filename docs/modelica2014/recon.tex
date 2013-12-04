@@ -452,6 +452,14 @@ and no two columns within the same table can share the same name.  But
 there is no such restriction between columns in different tables (or
 fields in different objects, for that matter).
 
+Finally, it is worth noting that certain pieces of data are optional.
+In those cases, we have consistently followed a policy of leaving out
+both the key and the value.  In other words, it is not sufficient to
+simply associate a \code{null} value with a key.  \textbf{Both the key
+and the value must be removed} if there is no value provided.  The
+guiding principle here is that parsers should not have to do excessive
+amounts of ``null pointer'' checking.
+
 With that background out of the way, let's proceed with our
 explanation of the two file formats.
 
