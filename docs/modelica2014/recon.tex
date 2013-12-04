@@ -67,10 +67,10 @@ assumption that the file itself will be locally available to the
 software that will be reading or writing the data stored in them.
 While this assumption is an excellent one for desktop based tools with
 direct access to disk drives capable of moving virtually
-instantaneously around from sector to sector, there are growing number
-of applications for which local access is not necessarily available.
-For these applications, we've initiated the \recon\ project to develop
-more suitable formats.
+instantaneously around from sector to sector, there are a growing
+number of applications for which local access is not necessarily
+available.  For these applications, we've initiated the
+\recon\ project to develop more suitable formats.
 
 With the emergence of web and cloud based modeling and simulation
 technologies, the time has come to explore file formats specifically
@@ -107,9 +107,9 @@ choice.  There are already open source implementations and the file
 format has been widely used.  In fact, it has even been adopted by The
 MathWorks for use in MATLAB.
 
-But HDF5 has some important drawbacks.  The first is that it is not
+But HDF5 has some practical drawbacks.  The first is that it is not
 truly cross-platform.  The reference implementation of HDF5 is written
-in C.  The implementation is primarily targeted for use with in C, C++
+in C.  The implementation is primarily targeted for use within C, C++
 or Fortran applications.  While there are various libraries available
 for reading HDF5 on the Java platform\cite{HDFJava}, they are
 incomplete and awkward to use.
@@ -128,22 +128,22 @@ There are, of course, many standards for manipulating data in web or
 cloud based environments.  The most popular formats, by far, are
 Javascript Object Notation (or JSON, for short) and XML.  There are a
 number of different approaches to marshalling and unmarshalling data
-for consumption by cross-platform tools.  Approaches like Google
+for consumption by cross-platform tools.  Projects like Google
 Protocol Buffers\cite{GPB}, Avro\cite{Avro}, Thrift\cite{Thrift} and
-others are working hard to try and knit together the various ``big
-data'' tools like Hadoop\cite{Hadoop}, Storm\cite{Storm} and ???.
+others are working hard to knit together the various ``big data''
+tools like Hadoop\cite{Hadoop}, Storm\cite{Storm} and ???.
 
 So where does that leave us?  Should we adopt the tried and true
 standards from the engineering world and simply live with their lack
 of interoperability with important platforms like Java or Javascript
-and poor performance when accessed remotely?  Or, should we try and
-adapt tools from the ``big data'' world, that were developed for quite
+and poor performance when accessed remotely?  Or, should we adapt
+tools from the ``big data'' world, that were developed for quite
 different use cases, to work in the engineering world.
 
-In some sense, we've chosen a compromise.  As we will see shortly, the
+In some sense we've chosen a compromise.  As we will see shortly, the
 \wall\ and \meld\ formats are fundamentally derived from the
 \msgpack\ \cite{msgpack} specification.  This gives us excellent cross
-platform compatibility.  But \msgpack\  is simply a serialization
+platform compatibility.  But \msgpack\ is simply a serialization
 protocol.  To address some of our more important concerns, to be
 discussed shortly, we needed to design a structural context in which
 to employ \msgpack. So in this sense, we've created a set of original
@@ -246,14 +246,14 @@ One issue with data files is that if you don't provide a means for
 associating metadata with entities in the file, the metadata will
 \textbf{become} entities in the file.  For this reason, we deemed it
 important that metadata should be treated in a ``first-class'' way.
-Specifically, it should be possible to associated metadata with the
-file as a whole, with data structures in the file all the way down to
-individual signals.  This would allow tools to persist other important
-information, beyond the solution, in these data files.  For example,
-information about common plots or plotting options, descriptions of
-the signals, units or display units could all be managed in a
-structured way without being confused with data and without needing to
-be a formal part of the file format specification.
+Specifically, it should be possible to associate metadata with the
+file as a whole and with data structures in the file all the way down
+to individual signals.  This would allow tools to persist other
+important information, beyond the solution, in these data files.  For
+example, information about common plots or plotting options,
+descriptions of the signals, units or display units could all be
+managed in a structured way without being confused with data and
+without needing to be a formal part of the file format specification.
 
 \subsection{Requirement 7 - Hierarchy}
 
@@ -262,7 +262,7 @@ be a formal part of the file format specification.
 Many tools create structures that are hierarchical.  In the Modelica
 world, we have deep hierarchies of instances in simulated models.  We
 also have hierarchies for packages and the definitions contained in
-them.  So it is important the a file format can represent this
+them.  So it is important that a file format can represent these
 hierarchies in some way.
 
 In our experience, trying to organize results according to an instance
@@ -278,15 +278,14 @@ avoid considerable complexity.
 % Support for heterogenous data (no strict type constraints)
 
 Even though our goal is to have a format that is well suited to web
-and cloud based application, it should also be capable of representing
-the kinds of simulation results as we normally think of them.  For
-this reason, we include as a requirement the ability to represent the
-widely used ``dsres'' format used by many tools including Dymola and
-OpenModelica.  In particular, it should be possible to preserve all
-the data normally contained in these formats when translating them
-into the \recon\ formats.  Furthermore, the \recon\ formats should have
-comparable storage efficiency (\textit{i.e.,} the files should be
-approximately the same size, regardless of format).
+and cloud based applications, it should also be capable of
+representing the kinds of simulation results we interact with in a
+desktop environment.  For this reason, we one of our requirements was
+the ability to translate data in the ``dsres'' format into the
+\recon\ formats.  Such a translation should preserve all data and
+metadata normally associated with the ``dsres'' format.  Furthermore,
+the resulting \recon\ files should be approximately the same size as
+the original ``dsres'' file.
 
 \section{Approach}
 
@@ -339,7 +338,7 @@ simulation, rewrite their data into the \meld\ format.
 
 % Started with BSON, switched to MsgPack
 
-There are really two aspects each \recon\ format.  The first is the
+There are really two aspects to each \recon\ format.  The first is the
 structure of the file (where different pieces of information reside in
 the file, something we'll discuss in Section \ref{sec:spec}) and the
 other is how the actual data is represented.
@@ -365,11 +364,11 @@ However, JSON is a textual representation.  The problem with a textual
 representation is the additional overhead of having to parse and
 interpret the text and convert, without any loss of precision, into a
 binary representation.  For this reason, we didn't consider JSON by
-itself a practice approach to serialization and deserialization.
+itself a practical approach to serialization and deserialization.
 
 While we wanted to avoid the parsing aspect of JSON, the JSON data
 model \cite{JSON} is well suited to our purposes and many different
-groups have attended to create a binary representation that follows
+groups have attempted to create a binary representation that follows
 the JSON data model.  So our initial approach was to consider BSON
 \cite{BSON} which is a binary format that is formally specified and
 widely implemented because it is one of the cornerstones of the
@@ -389,8 +388,8 @@ aspects.  This made it very easy for us to experiment with other
 serialization techniques.  We investigated other similar serialization
 schemes like Smile\cite{Smile}, BJSON\cite{BJSON} and
 UBJSON\cite{UBJSON}.  However, none of them seemed to have a critical
-mass behind them.  Indeed, the landscape of binary JSON
-representations seemed to be surprisingly fragmented.
+mass behind them.  Indeed, there doesn't seem to be a consensus in the
+JSON community on how to serialize JSON in a binary form.
 
 As part of our investigation, we also looked at \msgpack.  It turned
 out that, like BSON, \msgpack\ was formally specified and implemented
@@ -411,7 +410,7 @@ in.  Finally, the \msgpack\ serialization scheme includes an extension
 mechanism for including additional data types beyond those in the
 specification.  While we don't have any immediate use for these
 extensions, it is nice to have that feature if we ever find that
-\msgpack's serialization is a constraint.
+\msgpack's serialization is too constraining.
 
 \section{Specification}
 \label{sec:spec}
@@ -421,14 +420,14 @@ of these formats.  In this section we will describe the layout of both
 the \wall\ format and the \meld\ format.  As mentioned in the previous
 section, the serialization is done using \msgpack.  So we will focus
 mainly on the layout of data within the file.  When describing the
-actual data being stored we will use JSON notation document the data
-with the implicit understanding that this data will be serialized and
-deserialized using \msgpack.
+actual data being stored we will use JSON notation to document the
+data with the implicit understanding that this data will be serialized
+and deserialized using \msgpack.
 
 % tables and objects
 
 Before we get into the specifications for each of these formats, it
-will be useful to introduce a few topics that are common to both
+will be useful to discuss a few topics that are relevant to both
 formats.  For example, what exactly are we storing in these file
 formats?  Both formats support the storing of tables and objects.
 Tables are, as the name implies, a structure for storing tabular data.
@@ -459,7 +458,7 @@ explanation of the two file formats.
 \subsection{Wall Format}
 \label{sec:wall_spec}
 
-Recall that the \wall\ format is optimized for reading and that this,
+Recall that the \wall\ format is optimized for writing and that this,
 in turn, means being able to easily add data.  You can think of the
 \wall\ format is being similar to a brick wall where each brick (new
 piece of data) is staggered with respect to others.  As you will see,
@@ -595,7 +594,7 @@ correspond to the order defined by the list associated with the
 \code{"sigs"} key value within that table.
 
 The other entry type is a ``field entry''.  These represent updates to
-the values of fields in objects and has the following format:
+the values of fields in objects and have the following format:
 
 %\lstset{language=javascript}
 %\begin{lstlisting}[frame=single]  % Start your code-block
@@ -724,9 +723,9 @@ the header should contain the following information:
 This is very similar to the \wall\ format presented in Section
 \ref{sec:wall_spec}.  Again, we see file level metadata exactly as it
 is used in the \wall\ format.  We also have the \code{"tabs"} and
-\code{"objs"} keys, also present in the \wall\ format but with in
-important distinction which is that the data that follows them has a
-different format, as we shall see shortly.
+\code{"objs"} keys, also present in the \wall\ format but with an
+important distinction which is that the values that follows them have
+a different format, as we shall see shortly.
 
 But we also have a new key, the \code{"comp"} key, which isn't present
 at all in the \wall\ format.  The value associated with the
@@ -770,11 +769,11 @@ variables present in the file.  The \code{"toff"} key is associated
 with a map that specifies important information about the location of
 the variables within the file.  It is the \code{"toff"} data that
 makes it easy for us to extract individual signals.  The \code{"i"}
-key is associated with the starting byte, within the file, of the data
-associated with the variable and the \code{"l"} key is associated with
-the length of that data.  The optional \code{"t"} key defines any
-transformation, in any, to be applied to the variable data (see
-Section \ref{sec:trans} for more details).
+key is associated with the starting byte, within the file (starting
+from 0), of the data associated with the variable and the \code{"l"}
+key is associated with the length of that data.  The optional
+\code{"t"} key defines any transformation, in any, to be applied to
+the variable data (see Section \ref{sec:trans} for more details).
 
 Returning to the header data, the object data associated with the
 \code{"objs"} key has the following format in a \meld\ file:
@@ -809,22 +808,24 @@ with those keys are the field values.
 
 % Shrinkage
 
-It is worth pointing out that when writing the exactly length of the
+It is worth pointing out that when writing the exact length of the
 header (when encoded in \msgpack\ format) cannot be known \textit{a
-  priori}, For this reason, a collection of bytes representing the
-``worst case scenario'' (largest possible size) must be reserved for
-the header.  The size of this header depends on the number of tables
-and objects as well as the number of signals in each table.
+  priori}.  For this reason, a collection of bytes representing the
+largest possible size must be reserved for the header.  The size of
+this header depends on the number of tables and objects as well as the
+number of signals in each table so it important that all this
+information is known before determining the maximum number of bytes
+required to represent the header.
 
 However, when the final version of the header is written out (once the
-location of all the data can be determined), it's size may be less
-than originally anticipated.  For this reason, there may be a few
-unused bytes present between the end of the table and the first
-variable or object data in the file.  This is a result of the
-\msgpack\ format's aggressive compression of small integers.  While it
-is true that a few bytes will be wasted as a result it basically means
-that \msgpack's aggresive optimizations will be wasted in this case
-(and this case only).
+location of all the data can be determined), its size may be less than
+originally anticipated.  For this reason, there may be a few unused
+bytes present between the end of the table and the first variable or
+object data in the file.  This is a result of the \msgpack\ format's
+aggressive compression of small integers.  While it is true that a few
+bytes will be wasted as a result it basically means that \msgpack's
+aggresive optimizations will be wasted in this case (and this case
+only).
 
 \subsubsection{Meld Format Summary}
 
@@ -897,7 +898,7 @@ transformation is indicated when the transform string has a value of
 data type.  For numeric data types, the inverse transformation causes
 the data to have its sign inverted.  For boolean data, the inverse
 transformation applies a logical not operation to the data.  With this
-simple transform alone, it is possible to avoid strong a significant
+simple transform alone, it is possible to avoid storing a significant
 amount of data.
 
 The other transform type is the ``affine'' transform.  This
@@ -911,7 +912,9 @@ value, \code{o}.
 If no transform string is present, no transformation is applied and
 the data is left ``as is''.  If there is a transform string but it is
 not recognized, the data should also be left ``as is''.  If the
-transform string is recognized but the transform.
+transform string is recognized but the transform does not apply to the
+type of data being transformed, the data should again be left ``as
+is''.
 
 \section{Discussion}
 \label{sec:discussion}
@@ -923,16 +926,16 @@ Although it is implicit in the requirements listed in Section
 use case that drove these requirements.
 
 For web and cloud based simulation, the bulk of the computational work
-is done remotely.  In cloud services, there is an effect some times
-called ``data gravity'' which dictates to improve overall throughput,
-the computing platforms tends to gravitate to where the data is stored
-(\textit{i.e.,} the same service provider or at least ones that are connected
-with low latency, high bandwidth connections).
+is done remotely.  In cloud services, there is an effect sometimes
+called ``data gravity'' which dictates that to improve overall
+throughput, the computing platforms tends to gravitate to where the
+data is stored (\textit{i.e.,} the same service provider or at least
+ones that are connected with low latency, high bandwidth connections).
 
 So if one seeks an optimal configuration where the computing and
-storage are well connected, it makes sense that it is easy to store
-the complete simulation results without any significant concerns for
-latency or bandwidth.
+storage are well connected, it is easy to store the complete
+simulation results without any significant concerns for latency or
+bandwidth.
 
 The complication comes from having to access that data via a
 ``normal'' network connection.  A typical use case (and the one that
@@ -974,7 +977,7 @@ requests.  The first request would be the first 18 bytes (again,
 utilizing the \code{Range} header) to establish the size of the
 header.  The next request would be to read the binary header data
 which includes information about the locations of all table columns
-and objects.  Once these two requests had been made, the client would
+and objects.  Once these two requests have been made, the client would
 be able to access any object or column with only one additional
 request.
 
@@ -985,7 +988,7 @@ problems that have already been solved.  This was the motivation
 behind the use of \msgpack\ but we are also assuming that most network
 requests for data will be made using HTTP.  This is a safe assumption
 given the ubiquitous nature of HTTP (or HTTPS, for that matter).  But
-if we assume the requests are made via HTTP we also gain that
+if we assume that requests are made via HTTP we also gain the
 additional benefits of caching.
 
 Most networks are already equipped to efficiently handle caching
@@ -1012,15 +1015,15 @@ mix it in or conflate it with actual data.  Furthermore, metadata is
 supported for a wide range of entities represented in the file.
 
 There are many potential applications for such metadata.  For example,
-file level metadata can be used to store very useful information such
-as who ran a simulation, what particular model they ran, what
+file level metadata can be used to store useful information such as
+who ran a simulation, what particular model they ran, what
 modifications (if any) were applied to the model or even a complete
-listing of all the parameter values that used to simulate the model.
-In addition, general experimental data could also be stored in the
-results file.
+listing of all the parameter values that were used to simulate the
+model.  In addition, general experimental data could also be stored in
+the results file.
 
 Metadata at the signal level could be used to specify not just
-descriptions of those variables along with their physical units but
+descriptions of those variables along with their physical units but,
 they could also be used to include other attributes like start values,
 nominal values, \textit{etc.},
 
@@ -1040,7 +1043,7 @@ baseline.
 
 % Space efficiency
 
-The first issue we will example is space efficiency.  The baseline
+The first issue we will examine is space efficiency.  The baseline
 results take up 3,069,623 bytes of storage (for the storage options we
 selected).  When stored in the \meld\ format \textbf{without compression}
 those same results take up 3,169,994 bytes.  Note that this
@@ -1088,7 +1091,7 @@ milliseconds): 18.111, 18.143, 20.076, 19.309, 21.773 for an average time
 of 19.482 milliseconds.
 
 In the case of the \meld\ file, we opened the results file, created a
-\code{MeldReader} object to read it.  Extracted the \code{data\_2}
+\code{MeldReader} object to read it, extracted the \code{data\_2}
 table (called \code{T2} in the translated file) and then extracted the
 data associated with the \code{Time} signal.  That code looks as
 follows,
@@ -1152,18 +1155,19 @@ version of the benchmark).
 
 In fairness, it is worth pointing out that we generally expect
 simulation tools to write output results in the \wall\ format first
-and then convert them into the \meld\ format.  As such, they will some
-penalty as a one-time cost when regenerating their results in the
-\meld\ format and this penalty is not taken into account here.
+and then convert them into the \meld\ format.  As such, they will
+incur some penalty as a one-time cost when regenerating their results
+in the \meld\ format and this penalty is not taken into account here.
 Furthermore, this benchmark doesn't include any writing performance
 benchmarks (primarily because we have not connected any of these codes
 to actual simulation tools to measure write performance).
 
-In summary, we do not any benchmarks that compare write performance.
-But in terms of storage efficiency, the \meld\ file format was only
-3\% larger when compared to our baseline results in dsres format.  On
-the other hand, in terms of read performance, the \meld\ format was
-between 15 and 50\% faster depending on the amount of data to be read.
+In summary, we do not have any benchmarks that compare write
+performance.  But in terms of storage efficiency, the \meld\ file
+format was only 3\% larger when compared to our baseline results in
+dsres format.  On the other hand, in terms of read performance, the
+\meld\ format was between 15 and 50\% faster depending on the amount
+of data to be read.
 
 \section{Conclusion}
 \label{sec:conclusion}
@@ -1176,7 +1180,7 @@ In conclusion, the \recon\ file formats support many important features:
   implementations in C and Java already planned.
 % efficient disk and network access
 \item \textbf{efficient disk and network access} - These formats have been
-  optimizes for efficient network performance.  But as the benchmarks
+  optimized for efficient network performance.  But as the benchmarks
   show, these formats also perform very well for when results are
   stored locally on hard disks.
 % first-class metadata
