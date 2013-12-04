@@ -50,7 +50,7 @@ class BSONSerializer(object): # pragma: no cover
         obj = {"d": x}
         data = self.encode_obj(obj, uncomp=uncomp)
         return data
-    def decode_obj(self, fp, length, uncomp=False):
+    def decode_obj(self, fp, length, uncomp=False, verbose=False):
         """
         Decode an object (uncomp=True means suppress decompression)
         """
@@ -59,6 +59,8 @@ class BSONSerializer(object): # pragma: no cover
         data = fp.read(length)
         if self.compress and not uncomp:
             data = decompress(data)
+        if verbose:
+            print "Raw object data: "+str(repr(data))
         return BSON(data).decode()
     def decode_vec(self, fp, length, uncomp=False):
         """
