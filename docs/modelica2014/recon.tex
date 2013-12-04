@@ -915,7 +915,10 @@ transformation is indicated when the transform string has a value of
 \code{o} represents an offset value.  In the presence of this
 transformation, all \textbf{numeric} values in the base data should be
 multiplied by the scale factor, \code{s}, and then added to the offset
-value, \code{o}.
+value, \code{o}.  As one reviewer of this paper noted, unit transforms
+are almost always affine in nature.  This means that the affine
+transformation permits results to be stored in many different physical
+units without taking up any appreciable additional storage.
 
 If no transform string is present, no transformation is applied and
 the data is left ``as is''.  If there is a transform string but it is
