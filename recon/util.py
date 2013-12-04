@@ -17,13 +17,15 @@ def conv_len(bytes):
     up = struct.unpack('!L', bytes)
     return up[0]
 
-def read_len(fp, ignoreEOF=False):
+def read_len(fp, ignoreEOF=False, verbose=False):
     """
     This reads a length from the stream.  If the ignoreEOF flag
     is set, a failure to read the length simple results in
     a None being returned (vs. an exception being thrown)
     """
     lbytes = fp.read(4)
+    if verbose:
+        print "Raw length bytes: "+str(repr(lbytes))
     if len(lbytes)!=4:
         if ignoreEOF:
             return None
