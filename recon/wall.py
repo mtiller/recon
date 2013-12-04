@@ -339,8 +339,11 @@ class WallReader(object):
 
         # Now read the length of the header object
         # and then the header object itself
-        self.headlen = read_len(self.fp)
-        self.header = self.ser.decode_obj(self.fp, length=self.headlen)
+        self.headlen = read_len(self.fp, verbose=verbose)
+        if verbose:
+            print "Header length: "+str(self.headlen)
+        self.header = self.ser.decode_obj(self.fp, length=self.headlen,
+                                          verbose=verbose)
         self.metadata = self.header[H_METADATA]
         if self.verbose:
             print "header = "+str(self.header)
@@ -352,6 +355,12 @@ class WallReader(object):
         """
         Returns the set of objects in this file.
         """
+        if not H_OBJECTS in self.header:
+            print "WARNING: Object information is missing from header"
+            return set()
+        if self.header[H_OBJECTS]==None:
+            print "WARNING: Invalid header value for objects"
+            return set()
         return self.header[H_OBJECTS].keys()
 
     def tables(self):
@@ -373,9 +382,10 @@ class WallReader(object):
         self.fp.seek(self.start)
 
         # Read the next object
-        rowlen = read_len(self.fp, ignoreEOF=True)
+        rowlen = read_len(self.fp, ignoreEOF=True, verbose=self.verbose)
         while rowlen!=None:
-            row = self.ser.decode_obj(self.fp, length=rowlen)
+            row = self.ser.decode_obj(self.fp, length=rowlen,
+                                      verbose=self.verbose)
             if self.verbose:
                 print "row = "+str(row)
             # All entries have a single key which is the name of the entity
@@ -384,7 +394,7 @@ class WallReader(object):
             # be returned.
             if name in row:
                 ret.append(row[name])
-            rowlen = read_len(self.fp, ignoreEOF=True)
+            rowlen = read_len(self.fp, ignoreEOF=True, verbose=self.verbose)
         return ret
 
     def read_object(self, name):
@@ -456,6 +466,9 @@ class WallTableReader(object):
         Transformation **object** between alias and base signal
         """
         return self.header[T_ALIASES][name].get(V_TRANS, None)
+
+    def vmetadata(self, name):
+        return self.var_metadata.get(name, None)
 
     def data(self, name):
         """
