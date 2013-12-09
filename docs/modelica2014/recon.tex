@@ -11,7 +11,9 @@
 \geometry{left=20mm, right=20mm, top=25.4mm, bottom=25mm, noheadfoot, columnsep=8mm}
 %\parindent0pt
 \parindent10pt
-\bibliographystyle{ieeetr}
+
+\usepackage[sorting=none]{biblatex}
+\bibliography{recon}
 
 % some additional packages
 \usepackage{listings} % for code listings
@@ -99,8 +101,8 @@ community as a whole.
 \section{Introduction}
 \label{sec:intro}
 
-Several groups have examined the issue of standardized file formats
-\cite{AndreasHDF5,GallHDF5} in the context of Modelica.  In keeping
+Several groups have examined the issue of standardized file
+formats\cite{AndreasHDF5,GallHDF5} in the context of Modelica.  In keeping
 with the principles of the Modelica Association, an ideal choice would
 be a production ready format that is open source and cross-platform.
 With these requirements in mind, most people consider HDF5 a natural
@@ -145,7 +147,7 @@ different use cases, to work in the engineering world.
 
 In some sense we've chosen a compromise.  As we will see shortly, the
 \wall\ and \meld\ formats are fundamentally derived from the
-\msgpack\ \cite{msgpack} specification.  This gives us excellent cross
+\msgpack\cite{msgpack} specification.  This gives us excellent cross
 platform compatibility.  But \msgpack\ is simply a serialization
 protocol.  To address some of our more important concerns, to be
 discussed shortly, we needed to design a format the imposed additional
@@ -371,7 +373,7 @@ binary representation.  For this reason, we didn't consider JSON by
 itself a practical approach to serialization and deserialization.
 
 While we wanted to avoid the parsing aspect of JSON, the JSON data
-model \cite{JSON} is well suited to our purposes and many different
+model\cite{JSON} is well suited to our purposes and many different
 groups have attempted to create a binary representation that follows
 the JSON data model.  So our initial approach was to consider BSON
 \cite{BSON} which is a binary format that is formally specified and
@@ -686,7 +688,7 @@ far:
 // ...or row entries
 0x?? 0x?? 0x?? 0x?? // entry length
 {
-  <table name>: [list of signal values]  
+  <table name>: [list of signal values]
 }
 \end{verbatim}
 %\end{lstlisting}
@@ -1240,5 +1242,5 @@ In conclusion, the \recon\ file formats support many important features:
 The \recon\ formats provide all these benefits without any significant
 compromise in storage efficiency.
 
-\bibliography{recon}
+\printbibliography
 \end{document}
