@@ -84,7 +84,8 @@ When considering the various use cases that drove our requirements, we
 recognized that two different file formats were actually required.
 The first format, the \wall\ format, is optimized for writing.  The
 other format, the \meld\ format, is optimized for reading over a
-network.  We will discuss the importance of each of these formats and
+network (\textit{i.e.,} minimizing the number of reads and bytes
+read).  We will discuss the layout of each of these formats and
 describe the use cases for which they are most appropriate.
 
 In the open tradition of the Modelica Association, the authors have
@@ -100,7 +101,7 @@ community as a whole.
 
 Several groups have examined the issue of standardized file formats
 \cite{AndreasHDF5,GallHDF5} in the context of Modelica.  In keeping
-with the principals of the Modelica Association, an ideal choice would
+with the principles of the Modelica Association, an ideal choice would
 be a production ready format that is open source and cross-platform.
 With these requirements in mind, most people consider HDF5 a natural
 choice.  There are already open source implementations and the file
@@ -124,14 +125,16 @@ assumption is reasonable if you are able to communicate directly with
 the hard drive that the files are stored on, but it isn't reasonable
 when these files are only available through the network.
 
-There are, of course, many standards for manipulating data in web or
-cloud based environments.  The most popular formats, by far, are
-Javascript Object Notation (or JSON, for short) and XML.  There are a
-number of different approaches to marshalling and unmarshalling data
-for consumption by cross-platform tools.  Projects like Google
-Protocol Buffers\cite{GPB}, Avro\cite{Avro}, Thrift\cite{Thrift} and
-others are working hard to knit together the various ``big data''
-tools like Hadoop\cite{Hadoop}, Storm\cite{Storm} and ???.
+There are, of course, many standards for encoding data in web or cloud
+based environments.  The most popular formats, by far, are Javascript
+Object Notation (or JSON, for short) and XML.  There are other
+approaches as well like Google Protocol Buffers\cite{GPB},
+Avro\cite{Avro} and Thrift\cite{Thrift}.  Different approaches have
+different goals.  Some define schemas to add a level static checking.
+Others exist mainly to compress the data being transmitted.  Finally,
+others exist to introduce a layer of interoperability with RPC
+frameworks or ``big data'' tools like Hadoop\cite{Hadoop} and
+Storm\cite{Storm}.
 
 So where does that leave us?  Should we adopt the tried and true
 standards from the engineering world and simply live with their lack
@@ -145,10 +148,10 @@ In some sense we've chosen a compromise.  As we will see shortly, the
 \msgpack\ \cite{msgpack} specification.  This gives us excellent cross
 platform compatibility.  But \msgpack\ is simply a serialization
 protocol.  To address some of our more important concerns, to be
-discussed shortly, we needed to design a structural context in which
-to employ \msgpack. So in this sense, we've created a set of original
-file formats that leverage open standards but re-purpose them for
-modeling and simulation applications.
+discussed shortly, we needed to design a format the imposed additional
+structure on top of \msgpack. So in this sense, we've created a set of
+original file formats that leverage open standards, like \msgpack, but
+re-purpose them for modeling and simulation applications.
 
 \section{Goals}
 \label{sec:goals}
@@ -185,8 +188,8 @@ request to read from a disk drive and far less bandwidth.  As such, we
 would want to minimize the number of such requests and the amount of
 data necessary to transmit in each request.  This means we need a way
 to ``cluster'' the data we are interested in so as to minimize both
-the number of requests required and minimize the amount of data in
-each response.
+the number of requests required and the amount of data in each
+response.
 
 \subsection{Requirement 3 - Cross Platform Support}
 
@@ -214,11 +217,10 @@ underlying solution trajectory.  Typically, the data for each unique
 solution trajectory is stored once and each variable is simply a
 reference to the underlying solution trajectory.  Even more storage
 can be saved by recognizing that some trajectories are related to
-other trajectories by very simple transformations (\textit{e.g.,} a simple
-sign change).
-
-For this reason, it is very useful if these kinds of relationships are
-directly represented in the file format itself.
+other trajectories by very simple transformations (\textit{e.g.,} a
+simple sign change).  For this reason, it is very useful if these
+kinds of relationships are directly represented in the file format
+itself.
 
 \subsection{Requirement 5 - Data Types}
 
@@ -280,8 +282,8 @@ avoid considerable complexity.
 Even though our goal is to have a format that is well suited to web
 and cloud based applications, it should also be capable of
 representing the kinds of simulation results we interact with in a
-desktop environment.  For this reason, we one of our requirements was
-the ability to translate data in the ``dsres'' format into the
+desktop environment.  For this reason, one of our requirements was the
+ability to translate data in the ``dsres'' format into the
 \recon\ formats.  Such a translation should preserve all data and
 metadata normally associated with the ``dsres'' format.  Furthermore,
 the resulting \recon\ files should be approximately the same size as
@@ -293,13 +295,13 @@ the original ``dsres'' file.
 
 In reviewing these requirements, the main design challenge was trying
 to reconcile requirements 1 and 2.  Implementing requirement 1
-typically involves the need to write data out one row at a time where
+typically involves the need to write data out one row at a time, where
 each row represents the values of all the variables for successive
 solution times.  As such, the solution values for any particular
 \textit{variable} are widely spaced.  However, requirement 2 requires
 us to be able to extract a given variable with a minimum number of I/O
 operations.  In other words, requirement 1 typically results in data
-being ``fragmented'' while requirement 2 depends on that data being
+being fragmented while requirement 2 depends on that data being
 clustered together.
 
 % Two formats
@@ -308,17 +310,19 @@ clustered together.
 Our solution to this design problem was to design two file formats.
 The first, the \wall\ format, is designed for writing.  Not only does
 it make adding data fast and efficient, it also supports, unlike the
-\code{dsres} approach, adding data for multiple ``tables'' at once.
-In practice, what this means is that if you have variables in your
-simulation that are partitioned such that they have different
-independent variables (as with the new clock semantics in Modelica
-3.3), this format supports writing out new data for any of these
-variables.  In other words, you can add results that may have
-completely different time bases.
+\code{dsres} approach, adding data for multiple tables at once.  In
+practice, this means that if you have variables in your simulation
+that are partitioned such that they have different independent
+variables (as with the new clock semantics in Modelica 3.3), this
+format supports writing out new data for any of these variables.  In
+other words, you can add results that may have completely different
+time bases.  You can also include results from multiple simulations
+and use the metadata features to associate the specific parameter sets
+with each table.
 
 The other format, the \meld\ format, is optimized for reading.
 Specifically, it is optimized for requirement 2.  For an ideal
-format, it would be possible to extract a single result trajectory in
+format, it should be possible to extract a single result trajectory in
 a single read.  This would act to minimize the impact of latency.
 Furthermore, the bytes read should contain only data associated with
 the desired signal.  This would minimize the impact of limited
@@ -330,8 +334,8 @@ Our expectation is that tools will write data out (during simulation)
 in the \wall\ format.  Tools may choose to keep the data in this
 format.  For platforms where network access is not a requirement, the
 write optimized nature of the \wall\ format will probably be adequate
-for both reading and writing.  However, for cases where data will be
-read over a network we expect that tools will, upon completing a
+for both reading and writing.  However for cases where data will be
+read over a network, we expect that tools will, upon completing a
 simulation, rewrite their data into the \meld\ format.
 
 \subsection{Serialization}
@@ -433,7 +437,7 @@ formats?  Both formats support the storing of tables and objects.
 Tables are, as the name implies, a structure for storing tabular data.
 It is worth noting that there are no restrictions on what kind of data
 can be stored in a table except those imposed by the underlying
-\msgpack\ format (\textit{i.e.,} very few).  This means tables can mix
+\msgpack\ format (which are very few).  This means tables can mix
 integers, floats, doubles, longs, short ints, strings, booleans and
 even objects across different columns in the same table.
 
@@ -458,7 +462,7 @@ both the key and the value.  In other words, it is not sufficient to
 simply associate a \code{null} value with a key.  \textbf{Both the key
 and the value must be removed} if there is no value provided.  The
 guiding principle here is that parsers should not have to do excessive
-amounts of ``null pointer'' checking.
+amounts of null value checking.
 
 With that background out of the way, let's proceed with our
 explanation of the two file formats.
@@ -468,7 +472,7 @@ explanation of the two file formats.
 
 Recall that the \wall\ format is optimized for writing and that this,
 in turn, means being able to easily add data.  You can think of the
-\wall\ format is being similar to a brick wall where each brick (new
+\wall\ format as being similar to a brick wall where each brick (new
 piece of data) is staggered with respect to others.  As you will see,
 we are \textbf{not} storing information in homogenous arrays and this
 means that we cannot predict the index of data simply based on
@@ -477,8 +481,8 @@ possible to have data from two different tables interleaved between
 each other.  This allows us to add data with two distinct time bases.
 But it makes the location of data even more difficult to predict.
 However, remember that the \wall\ format is optimized for writing, not
-reading and that if network access is required tools will typically
-rewrite their data into the \meld\ format.
+reading and that if network access is required then tools will
+typically rewrite their data into the \meld\ format.
 
 \subsubsection{Leading Bytes}
 
@@ -495,14 +499,16 @@ so, what version of the specification should be applied.
 
 The next four bytes are a binary encoding of the length of the header.
 This encoding is done in so-called ``network byte order''
-(big-endian).
+(big-endian).  The byte encoding of the length is not considered part
+of the header (\textit{i.e.,} the length indicated doesn't include the
+4 bytes that encode the length).
 
 \subsubsection{Header}
 
 Once the length of the header is known, the bytes for the header are
 read in.  These bytes are assumed to have been serialized in
-\msgpack\ format so we must next unpack these bytes.  Once unpacked,
-the header should contain the following information:
+\msgpack\ format so we must next unpack (deserialize) these bytes.
+Once unpacked, the header should contain the following information:
 
 %\lstset{language=javascript}
 %\begin{lstlisting}[frame=single]  % Start your code-block
@@ -520,11 +526,10 @@ the header should contain the following information:
 %\end{lstlisting}
 
 The \code{"fmeta"} key is associated with the value for any file level
-metadata.  This metadata is, itself, represented as a map in
-\msgpack\ and will be deserialized as such into the implementation
-language.  The \code{"tabs"} key is associated with a value that maps
-the names of tables to table data.  The format of this table data is
-as follows:
+metadata.  This metadata is, itself, represented in our notation here
+as an object in JSON but will be encoded as a map in \msgpack.  The
+\code{"tabs"} key is associated with a value that maps the names of
+tables to table data.  The format of this table data is as follows:
 
 \begin{verbatim}
 {
@@ -544,13 +549,13 @@ as follows:
 }
 \end{verbatim}
 
-The \code{"tmeta"} key is associated with metadata (represented as a
-\msgpack\ map) but this time it is metadata associated with the table.
-In addition, we have the \code{"sigs"} key which represents an ordered
-list of signals.  A signal represents an actual solution trajectory
-and the order is important because the order in this list indicates
-the order in which the data will be stored in successive rows (to be
-discussed shortly).
+The \code{"tmeta"} key is associated with metadata (again, represented
+as a \msgpack\ map) but this time it is metadata associated with the
+table.  In addition, we have the \code{"sigs"} key which represents an
+ordered list of signals.  A signal represents an actual solution
+trajectory and the order is important because the order in this list
+indicates the order in which the data will be stored in successive
+rows (to be discussed shortly).
 
 The \code{"als"} key represents any aliases present in the table.
 Again, this is a \msgpack\ map where the name of the alias is the key.
@@ -562,16 +567,16 @@ that should be applied to the base signal to compute the value of the
 alias signal.  Note that this transformation \textbf{is optional}.
 The possible values will be described shortly in \ref{sec:trans}.
 
-Finally, we have the \code{"vmeta"} key which is a map where the keys
-are the names of variables (\textit{i.e.,} both signals and aliases) and
-the values are any metadata (again, stored as a \msgpack\ map)
+Finally we have the \code{"vmeta"} key, which is a map where the keys
+are the names of variables (\textit{i.e.,} both signals and aliases)
+and the values are any metadata (again, stored as a \msgpack\ map)
 associated with the named variable.  Note that keys are only present
 in the \code{"vmeta"} map if there is metadata associated with that
 variable.
 
 Returning to the header level entries, the \code{"objs"} key is
 associated with a value which is, in turn, a \msgpack\ map.  Each key
-in that map represents and object name and the value associated with
+in that map represents an object name and the value associated with
 those object name keys represents the metadata associated with the
 named object.
 
@@ -579,10 +584,11 @@ named object.
 
 Following the header, the remainder of the file consists of
 ``entries''.  Each entry is preceded by 4 bytes in network byte order
-indicating the length of the entry.  All entries are encoded maps in
-\msgpack\ format.  There are two types of possible entries and there
-are no rules about which will be present (\textit{i.e.,} they can appear
-in any order and be interleaved).
+indicating the length of the entry (again, the length indicated does
+not include the 4 bytes used to represent the length).  All entries
+are encoded maps in \msgpack\ format.  There are two types of possible
+entries and there are no rules about which can be present
+(\textit{i.e.,} they can appear in any order and be interleaved).
 
 The first type is a ``row entry'' which details a new row for a
 specified table.  The format of a row entry is as follows:
@@ -616,7 +622,7 @@ the values of fields in objects and have the following format:
 \end{verbatim}
 %\end{lstlisting}
 
-Note that the header does not specify what fields are present in the
+Note that the header does not specify which fields are present in the
 object.  This can only be determined by processing all the field
 entries and incorporating fields as they are given values.  The
 complete value for a given object is determined by processing all
@@ -768,9 +774,9 @@ is different in the \meld\ header than in the \wall\ header.  In a
 
 The \code{"tmeta"} is, again, the table level metadata.  Similarly,
 the \code{"vmeta"} key is associated with variable level metadata
-which is a map where the variable name is the key and the associated
-value is the variable level metadata (again, only present if there
-actually is metadata associated with the specified variable).
+which is a map where the variable name is the key (again, only present
+if there is metadata associated with the specified variable) and the
+associated value is the variable level metadata.
 
 The \code{"vars"} key is associated with an ordered list of the
 variables present in the file.  The \code{"toff"} key is associated
@@ -780,7 +786,7 @@ makes it easy for us to extract individual signals.  The \code{"i"}
 key is associated with the starting byte, within the file (starting
 from 0), of the data associated with the variable and the \code{"l"}
 key is associated with the length of that data.  The optional
-\code{"t"} key defines any transformation, in any, to be applied to
+\code{"t"} key defines the transformation, if any, to be applied to
 the variable data (see Section \ref{sec:trans} for more details).
 
 Returning to the header data, the object data associated with the
@@ -804,36 +810,37 @@ respectively, of the object data within the file.
 As discussed in Section \ref{sec:meld_held}, both variables
 (conceptually, columns in tables) and objects have an offset and a
 length provided in the header.  In the case of a variable, the data
-that is extracted from that location in the file will be \textbf{list}
-of values in \msgpack\ format.  The values in that list represent the
-values for the specified solution variables (first row first, last row
-last).  In the case of an object, the data that is extracted from that
-location in the file will be a \textbf{map} where the keys in the map
-represent the fields present in the object and the values associated
-with those keys are the field values.
+that is extracted from that location in the file will be a
+\textbf{list} of values in \msgpack\ format.  The values in that list
+represent the values for the specified solution variables (first row
+first, last row last).  In the case of an object, the data that is
+extracted from that location in the file will be a \textbf{map} where
+the keys in the map represent the fields present in the object and the
+values associated with those keys are the field values.
 
 \subsubsection{Header Size}
 
 % Shrinkage
 
-It is worth pointing out that when writing the exact length of the
-header (when encoded in \msgpack\ format) cannot be known \textit{a
-  priori}.  For this reason, a collection of bytes representing the
-largest possible size must be reserved for the header.  The size of
-this header depends on the number of tables and objects as well as the
-number of signals in each table so it important that all this
-information is known before determining the maximum number of bytes
-required to represent the header.
+It is worth pointing out that when writing the file, the exact length
+of the header (when encoded in \msgpack\ format) cannot be known
+\textit{a priori} (we shall explain why, shortly).  For this reason, a
+collection of bytes representing the largest possible size must be
+reserved for the header.  The size of the header depends on the number
+of tables and objects as well as the number of signals in each table
+so it important that all of this information is known before
+determining the maximum number of bytes required to represent the
+header.
 
 However, when the final version of the header is written out (once the
 location of all the data can be determined), its size may be less than
-originally anticipated.  For this reason, there may be a few unused
-bytes present between the end of the table and the first variable or
-object data in the file.  This is a result of the \msgpack\ format's
-aggressive compression of small integers.  While it is true that a few
-bytes will be wasted as a result it basically means that \msgpack's
-aggresive optimizations will be wasted in this case (and this case
-only).
+originally anticipated.  This is a result of the \msgpack\ format's
+aggressive compression of small integers.  For this reason, there may
+be a few unused bytes present between the end of the header and the
+first variable or object data in the file.  While it is true that a
+few bytes will be wasted as a result, it really only means that
+\msgpack's aggresive optimizations will be wasted in this case (and
+this case only).
 
 \subsubsection{Meld Format Summary}
 
@@ -911,7 +918,7 @@ amount of data.
 
 The other transform type is the ``affine'' transform.  This
 transformation is indicated when the transform string has a value of
-\code{"aff(s,o)"} where \code{s} represents a scale factor and
+\code{"aff(s,o)"}, where \code{s} represents a scale factor and
 \code{o} represents an offset value.  In the presence of this
 transformation, all \textbf{numeric} values in the base data should be
 multiplied by the scale factor, \code{s}, and then added to the offset
@@ -920,12 +927,20 @@ are almost always affine in nature.  This means that the affine
 transformation permits results to be stored in many different physical
 units without taking up any appreciable additional storage.
 
-If no transform string is present, no transformation is applied and
-the data is left ``as is''.  If there is a transform string but it is
-not recognized, the data should also be left ``as is''.  If the
-transform string is recognized but the transform does not apply to the
-type of data being transformed, the data should again be left ``as
-is''.
+No transform should be applied to the data if:
+\begin{itemize}
+\item No transform string is present
+\item The transform string is unrecognized/cannot be parsed
+\item The transform does not apply to the underlying data type
+  (\textit{e.g.,} applying the \code{affine} transformation to a
+  Boolean value)
+\item There was an kind of error or exception when attempting to apply
+  the transformation
+\end{itemize}
+In all but the first case, the tool or environment is strongly
+encourage to provide an error message alerting the user.  Tools are
+also free to treat all but the first of these conditions as an error
+and suppress access to the alias data.
 
 \section{Discussion}
 \label{sec:discussion}
@@ -983,8 +998,8 @@ impact of bandwidth limitations.
 
 Note the previous paragraph presumes we already have the header
 information from the files.  The worst case scenario for getting
-header information is to make two addition (one time only) network
-requests.  The first request would be the first 18 bytes (again,
+header information is to make two additional (one time only) network
+requests.  The first request would be for the first 18 bytes (again,
 utilizing the \code{Range} header) to establish the size of the
 header.  The next request would be to read the binary header data
 which includes information about the locations of all table columns
@@ -996,7 +1011,7 @@ request.
 
 One of the things we've tried to do in this project is avoid solving
 problems that have already been solved.  This was the motivation
-behind the use of \msgpack\ but we are also assuming that most network
+behind the use of \msgpack, but we are also assuming that most network
 requests for data will be made using HTTP.  This is a safe assumption
 given the ubiquitous nature of HTTP (or HTTPS, for that matter).  But
 if we assume that requests are made via HTTP we also gain the
@@ -1010,7 +1025,7 @@ across the same network?  As it turns out, once one user accesses the
 file, it is quite likely that the header information will be stored in
 a caching proxy between the users network and the storage provider.
 This is a caching scenario that we cannot address within an
-application, but nevertheless it is very likely that in such a
+application, but nevertheless, it is very likely that in such a
 multi-user environment the existing network proxies would
 transparently act to improve overall performance and enhance the user
 experience.
@@ -1035,7 +1050,7 @@ the results file.
 
 Metadata at the signal level could be used to specify not just
 descriptions of those variables along with their physical units but,
-they could also be used to include other attributes like start values,
+could also be used to include other attributes like start values,
 nominal values, \textit{etc.},
 
 In summary, the \recon\ formats make metadata a first class citizen
@@ -1067,18 +1082,17 @@ smaller than the dsres file.
 
 So, in terms of storage, the \meld\ format is quite comparable to the
 dsres format.  At first, this may seem counter-intuitive since we
-know, from our earlier discussion of \msgpack\ that arrays of floating
-point numbers incur an extra byte for storage.  However, it is worth
-pointing out that the dsres format cannot store strings very
-efficiently at all and that long descriptions will result in enormous
-amounts of padding.  So it would appear that, on net, these two
-effects cancel each other out.  However, one advantage that the
-\meld\ format has that the dsres format doesn't (and an advantage that
-is not capitalized on in these benchmarks at all) is the wider range
-of alias transformations.  In particular, it is possible to relate two
-signals via an affine transformation with the \meld\ format.
-Unfortunately, we do yet have any data on the potential savings this
-might offer.
+know, from our earlier discussion of \msgpack, that arrays of floating
+point numbers incur an extra byte for storage.  However, the dsres
+format cannot store strings very efficiently and that long
+descriptions will result in enormous amounts of padding.  So it would
+appear that, on net, these two effects cancel each other out.
+However, one advantage that the \meld\ format has that the dsres
+format doesn't (and an advantage that is not capitalized on in these
+benchmarks at all) is the wider range of alias transformations.  In
+particular, it is possible to relate two signals via an affine
+transformation with the \meld\ format.  Unfortunately, we do yet have
+any data on the potential savings this might offer.
 
 % extracting a single signal
 
@@ -1122,9 +1136,9 @@ milliseconds): 17.260, 18.074, 16.882, 14.608, 14.572 for an average
 time of 16.280 milliseconds.
 
 It is worth noting the SciPy implementation is very mature and
-utilizes numpy internally.  So one would expect excellent performance
-from that implementation.  Nevertheless, extracting data based in the
-\meld\ format was over 15\% faster on average.
+utilizes \code{numpy} internally.  So one would expect excellent
+performance from that implementation.  Nevertheless, extracting data
+based in the \meld\ format was over 15\% faster on average.
 
 % reading everything into memory
 
