@@ -358,7 +358,6 @@ class WallReader(object):
         documentation)
         """
         import json
-        import struct
         json.dump(self.header, fp, indent=4)
         for tabname in self.tables():
             tab = self.read_table(tabname)
