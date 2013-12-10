@@ -1,4 +1,3 @@
-from bson import BSON
 import struct
 import bz2
 
