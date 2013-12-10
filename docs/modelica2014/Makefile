@@ -1,9 +1,7 @@
-recon.pdf: recon.dvi
-	dvipdf recon.dvi
+recon.pdf: recon.tex recon.bib
+	pdflatex recon.tex
+	bibtex recon
+	pdflatex recon.tex
 
-recon.ps: recon.dvi
-	dvips recon.dvi
-
-recon.dvi: recon.tex
-	latex recon.tex
-	latex recon.tex
+clean:
+	rm *.aux *.bbl *.blg *-blx.bib *.log *.out *.run.xml
