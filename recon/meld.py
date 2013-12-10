@@ -450,6 +450,33 @@ class MeldReader(object):
         if self.verbose:
             print "Header = "+str(self.header)
 
+    def asJSON(self, fp):
+        """
+        This function outputs the wall file in a JSON like
+        format (to conform to the format discussed in the
+        documentation)
+        """
+        import json
+        json.dump(self.header, fp, indent=4)
+        for tabname in self.tables():
+            tab = self.read_table(tabname)
+            render = {}
+            render["name"] = tabname
+            render["metadata"] = tab.metadata
+            render["vmetadata"] = tab.var_metadata
+            sigs = {}
+            for sig in tab.signals():
+                sigs[sig] = tab.data(sig)
+            render["signals"] = sigs
+            json.dump(render, fp, indent=4)
+        for objname in self.objects():
+            obj = self.read_object(objname)
+            render = {}
+            render["name"] = objname
+            render["fields"] = obj.data
+            render["metadata"] = obj.metadata
+            json.dump(render, fp, indent=4)
+
     def report(self):
         """
         A little helper routine to write out some basic information about
