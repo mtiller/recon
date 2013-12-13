@@ -12,8 +12,8 @@
 %\parindent0pt
 \parindent10pt
 
-\usepackage[sorting=none]{biblatex}
-\bibliography{recon}
+\usepackage[backend=bibtex,sorting=none]{biblatex}
+\addbibresource{recon.bib}
 
 % some additional packages
 \usepackage{listings} % for code listings
@@ -399,7 +399,7 @@ JSON community on how to serialize JSON in a binary form.
 
 As part of our investigation, we also looked at \msgpack.  It turned
 out that, like BSON, \msgpack\ was formally specified and implemented
-for a wide variety of platforms\cite{MsgPack}.  Furthermore, in
+for a wide variety of platforms\cite{msgpack}.  Furthermore, in
 testing \msgpack, we found that it had much better storage efficiency
 compared to BSON.  So, in the end, we moved forward using the
 \msgpack\ serialization scheme.
@@ -809,7 +809,7 @@ respectively, of the object data within the file.
 
 \subsubsection{Variable Data}
 
-As discussed in Section \ref{sec:meld_held}, both variables
+As discussed in Section \ref{sec:meld_head}, both variables
 (conceptually, columns in tables) and objects have an offset and a
 length provided in the header.  In the case of a variable, the data
 that is extracted from that location in the file will be a
@@ -848,7 +848,7 @@ this case only).
 
 The following outline attempts to summarize all the details presented so
 far:
-
+{\small
 \begin{verbatim}
 // ID
 0x72 0x65 0x63 0x6f 0x6e 0x3a 0x6d
@@ -894,6 +894,7 @@ far:
 // offsets and lengths are specified
 // in the header)
 \end{verbatim}
+}
 
 \subsection{Transformations}
 \label{sec:trans}
