@@ -412,8 +412,8 @@ class WallReader(object):
         while rowlen!=None:
             row = self.ser.decode_obj(self.fp, length=rowlen,
                                       verbose=self.verbose)
-            if self.verbose:
-                print "row = "+str(row)
+            #if self.verbose:
+            #    print "row = "+str(row)
             # All entries have a single key which is the name of the entity
             # (table or object) that they apply to.  So this basically extracts
             # the value from each entity and appends it to an array which will

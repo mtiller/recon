@@ -23,8 +23,8 @@ def read_len(fp, ignoreEOF=False, verbose=False):
     a None being returned (vs. an exception being thrown)
     """
     lbytes = fp.read(4)
-    if verbose:
-        print "Raw length bytes: "+str(repr(lbytes))
+    #if verbose:
+    #    print "Raw length bytes: "+str(repr(lbytes))
     if len(lbytes)!=4:
         if ignoreEOF:
             return None
