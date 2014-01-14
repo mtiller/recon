@@ -5,6 +5,7 @@ sys.path.append(".")
 from recon.wall import WallReader
 
 for file in sys.argv[1:]:
+    print "--"+file+"--"
     with open(file, "rb") as fp:
         wall = WallReader(fp, verbose=True)
         if len(wall.objects()):
@@ -17,13 +18,13 @@ for file in sys.argv[1:]:
             print "    Data: "+str(o.data)
             print "    Metadata: "+str(o.metadata)
         
-        if len(wall.tables()):
+        if len(wall.tables())==0:
             print "No tables"
         else:
             print "Tables:"
         for tab in wall.tables():
             t = wall.read_table(tab)
-            print "  Table: "+str(t)
+            print "  Table: '%s'" % (str(t.name),)
             print "    Metadata: "+str(t.metadata)
             print "    Signals:"
             for sig in t.signals():
@@ -32,13 +33,17 @@ for file in sys.argv[1:]:
                 if len(data)<5:
                     print "        Data: "+str(data)
                 else:
-                    print "        Data: "+str(data[:2]+" ... "+ data[:-2])
+                    print "        Data: "+str(data[:2])+" ... "+str(data[-2:])
                 print "        Metadata: "+str(t.vmetadata(sig))
             print "    Aliases:"
             for als in t.aliases():
                 print "      "+str(als)
                 print "        Alias of: "+str(t.alias_of(als))
                 print "        Transform: "+str(t.alias_transform(als))
-                print "        Data: "+str(t.data(als))
+                data = t.data(als)
+                if len(data)<5:
+                    print "        Data: "+str(data)
+                else:
+                    print "        Data: "+str(data[:2])+" ... "+str(data[-2:])
                 print "        Metadata: "+str(t.vmetadata(als))
-            
+    print "------"
