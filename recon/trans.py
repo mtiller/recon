@@ -56,7 +56,7 @@ def wall2meld(wfp, mfp):
 
 def dsres2meld(df, mfp, verbose=False, compression=True, single=True):
     """
-    This function reads in a file in 'dsres' format and then write is
+    This function reads in a file in 'dsres' format and then writes it
     back out in meld format.  Note there is a dependency in this code
     on numpy and dymat.
     """
