@@ -4,4 +4,6 @@ recon.pdf: recon.tex recon.bib
 	pdflatex recon.tex
 
 clean:
-	rm *.aux *.bbl *.blg *-blx.bib *.log *.out *.run.xml recon.pdf recon.ps
+	-rm *.aux *.bbl *.blg *-blx.bib *.log
+	-rm *.out *.run.xml *.pdf *.ps *.bcf *.fdb_latexmk
+	-rm *.fls *.dvi
