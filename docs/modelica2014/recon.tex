@@ -19,6 +19,12 @@
 \usepackage{listings} % for code listings
 \usepackage{color}
 \usepackage[hidelinks=true]{hyperref}
+\hypersetup{%
+  pdftitle = {recon  -- Web and network friendly simulation data formats},
+  pdfauthor = {Michael Tiller and Peter Harman},
+  pdfsubject = {10th International Modelica Conference 2014},
+  pdfkeywords = {Modelica, FMI, simulation results, cloud, web, open source}}
+
 
 \lstdefinelanguage{JavaScript}{
   keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break},
@@ -47,8 +53,7 @@
 
 \begin{document}
 
-\title{\textbf{{\small Modelica'2014}\\
-    \recon\  -- Web and network friendly simulation data formats}}
+\title{\recon\  -- Web and network friendly simulation data formats}
 
 \author{Michael Tiller\\
   \href{http://xogeny.com}{Xogeny Inc.}, USA\\
@@ -102,13 +107,13 @@ community as a whole.
 \label{sec:intro}
 
 Several groups have examined the issue of standardized file
-formats\cite{AndreasHDF5,GallHDF5} in the context of Modelica.  In keeping
-with the principles of the Modelica Association, an ideal choice would
-be a production ready format that is open source and cross-platform.
-With these requirements in mind, most people consider HDF5 a natural
-choice.  There are already open source implementations and the file
-format has been widely used.  In fact, it has even been adopted by The
-MathWorks for use in MATLAB.
+formats\cite{PfeifferHDF5,DyMatHDF5} in the context of Modelica.  In
+keeping with the principles of the Modelica Association, an ideal
+choice would be a production ready format that is open source and
+cross-platform.  With these requirements in mind, most people consider
+HDF5 a natural choice.  There are already open source implementations
+and the file format has been widely used.  In fact, it has even been
+adopted by The MathWorks for use in MATLAB.
 
 But HDF5 has some practical drawbacks.  The first is that it is not
 truly cross-platform.  The reference implementation of HDF5 is written
@@ -490,10 +495,12 @@ typically rewrite their data into the \meld\ format.
 
 Each \wall\ file starts with the following sequence of bytes:
 
+{\footnotesize
 \begin{verbatim}
 0x72 0x65 0x63 0x6f 0x6e 0x3a 0x77
 0x61 0x6c 0x6c 0x3a 0x76 0x30 0x31
 \end{verbatim}
+}
 
 This is a hex encoding of the ASCII string \code{recon:wall:v01}.
 This allows us to identify whether this is a \recon\ \wall\ file and, if
@@ -512,8 +519,7 @@ read in.  These bytes are assumed to have been serialized in
 \msgpack\ format so we must next unpack (deserialize) these bytes.
 Once unpacked, the header should contain the following information:
 
-%\lstset{language=javascript}
-%\begin{lstlisting}[frame=single]  % Start your code-block
+{\footnotesize
 \begin{verbatim}
 {
   "fmeta": {<file-level metadata>},
@@ -525,7 +531,7 @@ Once unpacked, the header should contain the following information:
   }
 }
 \end{verbatim}
-%\end{lstlisting}
+}
 
 The \code{"fmeta"} key is associated with the value for any file level
 metadata.  This metadata is, itself, represented in our notation here
@@ -533,6 +539,7 @@ as an object in JSON but will be encoded as a map in \msgpack.  The
 \code{"tabs"} key is associated with a value that maps the names of
 tables to table data.  The format of this table data is as follows:
 
+{\footnotesize
 \begin{verbatim}
 {
   "tmeta": {<table-level metadata>},
@@ -550,6 +557,7 @@ tables to table data.  The format of this table data is as follows:
   }
 }
 \end{verbatim}
+}
 
 The \code{"tmeta"} key is associated with metadata (again, represented
 as a \msgpack\ map) but this time it is metadata associated with the
@@ -595,14 +603,13 @@ entries and there are no rules about which can be present
 The first type is a ``row entry'' which details a new row for a
 specified table.  The format of a row entry is as follows:
 
-%\lstset{language=javascript}
-%\begin{lstlisting}[frame=single]  % Start your code-block
+{\footnotesize
 \begin{verbatim}
 {
   "<table name>": [list of signal values]
 }
 \end{verbatim}
-%\end{lstlisting}
+}
 
 where the table name must be a key in the \code{"tabs"} map found in
 the header and the order of values in the list of signal values must
@@ -612,8 +619,7 @@ correspond to the order defined by the list associated with the
 The other entry type is a ``field entry''.  These represent updates to
 the values of fields in objects and have the following format:
 
-%\lstset{language=javascript}
-%\begin{lstlisting}[frame=single]  % Start your code-block
+{\footnotesize
 \begin{verbatim}
 {
   "<object name>": {
@@ -622,7 +628,7 @@ the values of fields in objects and have the following format:
   }
 }
 \end{verbatim}
-%\end{lstlisting}
+}
 
 Note that the header does not specify which fields are present in the
 object.  This can only be determined by processing all the field
@@ -641,8 +647,7 @@ while writing the file.
 The following outline attempts to summarize all the details presented so
 far:
 
-%\lstset{language=javascript}
-%\begin{lstlisting}[frame=single]  % Start your code-block
+{\footnotesize
 \begin{verbatim}
 // ID
 0x72 0x65 0x63 0x6f 0x6e 0x3a 0x77
@@ -691,7 +696,7 @@ far:
   <table name>: [list of signal values]
 }
 \end{verbatim}
-%\end{lstlisting}
+}
 
 where all maps are encoded in \msgpack.
 
@@ -702,10 +707,12 @@ where all maps are encoded in \msgpack.
 
 Each \meld\ file starts with the following sequence of bytes:
 
+{\footnotesize
 \begin{verbatim}
 0x72 0x65 0x63 0x6f 0x6e 0x3a 0x6d
 0x65 0x6c 0x64 0x3a 0x76 0x30 0x31
 \end{verbatim}
+}
 
 This is a hex encoding of the ASCII string \code{recon:meld:v01}.
 This allows us to identify whether this is a \recon\ \meld\ file and, if
@@ -723,6 +730,7 @@ read in.  These bytes are assumed to have been serialized in
 \msgpack\ format so we must next unpack these bytes.  Once unpacked,
 the header should contain the following information:
 
+{\footnotesize
 \begin{verbatim}
 {
   "fmeta": {<file-level metadata>},
@@ -735,6 +743,7 @@ the header should contain the following information:
   "comp": true|false // Compression flag
 }
 \end{verbatim}
+}
 
 This is very similar to the \wall\ format presented in Section
 \ref{sec:wall_spec}.  Again, we see file level metadata exactly as it
@@ -755,6 +764,7 @@ For reasons that will become obvious, the data for tables and objects
 is different in the \meld\ header than in the \wall\ header.  In a
 \meld\ file, the table data has the following format:
 
+{\footnotesize
 \begin{verbatim}
 {
   "tmeta": {<table level metadata>},
@@ -773,6 +783,7 @@ is different in the \meld\ header than in the \wall\ header.  In a
   }
 }
 \end{verbatim}
+}
 
 The \code{"tmeta"} is, again, the table level metadata.  Similarly,
 the \code{"vmeta"} key is associated with variable level metadata
@@ -794,6 +805,7 @@ the variable data (see Section \ref{sec:trans} for more details).
 Returning to the header data, the object data associated with the
 \code{"objs"} key has the following format in a \meld\ file:
 
+{\footnotesize
 \begin{verbatim}
 {
   "ometa": {<object level metadata>},
@@ -801,6 +813,7 @@ Returning to the header data, the object data associated with the
   "l": <length of object data>
 }
 \end{verbatim}
+}
 
 The \code{"ometa"} key is associated with the metadata of the
 associated object.  The \code{"i"} and \code{"l"} keys are used just
@@ -848,7 +861,7 @@ this case only).
 
 The following outline attempts to summarize all the details presented so
 far:
-{\small
+{\footnotesize
 \begin{verbatim}
 // ID
 0x72 0x65 0x63 0x6f 0x6e 0x3a 0x6d
@@ -1105,14 +1118,13 @@ from a dsres file, we used the \code{scipy.io.loadmat} function to
 load the \code{data\_2} matrix and then extracted the $0^{th}$ column
 (Time).  In other words,
 
-%\lstset{language=python}
-%\begin{lstlisting}[frame=single]  % Start your code-block
+{\footnotesize
 \begin{verbatim}
 mat = loadmat("tests/fullRobot.mat")
 T2 = mat["data_2"]
 time = T2[0,:]
 \end{verbatim}
-%\end{lstlisting}
+}
 
 Running this script 5 times gave the following times (in
 milliseconds): 18.111, 18.143, 20.076, 19.309, 21.773 for an average time
@@ -1124,15 +1136,14 @@ table (called \code{T2} in the translated file) and then extracted the
 data associated with the \code{Time} signal.  That code looks as
 follows,
 
-%\lstset{language=python}
-%\begin{lstlisting}[frame=single]  % Start your code-block
+{\footnotesize
 \begin{verbatim}
 with open("dsres_robot.mld", "rb") as fp:
   meld = MeldReader(fp)
   dt = meld.read_table("T2")
   time = dt.data("Time")
 \end{verbatim}
-%\end{lstlisting}
+}
 
 Running this script 5 times gave the following times (again, in
 milliseconds): 17.260, 18.074, 16.882, 14.608, 14.572 for an average
@@ -1151,6 +1162,7 @@ Python dictionary.  We will do this again for both formats.  We used
 the following script to extract the same signals from the dsres file
 format:
 
+{\footnotesize
 \begin{verbatim}
 ret = {}
 mf = dymat.DyMatFile("tests/fullRobot.mat")
@@ -1158,6 +1170,7 @@ for signal in mf.names(2):
     ret[signal] = mf.data(signal)
 ret["Time"] = mf.abscissa(2)
 \end{verbatim}
+}
 
 This code uses the \code{dymat} library which, in turn, leverages
 SciPy and numpy.  Running this code 5 times gave the following
@@ -1167,6 +1180,7 @@ execution times (in milliseconds): 519.50, 495.38, 483.60, 476.69 and
 The script for performing this benchmark using the \meld\ format looks
 as follows:
 
+{\footnotesize
 \begin{verbatim}
 ret = {}
 with open("dsres_robot.mld", "rb") as fp:
@@ -1175,6 +1189,7 @@ with open("dsres_robot.mld", "rb") as fp:
   for signal in dt.signals():
       ret[signal] = dt.data(signal)
 \end{verbatim}
+}
 
 Running this script 5 times, we record execution times (in
 milliseconds) of: 246.34, 240.66, 225.58, 224.22, 222.65 for an
