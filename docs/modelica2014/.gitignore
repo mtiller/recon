@@ -9,3 +9,6 @@ recon.blg
 recon.fls
 recon.fdb_latexmk
 recon.synctex.gz
+recon.bcf
+recon-blx.bib
+recon.run.xml
