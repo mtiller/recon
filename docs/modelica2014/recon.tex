@@ -1217,8 +1217,15 @@ of data to be read.
 As already mentioned, there is a reference implementation of both the
 \wall\ and \meld\ formats already available in Python\cite{pyRecon}.
 There are also implementations available for both C\cite{crecon} and
-Java\cite{jrecon} as well.  Finally, the wall format is also now
-supported by OpenModelica.
+Java\cite{jrecon}.
+
+In addition, the \wall\ format is also now supported by OpenModelica
+as of \code{r18784}.  The implementation of the \wall\ format required
+408 lines of code to implement in OpenModelica (this includes
+implementation of all necessary \msgpack\ operations, \textit{i.e.,}
+no external libraries are used to implement \msgpack\ functionality)
+while the implementation of the ``dsres'' format uses 656 lines of
+code.
 
 \section{Conclusion}
 \label{sec:conclusion}
