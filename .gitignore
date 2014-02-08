@@ -3,3 +3,7 @@ dev
 cover
 .coverage
 test_output
+build
+dist
+recon.egg-info
+tests/test.wll
