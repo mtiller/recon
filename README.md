@@ -24,6 +24,13 @@ format (at least not without making the implementation extremely
 complicated and involving lots of extra writes).  So we opted to
 specify to file formats that could easily be converted.
 
+## Dependencies
+
+This package requires an implementation of `msgpack`.  However, there
+are several implementation in Python.  During development, the
+`msgpack-python` package was used.  It is possible that other packages
+might work as well.
+
 ## The "Wall" Format
 
 The wall format is the "append friendly" format.  You can think of the
