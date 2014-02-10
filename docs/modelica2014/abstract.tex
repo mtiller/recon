@@ -1,0 +1,97 @@
+%sample file for Modelica 2011 Abstract page
+
+\documentclass[11pt,a4paper]{article}
+\usepackage{graphicx}
+\graphicspath{{fig/}}
+% uncomment according to your operating system:
+% ------------------------------------------------
+%\usepackage[latin1]{inputenc}    %% european characters can be used (Windows, old Linux)
+\usepackage[utf8]{inputenc}     %% european characters can be used (Linux)
+%\usepackage[applemac]{inputenc} %% european characters can be used (Mac OS)
+% ------------------------------------------------
+\usepackage[T1]{fontenc}   %% get hyphenation and accented letters right
+\usepackage{mathptmx}      %% use fitting times fonts also in formulas
+\usepackage{lmodern,amsmath,mathptmx,url}      %% recommended for readable pdf
+% do not change these lines:
+\pagestyle{empty}                %% no page numbers!
+\usepackage[left=35mm, right=35mm, top=15mm, bottom=20mm, noheadfoot]{geometry}
+%% please don't change geometry settings!
+\setlength{\parindent}{10pt}
+\setlength{\parskip}{3 mm}
+
+% some additional packages
+\usepackage{color}
+\usepackage{indentfirst}
+\usepackage[hidelinks=true]{hyperref}
+\usepackage[hidelinks=true]{hyperref}
+\hypersetup{%
+  pdftitle = {recon  -- Web and network friendly simulation data formats},
+  pdfauthor = {Michael Tiller and Peter Harman},
+  pdfsubject = {10th International Modelica Conference 2014},
+  pdfkeywords = {Modelica, FMI, simulation results, cloud, web, open source}}
+\usepackage[backend=bibtex,sorting=none]{biblatex}
+\addbibresource{recon}
+
+% usefull commands
+\newcommand{\recon}{\texttt{recon}}
+\newcommand{\wall}{\texttt{wall}}
+\newcommand{\meld}{\texttt{meld}}
+\newcommand{\msgpack}{\texttt{msgpack}}
+\newcommand{\code}[1]{\texttt{#1}} % make quoting code text a bit simpler
+
+\newcommand{\myr}{\textsuperscript{\textregistered}}
+\newcommand{\ud}{\mathrm{d}}
+\newcommand{\matx}[1]{\mathbf{#1}}
+
+% begin the document
+\begin{document}
+\thispagestyle{empty}
+
+\title{\recon\  -- Web and network friendly simulation data formats}
+
+\author{Michael Tiller\\
+  \href{http://xogeny.com}{Xogeny Inc.}, USA\\
+  \href{mailto:michael.tiller@xogeny.com}
+       {\nolinkurl{michael.tiller@xogeny.com}}
+  \and Peter Harman\\
+  \href{http://www.cydesign.com}
+       {CyDesign Ltd.}, UK\\
+  \href{mailto:peter@cydesign.com}{\nolinkurl{peter@cydesign.com}}}
+\date{} % <--- leave date empty
+\maketitle\thispagestyle{empty} %% <-- you need this for the first page
+
+There are many different commonly used file formats for storing time
+series data.  Most of these file formats are designed with the
+assumption that the file itself will be locally available to the
+software that will be reading or writing the data stored in them.
+While this assumption is an excellent one for desktop based tools with
+direct access to disk drives capable of moving virtually
+instantaneously around from sector to sector, there are a growing
+number of applications for which local access is not necessarily
+available.  For these applications, we've initiated the
+\recon\ project to develop more suitable formats.
+
+With the emergence of web and cloud based modeling and simulation
+technologies, the time has come to explore file formats specifically
+optimized for non-desktop applications.  In this paper, we present a
+new set of file formats that are specifically designed for web and
+cloud based approaches.  This paper reviews the key requirements for
+web and cloud enabled applications and then presents a specification
+for two file formats that address those requirements.
+
+When considering the various use cases that drove our requirements, we
+recognized that two different file formats were actually required.
+The first format, the \wall\ format, is optimized for writing.  The
+other format, the \meld\ format, is optimized for reading over a
+network (\textit{i.e.,} minimizing the number of reads and bytes
+read).  We will discuss the layout of each of these formats and
+describe the use cases for which they are most appropriate.
+
+In the open tradition of the Modelica Association, the authors have
+made specifications and implementations for these formats available as
+open source libraries with the hope that they will benefit the
+community as a whole.
+
+\printbibliography
+
+\end{document}
