@@ -388,7 +388,7 @@ This encoding is done in so-called "network byte order"
 of the header (*i.e.,* the length indicated doesn't include the
 4 bytes that encode the length).
 
-### Header
+### Wall Header
 
 Once the length of the header is known, the bytes for the header are
 read in.  These bytes are assumed to have been serialized in
@@ -439,15 +439,16 @@ order is important because the order in this list indicates the order
 in which the data will be stored in successive rows (to be discussed
 shortly).
 
-The `"als"` key represents any aliases present in the table.
-Again, this is a `msgpack` map where the name of the alias is the key.
-There are two essential pieces of information associated with each of
-the aliases.  The first, stored under the `"s"` key (which stands
-for "signal") is the name of the base signal that this alias is
-based on.  The `"t"` key is used to represent the transformation
-that should be applied to the base signal to compute the value of the
-alias signal.  Note that this transformation **is optional**.
-The possible values will be described shortly in \ref{sec:trans}.
+The `"als"` key represents any aliases present in the table.  Again,
+this is a `msgpack` map where the name of the alias is the key.  There
+are two essential pieces of information associated with each of the
+aliases.  The first, stored under the `"s"` key (which stands for
+"signal") is the name of the base signal that this alias is based on.
+The `"t"` key is used to represent the transformation that should be
+applied to the base signal to compute the value of the alias signal.
+Note that this transformation **is optional**.  The possible values
+will be described shortly in [our discussion of
+transformations](#transformations).
 
 Finally we have the `"vmeta"` key, which is a map where the keys
 are the names of variables (*i.e.,* both signals and aliases)
@@ -583,7 +584,7 @@ The next four bytes are a binary encoding of the length of the header.
 This encoding is done in so-called "network byte order"
 (big-endian).
 
-### Header
+### Meld Header
 
 Once the length of the header is known, the bytes for the header are
 read in.  These bytes are assumed to have been serialized in
@@ -603,12 +604,12 @@ the header should contain the following information:
 }
 ```
 
-This is very similar to the `wall` format presented in Section
-\ref{sec:wall_spec}.  Again, we see file level metadata exactly as it
-is used in the `wall` format.  We also have the `"tabs"` and
-`"objs"` keys, also present in the `wall` format but with an
-important distinction which is that the values that follows them have
-a different format, as we shall see shortly.
+This is very similar to the [`wall` format](#wall-format) .  Again, we
+see file level metadata exactly as it is used in the `wall` format.
+We also have the `"tabs"` and `"objs"` keys, also present in the
+`wall` format but with an important distinction which is that the
+values that follows them have a different format, as we shall see
+shortly.
 
 But we also have a new key, the `"comp"` key, which isn't present at
 all in the `wall` format.  The value associated with the `"comp"` key
@@ -647,16 +648,16 @@ which is a map where the variable name is the key (again, only present
 if there is metadata associated with the specified variable) and the
 associated value is the variable level metadata.
 
-The `"vars"` key is associated with an ordered list of the
-variables present in the file.  The `"toff"` key is associated
-with a map that specifies important information about the location of
-the variables within the file.  It is the `"toff"` data that
-makes it easy for us to extract individual signals.  The `"i"`
-key is associated with the starting byte, within the file (starting
-from 0), of the data associated with the variable and the `"l"`
-key is associated with the length of that data.  The optional
-`"t"` key defines the transformation, if any, to be applied to
-the variable data (see Section \ref{sec:trans} for more details).
+The `"vars"` key is associated with an ordered list of the variables
+present in the file.  The `"toff"` key is associated with a map that
+specifies important information about the location of the variables
+within the file.  It is the `"toff"` data that makes it easy for us to
+extract individual signals.  The `"i"` key is associated with the
+starting byte, within the file (starting from 0), of the data
+associated with the variable and the `"l"` key is associated with the
+length of that data.  The optional `"t"` key defines the
+transformation, if any, to be applied to the variable data (see
+[Transformations](#transformations) for more details).
 
 Returning to the header data, the object data associated with the
 `"objs"` key has the following format in a `meld` file:
@@ -676,16 +677,16 @@ respectively, of the object data within the file.
 
 ### Variable Data
 
-As discussed in Section \ref{sec:meld_head}, both variables
-(conceptually, columns in tables) and objects have an offset and a
-length provided in the header.  In the case of a variable, the data
-that is extracted from that location in the file will be a
-**list** of values in `msgpack` format.  The values in that list
-represent the values for the specified solution variables (first row
-first, last row last).  In the case of an object, the data that is
-extracted from that location in the file will be a **map** where
-the keys in the map represent the fields present in the object and the
-values associated with those keys are the field values.
+As discussed [previously](#meld-header), both variables (conceptually,
+columns in tables) and objects have an offset and a length provided in
+the header.  In the case of a variable, the data that is extracted
+from that location in the file will be a **list** of values in
+`msgpack` format.  The values in that list represent the values for
+the specified solution variables (first row first, last row last).  In
+the case of an object, the data that is extracted from that location
+in the file will be a **map** where the keys in the map represent the
+fields present in the object and the values associated with those keys
+are the field values.
 
 ### Header Size
 
@@ -810,9 +811,9 @@ and suppress access to the alias data.
 
 ## Use Case
 
-Although it is implicit in the requirements listed in Section
-\ref{sec:goals}, it is worth elaborating a bit more on the specific
-use case that drove these requirements.
+Although it is implicit in the requirements listed in [our
+goals](#goals), it is worth elaborating a bit more on the specific use
+case that drove these requirements.
 
 For web and cloud based simulation, the bulk of the computational work
 is done remotely.  In cloud services, there is an effect sometimes
@@ -891,11 +892,12 @@ experience.
 
 ## Metadata
 
-As discussed throughout Section \ref{sec:spec}, the `wall` and
-`meld` formats have extensive support for metadata.  This provides a
-clean mechanisms for including metadata in files without the need to
-mix it in or conflate it with actual data.  Furthermore, metadata is
-supported for a wide range of entities represented in the file.
+As discussed throughout [the specification](#specification), the
+`wall` and `meld` formats have extensive support for metadata.  This
+provides a clean mechanisms for including metadata in files without
+the need to mix it in or conflate it with actual data.  Furthermore,
+metadata is supported for a wide range of entities represented in the
+file.
 
 There are many potential applications for such metadata.  For example,
 file level metadata can be used to store useful information such as
