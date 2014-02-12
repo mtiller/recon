@@ -230,8 +230,9 @@ simulation, rewrite their data into the `meld` format.
 
 There are really two aspects to each `recon` format.  The first is the
 structure of the file (where different pieces of information reside in
-the file, something we'll discuss in Section \ref{sec:spec}) and the
-other is how the actual data is represented.
+the file, something we'll discuss in [the
+specification](#specification) and the other is how the actual data is
+represented.
 
 Obviously, the data is represented as individual bytes.  So we must
 define the process by which multi-byte pieces of information
