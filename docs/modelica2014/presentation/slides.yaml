@@ -5,6 +5,24 @@ metadata:
 slides:
   FirstPage:
     - first_page.html
+  Background:
+    - <hero><h1>Background</h1></hero>
+    - existing.md
+    - goals.html
+  Approach:
+    - <hero><h1>Approach</h1></hero>
+    - readwrite.html
+    - serialize.html
+  Wall Format:
+    - <hero><h1>Wall Format</h1></hero>
+    - wall/slides.yaml
+  Meld Format:
+    - <hero><h1>Meld Format</h1></hero>
+    - meld/slides.yaml
+  Implementations:
+    - <hero><h1>Implementations</h1></hero>
+    - impls.html
+    - perf.html
   Conclusion:
     - conclusions.html
     - thanks.html
