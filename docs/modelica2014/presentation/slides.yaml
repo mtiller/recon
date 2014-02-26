@@ -1,0 +1,10 @@
+metadata:
+  title: Recon -- Web and network friendly simulation data formats
+  styles:
+    - css/recon.css
+slides:
+  FirstPage:
+    - first_page.html
+  Conclusion:
+    - conclusions.html
+    - thanks.html
