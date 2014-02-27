@@ -1,5 +1,13 @@
 /* Customization of CSS */
 
+.flowtime h1 {
+    color: #cc8;
+}
+
+.flowtime dl dt:before {
+    content: ""
+}
+
 .pull-right {
     float: right;
 }
