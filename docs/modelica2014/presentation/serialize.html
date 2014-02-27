@@ -1,0 +1,44 @@
+extends: templates/2col.html
+---
+
+{% macro item(text) %}
+  <li class="c-step"><h3>{{text|safe}}</h3></li>
+{% endmacro %}
+
+{% macro format(p1, p2) %}
+  <dl>
+    <dt class="c-dim" style="font-size: 80%">{{p1|safe}}</dt>
+    <dd class="c-dim" style="font-size: 80%"> - {{p2|safe}}</dd>
+  </dl>
+{% endmacro %}
+
+{% macro selection(p1, p2) %}
+  <dl>
+    <dt class="c-step" style="font-size: 80%">{{p1|safe}}</dt>
+    <dd class="c-step" style="font-size: 80%"> - {{p2|safe}}</dd>
+  </dl>
+{% endmacro %}
+
+{% block title %}
+Serialization
+{% endblock %}
+
+{% block column-one %}
+<h2 style="margin: 10px 0px">Requirements</h2>
+<ul>
+  {{ item('1. Efficient storage of data') }}
+  {{ item('2. Support for scalars and records') }}
+  {{ item('3. Widely supported') }}
+  {{ item('4. Simple data model') }}
+</ul>
+{% endblock %}
+
+{% block column-two %}
+<h2 style="margin: 10px 0px">Formats</h2>
+  {{ format('XML', 'Too verbose, data model too complex') }}
+  {{ format('JSON', 'Too verbose') }}
+  {{ format('BSON', 'Inefficient array storage') }}
+  {{ format('Smile, BJSON, UBJSON', 'Niche formats') }}
+  {{ selection('<code>msgpack</code>', '<b style="color: #0f0">Perfect</b>') }}
+{% endblock %}
+

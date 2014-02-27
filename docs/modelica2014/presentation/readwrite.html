@@ -1,0 +1,33 @@
+extends: templates/2col.html
+---
+{% macro item(text) %}
+  <li class="c-step">{{text|safe}}</li>
+{% endmacro %}
+
+
+{% block title %}
+Reading vs. Writing
+{% endblock %}
+
+{% block column-one %}
+  <h2>Writing</h2>
+  <ul>
+    {{ item('Done during simulation') }}
+    {{ item('Avoid lots of I/O activity, <i>e.g.</i> rewriting parts of files') }}
+    {{ item('Avoid memory allocation and deallocation') }}
+    {{ item('Simplest approach: <b>append data to file</b>') }}
+    {{ item('Data for a given signal will be <b>scattered throughout the file</b>') }}
+  </ul>
+{% endblock %}
+
+{% block column-two %}
+  <h2>Reading</h2>
+  <ul>
+    {{ item('Done after simulation') }}
+    {{ item('Avoid lots of disk activity, <i>e.g.</i> to avoid network latency ') }}
+    {{ item('Avoid traversing complex data structures') }}
+    {{ item('Simplest approach: <b>store data in "stripes"</b>') }}
+    {{ item('Data for a given signal will be <b>stored contiguously</b>') }}
+  </ul>
+{% endblock %}
+
