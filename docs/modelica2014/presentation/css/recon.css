@@ -15,3 +15,14 @@
 .left-justify {
     text-align: left;
 }
+
+.column-one {
+    float: left;
+    width: 45%;
+}
+
+.column-two {
+    float: right;
+    width: 45%;
+}
+

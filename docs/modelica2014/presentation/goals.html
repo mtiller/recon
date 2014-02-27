@@ -1,0 +1,21 @@
+{% macro item(p1, p2) %}
+  <h3 style="margin-bottom: 10px"><span class="c-step">{{p1}}</span></h3>
+  <span style="margin-top: 10px" class="c-step">{{p2|safe}}</span>
+{% endmacro %}
+
+<div>
+  <h1>Goals</h1>
+</div>
+<div style="float: clear"></div>
+<div class="column-one">
+  {{ item('1. Easy to Append Data', 'As data is generated, it should be trivial to write') }}
+  {{ item('2. Minimize I/O', 'Minimize disk activity when reading and writing') }}
+  {{ item('3. Cross Platform', 'Should be easily implemented on any platform') }}
+  {{ item('4. Alias Support', 'Needs to support aliases') }}
+</div>
+<div class="column-two">
+  {{ item('5. Rich Types', 'Support for <code>Real</code>, <code>Integer</code>, <code>Boolean</code>, <code>String</code> and ideally <code>record</code>') }}
+  {{ item('6. Metadata', 'Should allow metadata to be associated with nearly anything') }}
+  {{ item('7. Hierarchy', 'Support for hierarchical signal names') }}
+  {{ item('8. Conversions', 'Should be easy to translate back and forth to other formats') }}
+</div>
