@@ -3,6 +3,7 @@ metadata:
   desc: The Recon project is developing web and network friendly simulation data formats
   image: img/logo_glossy.svg
   draft: true
+  math: true
   styles:
     - css/recon.css
 slides:

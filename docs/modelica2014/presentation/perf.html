@@ -1,0 +1,54 @@
+extends: templates/2col.html
+---
+
+{% block title %}
+Performance
+{% endblock %}
+
+{% block column-one %}
+<div class="c-step">
+<h4>Space Efficiency</h4>
+
+<table class="c-table">
+  <tbody>
+    <tr><td>Format</td><td>Size (bytes)</td><td>Difference</td></tr>
+    <tr><td>dsres<sup>&dagger;</sup></td><td>3,069,623</td><td>-</td></tr>
+    <tr><td>meld<sup>&Dagger;</sup></td><td>3,169,994</td><td>3.3% larger</td></tr>
+    <tr><td>meld (comp.)<sup>&Dagger;</sup></td><td>2,787,467</td><td>10% smaller</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="c-step">
+<h4>Time (to load single signal)</h4>
+<table class="c-table">
+  <tbody>
+    <tr><td>Format</td><td>Time (ms)</td><td>Difference</td></tr>
+    <tr><td>dsres<sup>&dagger;</sup></td><td>19.482</td><td>-</td></tr>
+    <tr><td>meld<sup>&Dagger</sup></td><td>16.280</td><td>15% faster</td></tr>
+  </tbody>
+</table>
+</div>
+{% endblock %}
+
+{% block column-two %}
+<div class="c-step">
+<h4>Time (read all signals into memory)</h4>
+<table class="c-table">
+  <tbody>
+    <tr><td>Format</td><td>Time (ms)</td><td>Difference</td></tr>
+    <tr><td>dsres<sup>&dagger;</sup></td><td>492.26</td><td>-</td></tr>
+    <tr><td>meld<sup>&Dagger</sup></td><td>231.89</td><td>52.8% faster***</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h4>Notes</h4>
+<ul>
+<li>&dagger; - Using <code>DyMat</code>, <code>scipy</code> and <code>numpy</code></li>
+<li>&Dagger; - Python implementation (simple aliasing)</li>
+<li>See paper for complete details</li>
+</ul>
+
+{% endblock %}
+
