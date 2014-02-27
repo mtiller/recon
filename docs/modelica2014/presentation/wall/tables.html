@@ -1,0 +1,30 @@
+extends: ../templates/2col.html
+---
+
+{% block title %}
+Table Metadata (in Header)
+{% endblock %}
+
+{% block column-one %}
+<div class="c-step">
+<h2>Values in <code>tabs</code></h2>
+
+<pre class="language-json">
+{
+  "tmeta": {&lt;table-level metadata&gt;},
+  "sigs": [&lt;list of signals&gt;],
+  "als": {
+    "&lt;aliasname&gt;": {
+      "s": &lt;base signal name&gt;,
+      "t": &lt;transform string&gt; // OPTIONAL
+    }
+  },
+  "vmeta": {
+    "&lt;varname&gt;": {
+      &lt;variable-level metadata&gt;
+    } // OPTIONAL
+  }
+}
+</pre>
+</div>
+{% endblock %}

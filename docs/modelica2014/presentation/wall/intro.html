@@ -1,0 +1,13 @@
+<h1>Wall Format</h1>
+
+{% macro item(p1, p2) %}
+  <h3 style="margin-bottom: 10px"><span class="c-step">{{p1}}</span></h3>
+  <span style="margin-top: 10px" class="c-step">{{p2|safe}}</span>
+{% endmacro %}
+
+<h2>Properties</h2>
+
+{{ item('Contains both tables and object', 'Names are unique across file') }}
+{{ item('Focus on writing', 'Writes just append data') }}
+{{ item('Multiple tables can be written simultaneously', 'Tables are built row by row') }}
+{{ item('Multiple objects can be written simultaneously', 'Objects are build field by field') }}

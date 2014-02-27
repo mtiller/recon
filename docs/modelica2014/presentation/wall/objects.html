@@ -1,0 +1,35 @@
+extends: ../templates/2col.html
+---
+
+{% block title %}
+Entries
+{% endblock %}
+
+{% block column-one %}
+<div class="c-step">
+<h2>Table entries</h2>
+
+<pre class="language-json">
+{
+  "&lt;table name&gt;": [list of signal values]
+}
+</pre>
+</div>
+{% endblock %}
+
+{% block column-two %}
+<div class="c-step">
+<h2>Object entries</h2>
+
+<pre class="language-json">
+{
+  "&lt;object name&gt;": {
+    "&lt;field name&gt;": &lt;field value&gt;,
+    "&lt;field name&gt;": &lt;field value&gt;
+  }
+}
+</pre>
+</div>
+{% endblock %}
+
+}

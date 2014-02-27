@@ -1,0 +1,42 @@
+extends: ../templates/2col.html
+---
+{% block title %}
+Header
+{% endblock %}
+
+{% block column-one %}
+<div class="c-step">
+<h2>Initial Bytes</h2>
+
+<pre class="language-python">
+0x72 0x65 0x63 0x6f 0x6e 0x3a 0x77
+0x61 0x6c 0x6c 0x3a 0x76 0x30 0x31
+</pre>
+
+<h4>Represents the ASCII string:</h4>
+<pre class="language-python">
+"recon:wall:v01"
+</pre>
+</div>
+{% endblock %}
+
+{% block column-two %}
+<div class="c-step">
+<h2>Header</h2>
+
+<pre class="language-javascript">
+0x__ 0x__ 0x__ 0x__ /* Network order length */
+{% raw %}
+{
+  "fmeta": {&lt;file-level metadata&gt;},
+  "tabs": {
+    "&lt;table name&gt;": {&lt;table data&gt;}
+  },
+  "objs": {
+    "&lt;object name&gt;": {&lt;object metadata&gt;}
+  }
+} /* encoded as msgpack */
+{% endraw %}
+</pre>
+</div>
+{% endblock %}
