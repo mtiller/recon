@@ -1,0 +1,39 @@
+extends: ../templates/2col.html
+---
+
+{% block title %}
+Table Metadata (in Header)
+{% endblock %}
+
+{% block column-one %}
+<div class="c-step">
+<h2>Header</h2>
+
+<pre class="language-javascript">
+{
+  "fmeta": {&lt;file-level metadata&gt;},
+  "tabs": {
+    "&lt;table name&gt;": &lt;table data&gt;
+  },
+  "objs": {
+    "&lt;object name&gt;": &lt;object data&gt;
+  },
+  "comp": true|false // Compression flag
+} /* encoded as msgpack */
+</pre>
+</div>
+{% endblock %}
+
+{% block column-two %}
+<div class="c-step">
+<h2>Values in <code>objs</code></h2>
+
+<pre class="language-javascript">
+{
+  "ometa": {&lt;object level metadata&gt;},
+  "i": &lt;index of object data&gt;,
+  "l": &lt;length of object data&gt;
+}
+</pre>
+</div>
+{% endblock %}

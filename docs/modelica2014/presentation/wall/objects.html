@@ -11,7 +11,8 @@ Entries
 
 <pre class="language-json">
 {
-  "&lt;table name&gt;": [list of signal values]
+  0x__ 0x__ 0x__ 0x__ // entry length
+  "&lt;table name&gt;": [list of signal values] // msgpack
 }
 </pre>
 </div>
@@ -23,10 +24,11 @@ Entries
 
 <pre class="language-json">
 {
+  0x__ 0x__ 0x__ 0x__ // entry length
   "&lt;object name&gt;": {
     "&lt;field name&gt;": &lt;field value&gt;,
     "&lt;field name&gt;": &lt;field value&gt;
-  }
+  } // msgpack format
 }
 </pre>
 </div>

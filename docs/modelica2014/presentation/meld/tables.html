@@ -1,0 +1,52 @@
+extends: ../templates/2col.html
+---
+
+{% block title %}
+Table Metadata (in Header)
+{% endblock %}
+
+{% block column-one %}
+<div class="c-step">
+<h2>Header</h2>
+
+<pre class="language-javascript">
+{% raw %}
+{
+  "fmeta": {&lt;file-level metadata&gt;},
+  "tabs": {
+    "&lt;table name&gt;": &lt;table data&gt;
+  },
+  "objs": {
+    "&lt;object name&gt;": &lt;object data&gt;
+  },
+  "comp": true|false // Compression flag
+} /* encoded as msgpack */
+</pre>
+{% endraw %}
+</div>
+{% endblock %}
+
+{% block column-two %}
+<div class="c-step">
+<h2>Values in <code>tabs</code></h2>
+
+<pre class="language-json">
+{
+  "tmeta": {&lt;table level metadata&gt;},
+  "vars": &lt;list of variable names&gt;,
+  "toff": {
+    "&lt;varname&gt;": {
+      "i": &lt;index of variable data&gt;,
+      "l": &lt;length of variable data&gt;,
+      "t": &lt;transform string&gt; // OPTIONAL
+    }
+  },
+  "vmeta": {
+    "&lt;varname&gt;": {
+      &lt;variable level metadata&gt;
+    } // OPTIONAL
+  }
+}
+</pre>
+</div>
+{% endblock %}
