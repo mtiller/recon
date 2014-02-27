@@ -2,6 +2,7 @@ metadata:
   title: Recon -- Web and network friendly simulation data formats
   desc: The Recon project is developing web and network friendly simulation data formats
   image: img/logo_glossy.svg
+  draft: true
   styles:
     - css/recon.css
 slides:
