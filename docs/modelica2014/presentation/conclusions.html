@@ -1,1 +1,32 @@
-<h1>Conclusions</h1>
+extends: templates/2col.html
+---
+{% block title %}
+Conclusions
+{% endblock %}
+
+{% macro item(p1, p2) %}
+  <h3 style="margin-bottom: 10px"><span class="c-step">{{p1}}</span></h3>
+  <span style="margin-top: 10px" class="c-step">{{p2|safe}}</span>
+{% endmacro %}
+
+{% block column-one %}
+{{ item('Easy to implement',
+        'Open source implementations in Python, C and Java') }}
+{{ item('Efficient disk and network access',
+        'For extraction of individual signals or large quantities of data') }}
+{{ item('First class metadata',
+        'Available for files, tables, objects and signal') }}
+{{ item('Writing to multiple tables',
+        'Supports stream of results with different clocks') }}
+{% endblock %}
+
+{% block column-two %}
+{{ item('Rich data types',
+        'Columns of data can be reals, ints, booleans, strings or records') }}
+{{ item('Richer aliases',
+        'Supports alias, inverse aliases and affine aliases') }}
+{{ item('Efficient string handling',
+        'Reduces the impact of long descriptions on file size') }}
+{{ item('Mixed storage of tables and objects',
+        'Useful for heterogenous data (e.g., parameter sets)') }}
+{% endblock %}
