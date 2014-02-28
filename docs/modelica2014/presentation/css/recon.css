@@ -24,6 +24,12 @@
     text-align: left;
 }
 
+img.centered {
+    display: block;
+    margin-left: auto;
+    margin-right: auto
+}
+
 .column-one {
     float: left;
     width: 45%;
