@@ -11,7 +11,7 @@ slides:
     - first_page.html
   Background:
     - <hero><h1>Background</h1></hero>
-    - existing.md
+    - existing.html
     - goals.html
   Approach:
     - <hero><h1>Approach</h1></hero>

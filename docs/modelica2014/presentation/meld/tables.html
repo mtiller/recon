@@ -10,7 +10,7 @@ Table Header Data
 <h2>Header</h2>
 
 <pre class="language-javascript">
-{% raw %}
+/* encoded as msgpack */
 {
   "fmeta": {&lt;file-level metadata&gt;},
   "tabs": {
@@ -20,9 +20,7 @@ Table Header Data
     "&lt;object name&gt;": &lt;object data&gt;
   },
   "comp": true|false // Compression flag
-} /* encoded as msgpack */
-</pre>
-{% endraw %}
+}</pre>
 </div>
 {% endblock %}
 
@@ -31,6 +29,7 @@ Table Header Data
 <h2>Values in <code>tabs</code></h2>
 
 <pre class="language-json">
+/* encoded as msgpack */
 {
   "tmeta": {&lt;table level metadata&gt;},
   "vars": &lt;list of variable names&gt;,
@@ -38,7 +37,7 @@ Table Header Data
     "&lt;varname&gt;": {
       "i": &lt;index of variable data&gt;,
       "l": &lt;length of variable data&gt;,
-      "t": &lt;transform string&gt; // OPTIONAL
+      "t": &lt;transform string&gt; // (opt.)
     }
   },
   "vmeta": {

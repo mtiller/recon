@@ -25,7 +25,10 @@ Meld Header
 <h2>Header</h2>
 
 <pre class="language-javascript">
-0x__ 0x__ 0x__ 0x__ /* Network order length */
+/* Length in network order */
+0x__ 0x__ 0x__ 0x__
+
+/* encoded as msgpack */
 {
   "fmeta": {&lt;file-level metadata&gt;},
   "tabs": {
@@ -35,7 +38,7 @@ Meld Header
     "&lt;object name&gt;": &lt;object data&gt;
   },
   "comp": true|false // Compression flag
-} /* encoded as msgpack */
+}
 </pre>
 
 <h4>Same as for wall format, exception <code>comp</code> flag</h4>

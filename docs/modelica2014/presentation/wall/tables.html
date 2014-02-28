@@ -10,7 +10,8 @@ Table Header Data
 <h2>Wall Header</h2>
 
 <pre class="language-javascript">
-0x__ 0x__ 0x__ 0x__ /* Network order length */
+/* Length in network order */
+0x__ 0x__ 0x__ 0x__
 {
   "fmeta": {&lt;file-level metadata&gt;},
   "tabs": {
@@ -35,7 +36,7 @@ Table Header Data
   "als": {
     "&lt;aliasname&gt;": {
       "s": &lt;base signal name&gt;,
-      "t": &lt;transform string&gt; // OPTIONAL
+      "t": &lt;transform string&gt; // (opt.)
     }
   },
   "vmeta": {

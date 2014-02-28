@@ -10,6 +10,7 @@ Object Header Data
 <h2>Header</h2>
 
 <pre class="language-javascript">
+/* encoded as msgpack */
 {
   "fmeta": {&lt;file-level metadata&gt;},
   "tabs": {
@@ -19,7 +20,7 @@ Object Header Data
     "&lt;object name&gt;": &lt;object data&gt;
   },
   "comp": true|false // Compression flag
-} /* encoded as msgpack */
+}
 </pre>
 </div>
 {% endblock %}
@@ -29,6 +30,7 @@ Object Header Data
 <h2>Values in <code>objs</code></h2>
 
 <pre class="language-javascript">
+/* encoded as msgpack */
 {
   "ometa": {&lt;object level metadata&gt;},
   "i": &lt;index of object data&gt;,
