@@ -5,5 +5,5 @@ cover
 test_output
 build
 dist
-recon.egg-info
+pyrecon.egg-info
 tests/test.wll
