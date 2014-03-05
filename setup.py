@@ -1,9 +1,9 @@
 from setuptools import setup
 from os.path import join, dirname
 
-setup(name="recon",
+setup(name="pyrecon",
       version="0.3.0",
-      description="Recon file format",
+      description="Python implementation of Recon file format and utilities",
       long_description=open(join(dirname(__file__), 'README.md')).read(),
       author="Michael Tiller",
       author_email="michael.tiller@gmail.com",
