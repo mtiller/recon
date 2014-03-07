@@ -4,6 +4,12 @@ metadata:
   image: img/logo_glossy.svg
   draft: false
   math: true
+  package:
+    window:
+      kiosk: false
+      toolbar: false
+      width: 1024
+      height: 768
   styles:
     - css/recon.css
 slides:
