@@ -61,7 +61,7 @@ def dsres2meld(df, mfp, verbose=False, compression=True, single=True):
     on numpy and dymat.
     """
     import numpy
-    from dymat import DyMatFile
+    from DyMat import DyMatFile
 
     # Read dsres file
     mf = DyMatFile(df)
