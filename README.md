@@ -22,7 +22,7 @@ network).  Note, our definition of "single" has some caveats.
 We recognized that we could not accomplish this goal with a single
 format (at least not without making the implementation extremely
 complicated and involving lots of extra writes).  So we opted to
-specify to file formats that could easily be converted.
+specify two file formats that could easily be converted.
 
 ## Dependencies
 
