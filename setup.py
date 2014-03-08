@@ -12,5 +12,6 @@ setup(name="pyrecon",
       scripts=['scripts/meld_info', 'scripts/wall_info',
                'scripts/wall2meld', 'scripts/dsres2meld'],
       packages=['recon'],
+      install_requires=['msgpack-python'],
       include_package_data=True,
       zip_safe=False)
