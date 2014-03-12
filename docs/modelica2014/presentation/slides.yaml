@@ -23,6 +23,7 @@ slides:
     - <hero><h1>Approach</h1></hero>
     - readwrite.html
     - serialize.html
+    - msgpack.html
   Wall Format:
     - <hero><h1>Wall Format</h1></hero>
     - wall/slides.yaml
