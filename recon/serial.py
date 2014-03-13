@@ -112,3 +112,58 @@ class MsgPackSerializer(object):
         """
         return self.decode_obj(fp, length=length,
                                verbose=verbose, uncomp=uncomp)
+
+class UMsgPackSerializer(object):
+    def __init__(self, compress=False, single=False):
+        """
+        Initialize various settings
+        """
+        self.compress = compress
+        self.single = single
+    def encode_obj(self, x, verbose=False, uncomp=False):
+        """
+        Encode an object (uncomp=True means suppress compression)
+        """
+        import umsgpack
+        if self.single:
+            umsgpack._float_size=32
+        else:
+            umsgpack._float_size=64
+        print "umsgpack._float_size = "+str(umsgpack._float_size)
+        
+        try:
+            data = umsgpack.packb(x)
+            if self.compress and not uncomp:
+                data = compress(data)
+            return data
+        except Exception as e: # pragma: no cover
+            print "Exception thrown while trying to pack '"+str(x)+"'"
+            if type(x)==list:
+                print "  List contains: "+str(type(x[0]))
+            raise e
+    def encode_vec(self, x, verbose=False, uncomp=False):
+        """
+        Encode a vector (uncomp=True means suppress compression)
+        """
+        return self.encode_obj(x, verbose=verbose, uncomp=uncomp)
+    def decode_obj(self, fp, length, verbose=False, uncomp=False):
+        """
+        Decode an object (uncomp=True means suppress decompression)
+        """
+        import umsgpack
+        if self.single:
+            umsgpack._float_size=32
+        else:
+            umsgpack._float_size=64
+
+        data = fp.read(length)
+        if self.compress and not uncomp:
+            data = decompress(data)
+        x = umsgpack.unpackb(data)
+        return x
+    def decode_vec(self, fp, length, verbose=False, uncomp=False):
+        """
+        Decode a vector (uncomp=True means suppress decompression)
+        """
+        return self.decode_obj(fp, length=length,
+                               verbose=verbose, uncomp=uncomp)

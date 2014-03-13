@@ -1,11 +1,12 @@
 import sys
 
-from serial import BSONSerializer, MsgPackSerializer
+from serial import BSONSerializer, MsgPackSerializer, UMsgPackSerializer
 
 from util import write_len, read_len, conv_len, parse_transform
 
 #DEFSER = BSONSerializer
 DEFSER = MsgPackSerializer
+#DEFSER = UMsgPackSerializer
 
 # This is a unique ID that every meld file starts with so
 # it can be identified/verified.

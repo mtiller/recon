@@ -1,4 +1,4 @@
-from serial import BSONSerializer, MsgPackSerializer
+from serial import BSONSerializer, MsgPackSerializer, UMsgPackSerializer
 
 from util import write_len, read_len, parse_transform
 
@@ -8,6 +8,7 @@ WALL_ID = "recon:wall:v01"
 
 #DEFSER = BSONSerializer
 DEFSER = MsgPackSerializer
+#DEFSER = UMsgPackSerializer
 
 # Header
 H_METADATA = "fmeta"
