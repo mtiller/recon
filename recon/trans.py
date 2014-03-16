@@ -54,7 +54,7 @@ def wall2meld(wfp, mfp):
 
     meld.close()
 
-def dsres2meld(df, mfp, verbose=False, compression=True, single=True):
+def dsres2meld(df, mfp, verbose=False, compression=False, single=True):
     """
     This function reads in a file in 'dsres' format and then writes it
     back out in meld format.  Note there is a dependency in this code
@@ -148,8 +148,6 @@ def dsres2meld(df, mfp, verbose=False, compression=True, single=True):
         tables[block].write(aname, list(abscissa))
 
         signals = signal_map[block]
-        print "Block: "+str(block)
-        print "  Writing signals: "+str(signals)
 
         # Then write signals (no need to write aliases)
         for signal in signals:
