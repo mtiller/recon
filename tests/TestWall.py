@@ -3,7 +3,7 @@ from nose.tools import *
 import os
 
 def write_wall(verbose=False):
-    with open(os.path.join("test_output","sample.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, metadata={"a": "bar"}, verbose=verbose)
 
@@ -92,7 +92,7 @@ def testValidFile():
 
 @raises(KeyError)
 def testDuplicate1():
-    with open(os.path.join("test_output","sample_1.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_1.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
 
@@ -108,7 +108,7 @@ def testDuplicate1():
 
 @raises(KeyError)
 def testDuplicate2():
-    with open(os.path.join("test_output","sample_2.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_2.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
 
@@ -121,7 +121,7 @@ def testDuplicate2():
 
 @raises(KeyError)
 def testDuplicate3():
-    with open(os.path.join("test_output","sample_3.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_3.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
 
@@ -134,7 +134,7 @@ def testDuplicate3():
 
 @raises(KeyError)
 def testDuplicate4():
-    with open(os.path.join("test_output","sample_4.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_4.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
 
@@ -144,7 +144,7 @@ def testDuplicate4():
 
 @raises(FinalizedWall)
 def testDuplicate5():
-    with open(os.path.join("test_output","sample_5.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_5.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
 
@@ -155,7 +155,7 @@ def testDuplicate5():
 
 @raises(FinalizedWall)
 def testDuplicate6():
-    with open(os.path.join("test_output","sample_6.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_6.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
 
@@ -174,7 +174,7 @@ def testDuplicate6():
 
 @raises(KeyError)
 def testDuplicate7():
-    with open(os.path.join("test_output","sample_7.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_7.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
 
@@ -188,7 +188,7 @@ def testDuplicate7():
         wall.finalize()
 
 def testEmpty():
-    with open(os.path.join("test_output","sample_8.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_8.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
         t = wall.add_table(name="T1");
@@ -204,7 +204,7 @@ def testEmpty():
 
 @raises(NameError)
 def testMissingSignal():
-    with open(os.path.join("test_output","sample_9.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_9.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
         t = wall.add_table(name="T1")
@@ -221,7 +221,7 @@ def testMissingSignal():
 
 @raises(ValueError)
 def testBadArgs():
-    with open(os.path.join("test_output","sample_10.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_10.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
         t = wall.add_table(name="T1")
@@ -235,7 +235,7 @@ def testBadArgs():
 
 @raises(NotFinalized)
 def testNotFinalRow():
-    with open(os.path.join("test_output","sample_11.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_11.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
         t = wall.add_table(name="T1")
@@ -248,7 +248,7 @@ def testNotFinalRow():
 
 @raises(TypeError)
 def testNotAType():
-    with open(os.path.join("test_output","sample_12.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_12.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
         t = wall.add_table(name="T1")
@@ -257,7 +257,7 @@ def testNotAType():
 
 @raises(TypeError)
 def testTypeMismatch1():
-    with open(os.path.join("test_output","sample_13.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_13.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
         t = wall.add_table(name="T1")
@@ -266,7 +266,7 @@ def testTypeMismatch1():
 
 @raises(TypeError)
 def testTypeMismatch2():
-    with open(os.path.join("test_output","sample_14.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_14.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
         t = wall.add_table(name="T1")
@@ -275,7 +275,7 @@ def testTypeMismatch2():
 
 @raises(TypeError)
 def testTypeMismatch3():
-    with open(os.path.join("test_output","sample_15.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_15.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
         t = wall.add_table(name="T1")
@@ -284,14 +284,14 @@ def testTypeMismatch3():
 
 @raises(NotFinalized)
 def testNotFinalField():
-    with open(os.path.join("test_output","sample_16.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_16.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, verbose=True)
         o = wall.add_object(name="O1");
         o.add_fields(x=12.0)
 
 def testMetadata1():
-    with open(os.path.join("test_output","sample_17.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_17.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, metadata={"a": "bar"}, verbose=True)
         t = wall.add_table(name="T1", metadata={"b": "foo"});
@@ -310,7 +310,7 @@ def testMetadata1():
 
 @raises(ValueError)
 def testBadTransform1():
-    with open(os.path.join("test_output","sample_18.wll"), "w+") as fp:
+    with open(os.path.join("test_output","sample_18.wll"), "wb+") as fp:
         # Create the wall object with a file-like object to write to
         wall = WallWriter(fp, metadata={"a": "bar"}, verbose=True)
         t = wall.add_table(name="T1", metadata={"b": "foo"});

@@ -12,7 +12,7 @@ def testWall2Meld():
     write_wall(verbose=True);
 
     with open(os.path.join("test_output","sample.wll"), "rb") as wfp:
-        with open(os.path.join("test_output","sample.mld"), "w+") as mfp:
+        with open(os.path.join("test_output","sample.mld"), "wb+") as mfp:
             wall2meld(wfp, mfp)
 
     with open(os.path.join("test_output","sample.mld"), "rb") as fp:
@@ -44,7 +44,7 @@ def testWall2Meld():
         assert_equals(table.data("b"), ["2.0", "3.0", "3.0"])
 
 def testDsres2Meld():
-    with open(os.path.join("test_output","dsres.mld"), "w+") as fp:
+    with open(os.path.join("test_output","dsres.mld"), "wb+") as fp:
         dsres2meld("tests/dsres.mat", fp, verbose=True, compression=False)
 
     with open(os.path.join("test_output","dsres.mld"), "rb") as fp:
@@ -52,7 +52,7 @@ def testDsres2Meld():
         print str(meld.report())
 
 def testDsres2Meld_Compression():
-    with open(os.path.join("test_output","dsres_comp.mld"), "w+") as fp:
+    with open(os.path.join("test_output","dsres_comp.mld"), "wb+") as fp:
         dsres2meld("tests/dsres.mat", fp, verbose=True, compression=True)
 
     with open(os.path.join("test_output","dsres_comp.mld"), "rb") as fp:
@@ -60,7 +60,7 @@ def testDsres2Meld_Compression():
         print str(meld.report())
 
 def testDsres2Meld_Robot():
-    with open(os.path.join("test_output","dsres_robot.mld"), "w+") as fp:
+    with open(os.path.join("test_output","dsres_robot.mld"), "wb+") as fp:
         dsres2meld("tests/fullRobot.mat", fp, verbose=False, compression=False)
 
     with open(os.path.join("test_output","dsres.mld"), "rb") as fp:
@@ -68,7 +68,7 @@ def testDsres2Meld_Robot():
         print str(meld.report())
 
 def testDsres2Meld_Compression_Robot():
-    with open(os.path.join("test_output","dsres_robot_comp.mld"), "w+") as fp:
+    with open(os.path.join("test_output","dsres_robot_comp.mld"), "wb+") as fp:
         dsres2meld("tests/fullRobot.mat", fp, verbose=False)
 
     with open(os.path.join("test_output","dsres_comp.mld"), "rb") as fp:

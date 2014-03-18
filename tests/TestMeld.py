@@ -5,7 +5,7 @@ from recon.meld import MeldWriter, MeldReader
 import os
 
 def write_meld(name,compression=False,verbose=False,n=0):
-    with open(os.path.join("test_output",name+".mld"), "w+") as fp:
+    with open(os.path.join("test_output",name+".mld"), "wb+") as fp:
         meld = MeldWriter(fp, metadata={"source": "x"}, verbose=verbose, compression=compression)
         
         # Need to identify all entities in the file first.  We don't need
@@ -81,7 +81,7 @@ def testCompressedValidMeld2():
 def testDuplicateTable1():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dtab1.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dtab1.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_table(name="T1");
         t.add_signal("time")
@@ -96,7 +96,7 @@ def testDuplicateTable1():
 def testDuplicateTable2():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dtab2.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dtab2.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_table(name="T1");
         t.add_signal("time")
@@ -108,7 +108,7 @@ def testDuplicateTable2():
 def testDuplicateTable3():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dtab3.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dtab3.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_table(name="T1");
         t.add_signal("time")
@@ -124,7 +124,7 @@ def testDuplicateTable3():
 def testDuplicateTable3b():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dtab3b.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dtab3b.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_table(name="T1");
         t.add_signal("time")
@@ -136,7 +136,7 @@ def testDuplicateTable3b():
 def testDuplicateTable4():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dtab4.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dtab4.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_table(name="T1");
         t.add_signal("time")
@@ -152,7 +152,7 @@ def testDuplicateTable4():
 def testDuplicateTable5():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dtab5.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dtab5.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_table(name="T1");
         t.add_signal("time")
@@ -167,7 +167,7 @@ def testDuplicateTable5():
 def testDuplicateTable6():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dtab6.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dtab6.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_table(name="T1")
         t.add_signal("time")
@@ -184,7 +184,7 @@ def testDuplicateTable6():
 def testDuplicateTable7():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dtab7.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dtab7.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_table(name="T1");
         t.add_signal("time")
@@ -202,7 +202,7 @@ def testDuplicateTable7():
 def testDuplicateTable8():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dtab8.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dtab8.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_table(name="T1");
         t.add_signal("time")
@@ -219,7 +219,7 @@ def testDuplicateTable8():
 def testDuplicateTable9():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dtab9.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dtab9.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_table(name="T1");
         t.add_signal("time")
@@ -233,7 +233,7 @@ def testDuplicateTable9():
 def testDuplicateTable10():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dtab10.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dtab10.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_table(name="T1");
         t.add_signal("time")
@@ -248,7 +248,7 @@ def testDuplicateTable10():
 def testDuplicateTable11():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dtab11.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dtab11.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_table(name="T1")
         t.add_signal("time")
@@ -263,7 +263,7 @@ def testDuplicateTable11():
 def testDuplicateObject1():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dobj1.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dobj1.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_object(name="T1")
         t = meld.add_object(name="T1")
@@ -272,7 +272,7 @@ def testDuplicateObject1():
 def testDuplicateObject2():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dobj2.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dobj2.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_object(name="T1")
         t = meld.add_table(name="T1");
@@ -284,7 +284,7 @@ def testDuplicateObject2():
 def testDuplicateObject3():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dobj3.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dobj3.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_object(name="T1")
         meld.finalize()
@@ -293,7 +293,7 @@ def testDuplicateObject3():
 def testDuplicateObject4():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dobj4.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dobj4.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_object(name="T1")
         meld.finalize()
@@ -304,7 +304,7 @@ def testDuplicateObject4():
 def testDuplicateObject5():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_dobj5.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_dobj5.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_object(name="T1")
         meld.finalize()
@@ -316,7 +316,7 @@ def testDuplicateObject5():
 def testNoSuchTable():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_ntab.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_ntab.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_table(name="T1");
         t.add_signal("time")
@@ -336,7 +336,7 @@ def testNoSuchTable():
 def testNoSuchSignal():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_nsig.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_nsig.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_table(name="T1");
         t.add_signal("time")
@@ -358,7 +358,7 @@ def testNoSuchSignal():
 def testNoSuchObject():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_nobj.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_nobj.mld"), "wb+") as fp:
         meld = MeldWriter(fp)
         t = meld.add_table(name="T1");
         t.add_signal("time")
@@ -377,7 +377,7 @@ def testNoSuchObject():
 def testMetadata1():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_md1.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_md1.mld"), "wb+") as fp:
         meld = MeldWriter(fp, metadata={"a": "bar"})
         t = meld.add_table(name="T1", metadata={"b": "foo"});
         t.add_signal("time", metadata={"units": "s"})
@@ -400,7 +400,7 @@ def testMetadata1():
 def testNotAType():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_ntype.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_ntype.mld"), "wb+") as fp:
         meld = MeldWriter(fp, metadata={"a": "bar"})
         t = meld.add_table(name="T1", metadata={"b": "foo"});
         t.add_signal("time", metadata={"units": "s"}, vtype="float")
@@ -412,7 +412,7 @@ def testNotAType():
 def testTypeMismatch1():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_tmis1.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_tmis1.mld"), "wb+") as fp:
         meld = MeldWriter(fp, metadata={"a": "bar"})
         t = meld.add_table(name="T1", metadata={"b": "foo"});
         t.add_signal("time", metadata={"units": "s"}, vtype=float)
@@ -424,7 +424,7 @@ def testTypeMismatch1():
 def testTypeMismatch2():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_tmis2.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_tmis2.mld"), "wb+") as fp:
         meld = MeldWriter(fp, metadata={"a": "bar"})
         t = meld.add_table(name="T1", metadata={"b": "foo"});
         t.add_signal("time", metadata={"units": "s"}, vtype=int)
@@ -436,7 +436,7 @@ def testTypeMismatch2():
 def testTypeMismatch3():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_tmis3.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_tmis3.mld"), "wb+") as fp:
         meld = MeldWriter(fp, metadata={"a": "bar"})
         t = meld.add_table(name="T1", metadata={"b": "foo"});
         t.add_signal("time", metadata={"units": "s"}, vtype=bool)
@@ -447,7 +447,7 @@ def testTypeMismatch3():
 def testChecking1():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_c1.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_c1.mld"), "wb+") as fp:
         meld = MeldWriter(fp, metadata={"a": "bar"})
         t = meld.add_table(name="T1", metadata={"b": "foo"});
         t.add_signal("time", metadata={"units": "s"}, vtype=bool)
@@ -458,7 +458,7 @@ def testChecking1():
 def testChecking2():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_c2.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_c2.mld"), "wb+") as fp:
         meld = MeldWriter(fp, metadata={"a": "bar"})
         t = meld.add_table(name="T1", metadata={"b": "foo"});
         t.add_signal("time", metadata={"units": "s"}, vtype=int)
@@ -469,7 +469,7 @@ def testChecking2():
 def testChecking3():
     from recon.meld import MeldWriter
 
-    with open(os.path.join("test_output","sample_c3.mld"), "w+") as fp:
+    with open(os.path.join("test_output","sample_c3.mld"), "wb+") as fp:
         meld = MeldWriter(fp, metadata={"a": "bar"})
         t = meld.add_table(name="T1", metadata={"b": "foo"});
         t.add_signal("time", metadata={"units": "s"}, vtype=str)
