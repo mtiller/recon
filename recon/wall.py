@@ -45,7 +45,7 @@ class WallWriter(object):
     largely pythonic API for doing so.
     """
 
-    def __init__(self, fp, metadata={}, verbose=False):
+    def __init__(self, file, metadata={}, verbose=False):
         """
         Constructor for a WallWriter.  The file-like object fp only
         needs to support the 'write' method.
@@ -53,6 +53,15 @@ class WallWriter(object):
         Note: all metadata must be supplied at the time the wall
         file is created.
         """
+
+        # If a file name is passed, open the file...in *binary* mode
+        if type(file)==str:
+            fp = open(file, "wb")
+            self.shouldClose = True
+        else:
+            fp = file # Assume this is a file
+            self.shouldClose = False
+
         self.fp = fp
         self.verbose = verbose
         self.defined = False
@@ -62,6 +71,12 @@ class WallWriter(object):
         self.buffered_rows = []
         self.buffered_fields = [] # [{objname -> {field -> value}}]
         self.ser = DEFSER()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
 
     def _check_name(self, name):
         """
@@ -193,6 +208,12 @@ class WallWriter(object):
         self.buffered_rows = []
         self.buffered_fields = []
 
+    def close(self):
+        # We close the file pointer IF we created it.  Otherwise,
+        # we do nothing
+        if self.shouldClose:
+            self.fp.close()
+
 class WallTableWriter(object):
     """
     This class is used to add rows to a given wall.
@@ -322,11 +343,20 @@ class WallReader(object):
     """
     This class is used to read a wall file.
     """
-    def __init__(self, fp, verbose=False):
+    def __init__(self, file, verbose=False):
         """
         This is the constructor for the wall reader.  The file like
         'fp' object must support the read, tell and seek methods.
         """
+
+        # If a file name is passed, open the file...in *binary* mode
+        if type(file)==str:
+            fp = open(file, "rb")
+            self.shouldClose = True
+        else:
+            fp = file # Assume this is a file
+            self.shouldClose = False
+
         self.fp = fp
         self.verbose = verbose
 
@@ -351,6 +381,12 @@ class WallReader(object):
 
         # Record where the end of the header is.
         self.start = fp.tell()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
 
     def asJSON(self, fp):
         """
@@ -443,6 +479,12 @@ class WallReader(object):
                                " present, options are: %s" % \
                                (str(self.header[H_TABLES]),))
         return WallTableReader(self, name, self.header[H_TABLES][name])
+
+    def close(self):
+        # We close the file pointer IF we created it.  Otherwise,
+        # we do nothing
+        if self.shouldClose:
+            self.fp.close()
 
 class WallTableReader(object):
     """

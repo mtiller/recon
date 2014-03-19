@@ -87,8 +87,10 @@ class MeldWriter(object):
         # If a file name is passed, open the file...in *binary* mode
         if type(file)==str:
             fp = open(file, "wb")
+            self.shouldClose = True
         else:
             fp = file # Assume this is a file
+            self.shouldClose = False
 
         self.fp = fp
         self.verbose = verbose
@@ -104,6 +106,12 @@ class MeldWriter(object):
         self.start = None
         self.headlen = None
         self.closed = False
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
 
     def _check_names(self, name):
         """
@@ -265,6 +273,8 @@ class MeldWriter(object):
         """
         Close this meld for any more writing.
         """
+        if self.closed:
+            return # This can happen if explicitly close in combination with "with"
         self._write_header()
         if not self.defined:
             self.finalize()
@@ -279,6 +289,8 @@ class MeldWriter(object):
         if len(missing)>0:
             raise MissingData("Data not written for: "+str(missing))
         self.closed = True
+        if self.shouldClose:
+            self.fp.close()
 
 class MeldTableWriter(object):
     """
@@ -433,14 +445,20 @@ class MeldReader(object):
         # If a file name is passed, open the file...in *binary* mode
         if type(file)==str:
             fp = open(file, "rb")
+            self.shouldClose = True;
         else:
             fp = file # Assume this is a file
+            self.shouldClose = False;
 
         # Note, the inmemory option didn't seem to make any difference
         # in my basic benchmarks
         if inmemory:
             import StringIO
             self.fp = StringIO.StringIO(fp.read())
+            # If we opened this file pointer, we don't need it anymore.
+            if self.shouldClose:
+                fp.close()
+            self.shouldClose = True
         else:
             self.fp = fp
         self.verbose = verbose
@@ -463,6 +481,12 @@ class MeldReader(object):
             print "Compression: "+str(self.compression)
         if self.verbose:
             print "Header = "+str(self.header)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
 
     def asJSON(self, fp):
         """
@@ -545,6 +569,10 @@ class MeldReader(object):
         self.fp.seek(ind)
         data = self.ser.decode_obj(self.fp, blen)
         return MeldObjectReader(data, metadata)
+
+    def close(self):
+        if self.shouldClose:
+            self.fp.close()
 
 class MeldTableReader(object):
     """

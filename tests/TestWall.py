@@ -3,10 +3,8 @@ from nose.tools import *
 import os
 
 def write_wall(verbose=False):
-    with open(os.path.join("test_output","sample.wll"), "wb+") as fp:
-        # Create the wall object with a file-like object to write to
-        wall = WallWriter(fp, metadata={"a": "bar"}, verbose=verbose)
-
+    wfile = os.path.join("test_output","sample.wll")
+    with WallWriter(wfile, metadata={"a": "bar"}, verbose=verbose) as wall:
         # Walls can contain tables, here is how we define one
         t = wall.add_table(name="T1", metadata={"model": "Foo"});
         t.add_signal("time", metadata={"units": "s"}, vtype=float)
@@ -50,9 +48,8 @@ def write_wall(verbose=False):
         wall.flush();
 
 def read_wall(verbose=False):
-    with open(os.path.join("test_output","sample.wll"), "rb") as fp:
-        wall = WallReader(fp, verbose=verbose)
-
+    wfile = os.path.join("test_output","sample.wll")
+    with WallReader(wfile, verbose=verbose) as wall:
         print "Objects:"
         for objname in wall.objects():
             obj = wall.read_object(objname)

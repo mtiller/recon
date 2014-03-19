@@ -51,7 +51,7 @@ def testDsres2Meld():
     print str(meld.report())
 
 def testDsres2Meld_Compression():
-    with open(os.path.join("test_output","dsres_comp.mld"), "wb+") as fp:
+    with open(os.path.join("test_output","dsres_comp.mld"), "wb") as fp:
         dsres2meld("tests/dsres.mat", fp, verbose=True, compression=True)
 
     with open(os.path.join("test_output","dsres_comp.mld"), "rb") as fp:
@@ -59,7 +59,7 @@ def testDsres2Meld_Compression():
         print str(meld.report())
 
 def testDsres2Meld_Robot():
-    with open(os.path.join("test_output","dsres_robot.mld"), "wb+") as fp:
+    with open(os.path.join("test_output","dsres_robot.mld"), "wb") as fp:
         dsres2meld("tests/fullRobot.mat", fp, verbose=False, compression=False)
 
     with open(os.path.join("test_output","dsres.mld"), "rb") as fp:
@@ -67,7 +67,7 @@ def testDsres2Meld_Robot():
         print str(meld.report())
 
 def testDsres2Meld_Compression_Robot():
-    with open(os.path.join("test_output","dsres_robot_comp.mld"), "wb+") as fp:
+    with open(os.path.join("test_output","dsres_robot_comp.mld"), "wb") as fp:
         dsres2meld("tests/fullRobot.mat", fp, verbose=False)
 
     with open(os.path.join("test_output","dsres_comp.mld"), "rb") as fp:
