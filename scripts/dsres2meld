@@ -10,6 +10,7 @@ if len(sys.argv)!=2:
 
 name, ext = os.path.splitext(sys.argv[1])
 
-with open(sys.argv[1], "rb") as wfp:
-     with open(name+".mld", "wb+") as mfp:
-     	  dsres2meld(wfp, mfp)
+wfile = sys.argv[1]
+mfile = name+".mld"
+
+dsres2meld(wfile, mfile)

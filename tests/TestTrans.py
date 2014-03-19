@@ -11,9 +11,9 @@ import os
 def testWall2Meld():
     write_wall(verbose=True);
 
-    with open(os.path.join("test_output","sample.wll"), "rb") as wfp:
-        with open(os.path.join("test_output","sample.mld"), "wb+") as mfp:
-            wall2meld(wfp, mfp)
+    wfile = os.path.join("test_output","sample.wll")
+    mfile =  os.path.join("test_output","sample.mld")
+    wall2meld(wfile, mfile)
 
     with open(os.path.join("test_output","sample.mld"), "rb") as fp:
         meld = MeldReader(fp, verbose=True)
@@ -44,12 +44,11 @@ def testWall2Meld():
         assert_equals(table.data("b"), ["2.0", "3.0", "3.0"])
 
 def testDsres2Meld():
-    with open(os.path.join("test_output","dsres.mld"), "wb+") as fp:
-        dsres2meld("tests/dsres.mat", fp, verbose=True, compression=False)
+    mfile = os.path.join("test_output","dsres.mld")
+    dsres2meld("tests/dsres.mat", mfile, verbose=True, compression=False)
 
-    with open(os.path.join("test_output","dsres.mld"), "rb") as fp:
-        meld = MeldReader(fp, verbose=True)
-        print str(meld.report())
+    meld = MeldReader(mfile, verbose=True)
+    print str(meld.report())
 
 def testDsres2Meld_Compression():
     with open(os.path.join("test_output","dsres_comp.mld"), "wb+") as fp:
