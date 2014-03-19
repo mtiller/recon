@@ -76,7 +76,7 @@ class WriteAfterClose(Exception):
     pass
 
 class MeldWriter(object):
-    def __init__(self, fp, metadata={}, compression=False,
+    def __init__(self, file, metadata={}, compression=False,
                  verbose=False, single=False):
         """
         This is the constructor for the meld writer.
@@ -84,6 +84,12 @@ class MeldWriter(object):
         Note: All metadata must be supplied at the time when the meld
         is created.
         """
+        # If a file name is passed, open the file...in *binary* mode
+        if type(file)==str:
+            fp = open(file, "wb")
+        else:
+            fp = file # Assume this is a file
+
         self.fp = fp
         self.verbose = verbose
         self.compression = compression
@@ -418,11 +424,18 @@ class MeldReader(object):
     """
     This class is used for reading melds
     """
-    def __init__(self, fp, verbose=False, inmemory=False):
+    def __init__(self, file, verbose=False, inmemory=False):
         """
         Reads the header information (two reads, one for size and one
         for rest of header).
         """
+
+        # If a file name is passed, open the file...in *binary* mode
+        if type(file)==str:
+            fp = open(file, "rb")
+        else:
+            fp = file # Assume this is a file
+
         # Note, the inmemory option didn't seem to make any difference
         # in my basic benchmarks
         if inmemory:

@@ -5,61 +5,60 @@ from recon.meld import MeldWriter, MeldReader
 import os
 
 def write_meld(name,compression=False,verbose=False,n=0):
-    with open(os.path.join("test_output",name+".mld"), "wb+") as fp:
-        meld = MeldWriter(fp, metadata={"source": "x"}, verbose=verbose, compression=compression)
-        
-        # Need to identify all entities in the file first.  We don't need
-        # their data.  We just need to enumerate them for the header.
-        t = meld.add_table(name="T1", metadata={"model": "Foo"})
-        t.add_signal("time", metadata={"units": "s"}, vtype=float)
-        t.add_signal("x")
-        t.add_signal("y")
-        t.add_alias(alias="a", of="x", transform="aff(1.0,1.0)", metadata={"ax": "zed"});
-        t.add_alias(alias="b", of="y", transform="inv");
-        obj1 = meld.add_object("obj1", metadata={"a": "bar"});
-        obj2 = meld.add_object("obj2");
+    meld = MeldWriter(os.path.join("test_output",name+".mld"),
+                      metadata={"source": "x"}, verbose=verbose, compression=compression)
+    
+    # Need to identify all entities in the file first.  We don't need
+    # their data.  We just need to enumerate them for the header.
+    t = meld.add_table(name="T1", metadata={"model": "Foo"})
+    t.add_signal("time", metadata={"units": "s"}, vtype=float)
+    t.add_signal("x")
+    t.add_signal("y")
+    t.add_alias(alias="a", of="x", transform="aff(1.0,1.0)", metadata={"ax": "zed"});
+    t.add_alias(alias="b", of="y", transform="inv");
+    obj1 = meld.add_object("obj1", metadata={"a": "bar"});
+    obj2 = meld.add_object("obj2");
 
-        # All the structural information has been specified (perhaps this
-        # could be implicitly invoked?)
-        meld.finalize()
+    # All the structural information has been specified (perhaps this
+    # could be implicitly invoked?)
+    meld.finalize()
 
-        # Now we can start writing the actual data to the file.  As soon as we
-        # start writing data, we can't made any changes that would affect the header
-        t.write("time", [0.0, 1.0, 2.0]+[0.0]*n);
-        t.write("x", [1.0, 0.0, 1.0]+[0.0]*n);
-        t.write("y", [2.0, 3.0, 3.0]+[0.0]*n);
+    # Now we can start writing the actual data to the file.  As soon as we
+    # start writing data, we can't made any changes that would affect the header
+    t.write("time", [0.0, 1.0, 2.0]+[0.0]*n);
+    t.write("x", [1.0, 0.0, 1.0]+[0.0]*n);
+    t.write("y", [2.0, 3.0, 3.0]+[0.0]*n);
 
-        # Once we switch to writing another entity, the previous entity is
-        # implicitly finalized
-        obj1.write(nationality="American", name="Mike");
+    # Once we switch to writing another entity, the previous entity is
+    # implicitly finalized
+    obj1.write(nationality="American", name="Mike");
 
-        obj2.write(nationality="GreatBritisher", name="Pete");
+    obj2.write(nationality="GreatBritisher", name="Pete");
 
-        # When the meld is closed (and it must be closed!), the entity that was
-        # currently being written is finalized
-        meld.close()
+    # When the meld is closed (and it must be closed!), the entity that was
+    # currently being written is finalized
+    meld.close()
 
 def read_meld(name,verbose=True):
-    with open(os.path.join("test_output",name+".mld"), "rb") as fp:
-        meld = MeldReader(fp, verbose=verbose)
-        assert_equals(meld.metadata, {"source": "x"})
+    meld = MeldReader(os.path.join("test_output",name+".mld"), verbose=verbose)
+    assert_equals(meld.metadata, {"source": "x"})
 
-        print "Objects:"
-        for objname in meld.objects():
-            obj = meld.read_object(objname)
-            print "  "+objname+" = "+str(obj)
-            if objname=="obj1":
-                assert_equals(obj.metadata, {"a": "bar"})
+    print "Objects:"
+    for objname in meld.objects():
+        obj = meld.read_object(objname)
+        print "  "+objname+" = "+str(obj)
+        if objname=="obj1":
+            assert_equals(obj.metadata, {"a": "bar"})
 
-        print "Tables:"
-        for tabname in meld.tables():
-            table = meld.read_table(tabname)
-            print "  "+tabname
-            for signal in table.signals():
-                print "    #"+signal+": "+str(table.data(signal))
-            assert_equals(table.metadata["model"], "Foo")
-            assert_equals(table.var_metadata["a"], {"ax": "zed"})
-            assert_equals(table.var_metadata["time"], {"units": "s"})
+    print "Tables:"
+    for tabname in meld.tables():
+        table = meld.read_table(tabname)
+        print "  "+tabname
+        for signal in table.signals():
+            print "    #"+signal+": "+str(table.data(signal))
+        assert_equals(table.metadata["model"], "Foo")
+        assert_equals(table.var_metadata["a"], {"ax": "zed"})
+        assert_equals(table.var_metadata["time"], {"units": "s"})
 
 def testUncompressedValidMeld1():
     write_meld(name="sample_ucmeld1",verbose=False,compression=False,n=100)
