@@ -55,7 +55,7 @@ class WallWriter(object):
         """
 
         # If a file name is passed, open the file...in *binary* mode
-        if type(file)==str:
+        if type(file)==str or type(file)==unicode:
             fp = open(file, "wb")
             self.shouldClose = True
         else:
@@ -350,7 +350,7 @@ class WallReader(object):
         """
 
         # If a file name is passed, open the file...in *binary* mode
-        if type(file)==str:
+        if type(file)==str or type(file)==unicode:
             fp = open(file, "rb")
             self.shouldClose = True
         else:
