@@ -57,3 +57,9 @@ the cloud and the desktop/browser.  Having a format that supports
 utilizing cloud/remote storage solutions which will lead to more
 responsive interfaces and better data management practices and
 capacity.  The meld format is designed for this use case.
+
+# Specification
+
+The current specification for both formats can be found [here](https://github.com/xogeny/recon/blob/master/docs/SPEC.md#introduction).
+
+
