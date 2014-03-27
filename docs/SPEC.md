@@ -375,18 +375,17 @@ Each `wall` file starts with the following sequence of bytes:
 
 ```
 0x72 0x65 0x63 0x6f 0x6e 0x3a 0x77
-0x61 0x6c 0x6c 0x3a 0x76 0x30 0x31
+0x61 0x6c 0x6c 0x3a 0x76 0x30 0x32
 ```
 
 This is a hex encoding of the ASCII string `"recon:wall:v01"`.
 This allows us to identify whether this is a `recon` `wall` file and, if
 so, what version of the specification should be applied.
 
-The next four bytes are a binary encoding of the length of the header.
-This encoding is done in so-called "network byte order"
-(big-endian).  The byte encoding of the length is not considered part
-of the header (*i.e.,* the length indicated doesn't include the
-4 bytes that encode the length).
+The next 1-9 bytes are the length of the header in msgpack format.
+The byte encoding of the length is not considered part of the header
+(*i.e.,* the length indicated doesn't include the bytes that encode
+the length).
 
 ### Wall Header
 
@@ -465,13 +464,13 @@ named object.
 
 ### Entries
 
-Following the header, the remainder of the file consists of
-"entries".  Each entry is preceded by 4 bytes in network byte order
-indicating the length of the entry (again, the length indicated does
-not include the 4 bytes used to represent the length).  All entries
-are encoded maps in `msgpack` format.  There are two types of possible
-entries and there are no rules about which can be present
-(*i.e.,* they can appear in any order and be interleaved).
+Following the header, the remainder of the file consists of "entries".
+Each entry is preceded by 1-9 bytes in that encode the length of the
+entry in msgpack format (again, the length indicated does not include
+the bytes used to represent the length).  All entries are encoded maps
+in `msgpack` format.  There are two types of possible entries and
+there are no rules about which can be present (*i.e.,* they can appear
+in any order and be interleaved).
 
 The first type is a "row entry" which details a new row for a
 specified table.  The format of a row entry is as follows:
@@ -517,9 +516,9 @@ far:
 ```
 // ID
 0x72 0x65 0x63 0x6f 0x6e 0x3a 0x77
-0x61 0x6c 0x6c 0x3a 0x76 0x30 0x31
-// Header length, network order
-0x?? 0x?? 0x?? 0x??
+0x61 0x6c 0x6c 0x3a 0x76 0x30 0x32
+// Header length in msgpack format
+0x?? ... 0x?? // 1-9 bytes
 {
   "fmeta": {<file-level metadata>},
   "tabs": {
@@ -548,7 +547,8 @@ far:
 // which can be either...
 
 // ...field entries...
-0x?? 0x?? 0x?? 0x?? // entry length
+// Entry length in msgpack format
+0x?? ... 0x?? // 1-9 bytes
 {
   <object name>: {
     <field name>: <field value>,
@@ -557,7 +557,8 @@ far:
 }
 
 // ...or row entries
-0x?? 0x?? 0x?? 0x?? // entry length
+// Entry length in msgpack format
+0x?? ... 0x?? // 1-9 bytes
 {
   <table name>: [list of signal values]
 }
@@ -573,16 +574,14 @@ Each `meld` file starts with the following sequence of bytes:
 
 ```
 0x72 0x65 0x63 0x6f 0x6e 0x3a 0x6d
-0x65 0x6c 0x64 0x3a 0x76 0x30 0x31
+0x65 0x6c 0x64 0x3a 0x76 0x30 0x32
 ```
 
 This is a hex encoding of the ASCII string `recon:meld:v01`.
 This allows us to identify whether this is a `recon` `meld` file and, if
 so, what version of the specification should be applied.
 
-The next four bytes are a binary encoding of the length of the header.
-This encoding is done in so-called "network byte order"
-(big-endian).
+The next 1-9 bytes are the length of the header in msgpack format.
 
 ### Meld Header
 
@@ -718,9 +717,9 @@ far:
 ```
 // ID
 0x72 0x65 0x63 0x6f 0x6e 0x3a 0x6d
-0x65 0x6c 0x64 0x3a 0x76 0x30 0x31
-// Header length, network order
-0x?? 0x?? 0x?? 0x??
+0x65 0x6c 0x64 0x3a 0x76 0x30 0x32
+// Header length in msgpack format
+0x?? ... 0x?? // 1-9 bytes
 {
   "fmeta": {<file-level metadata>},
   "tabs": {
