@@ -1,5 +1,6 @@
 from recon.wall import WallReader, WallWriter
 from recon.meld import MeldReader, MeldWriter
+from recon.transforms import Affine, Inverse
 
 def wall2meld(wfp, mfp):
     """
@@ -33,7 +34,7 @@ def wall2meld(wfp, mfp):
         for alias in table.aliases():
             mtable.add_alias(alias, 
                              of=table.alias_of(alias),
-                             transform=table.alias_transform_string(alias),
+                             transform=table.alias_transform(alias),
                              metadata=table.var_metadata.get(alias, None))
     
     # Now that all definitions are made, we can finalize the meld
@@ -131,7 +132,7 @@ def dsres2meld(df, mfp, verbose=False, compression=True, single=True):
             transform = None
             if alias[3]<0.0:
                 tables[block].add_alias(alias=alias[0], of=alias[2],
-                                        transform="aff(-1,0)",
+                                        transform=Inverse(),
                                         metadata={DESC:mf.description(alias[0])})
             else:
                 tables[block].add_alias(alias=alias[0], of=alias[2],

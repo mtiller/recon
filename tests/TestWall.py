@@ -1,4 +1,5 @@
 from recon.wall import WallWriter, WallReader, FinalizedWall, NotFinalized
+from recon.transforms import Affine, Inverse
 from nose.tools import *
 import os
 
@@ -13,9 +14,9 @@ def write_wall(verbose=False):
         t.add_signal("active")
 
         # Tables can also have aliases, here is how we define a few
-        t.add_alias(alias="a", of="x", transform="aff(-1.0,2.0)", metadata={"ax": "zed"});
+        t.add_alias(alias="a", of="x", transform=Affine(-1,2), metadata={"ax": "zed"});
         t.add_alias(alias="b", of="y");
-        t.add_alias(alias="inactive", of="active", transform="inv");
+        t.add_alias(alias="inactive", of="active", transform=Inverse());
 
         # Walls can also have objects.
         obj1 = wall.add_object("obj1", metadata={"xyz": "ABC"});

@@ -420,7 +420,7 @@ to table data.  The format of this table data is as follows:
   "als": {
     "<aliasname>": {
       "s": <base signal name>,
-      "t": <transform string> // OPTIONAL
+      "t": {transform data} // OPTIONAL
     }
   },
   "vmeta": {
@@ -529,7 +529,7 @@ far:
       "als": {
         <aliasname>: {
           "s": <base signal name>,
-          "t": <transform string> // OPTIONAL
+          "t": {transform data} // OPTIONAL
         }
       },
       "vmeta": {
@@ -631,7 +631,7 @@ is different in the `meld` header than in the `wall` header.  In a
     "<varname>": {
       "i": <index of variable data>,
       "l": <length of variable data>,
-      "t": <transform string> // OPTIONAL
+      "t": {transform data} // OPTIONAL
     }
   },
   "vmeta": {
@@ -731,7 +731,7 @@ far:
         "<varname>": {
           "i": <index of variable data>,
           "l": <length of variable data>,
-          "t": <transform string> // OPTIONAL
+          "t": {transform data} // OPTIONAL
         }
       },
       "vmeta": {
@@ -764,42 +764,45 @@ far:
 ## Transformations
 
 In the previous sections, there were several mentions of a so-called
-"transform string".  This is an optional piece of information
-associated with an alias (in the case of the `wall` format) or a
-variable (in the case of the `meld` format).  It defines the
-transformation, if any, that must be performed over some base data in
-order to retrieve the true value of the referenced data.  There are
-presently only two allowed transformation types that are supported by
-the `recon` formats.
+"transform data".  This is an optional piece of information associated
+with an alias (in the case of the `wall` format) or a variable (in the
+case of the `meld` format).  It defines the transformation, if any,
+that must be performed over some base data in order to retrieve the
+true value of the referenced data.  Transform data is represented as
+an object.  All transforms must include a key `k` whose value (a
+string) identifies the type of transformation to be applied.  There
+are presently only two allowed transformation types that are supported
+by the `recon` formats.
 
 The first transformation type is the "inverse" transformation.  This
-transformation is indicated when the transform string has a value of
-`"inv"`.  The impact of the inverse transformation depends on the
-data type.  For numeric data types, the inverse transformation causes
-the data to have its sign inverted.  For boolean data, the inverse
-transformation applies a logical not operation to the data.  With this
-simple transform alone, it is possible to avoid storing a significant
-amount of data.
+transformation is indicated when `k` key in the transform data has a
+value of `"inv"`.  The impact of the inverse transformation depends on
+the data type.  For numeric data types, the inverse transformation
+causes the data to have its sign inverted.  For boolean data, the
+inverse transformation applies a logical not operation to the data.
+With this simple transform alone, it is possible to avoid storing a
+significant amount of data.
 
 The other transform type is the "affine" transform.  This
-transformation is indicated when the transform string has a value of
-`"aff(s,o)"`, where `s` represents a scale factor and
-`o` represents an offset value.  In the presence of this
+transformation is indicated when the `k` key in the transform data has
+a value of `"aff"`.  In this case, the transform data should include
+two additional keye, `s` and `o`.  The `s` key is a scale factor and
+the `o` key is an offset value.  In the presence of this
 transformation, all **numeric** values in the base data should be
 multiplied by the scale factor, `s`, and then added to the offset
-value, `o`.  As one reviewer of this paper noted, unit transforms
-are almost always affine in nature.  This means that the affine
-transformation permits results to be stored in many different physical
-units without taking up any appreciable additional storage.
+value, `o`.  As one reviewer of this paper noted, unit conversion
+transforms are almost always affine in nature.  This means that the
+affine transformation permits results to be stored in many different
+physical units without taking up any appreciable additional storage.
 
 No transform should be applied to the data if:
 
-   * No transform string is present
-   * The transform string is unrecognized/cannot be parsed
+   * No transform data is present
+   * The transform data is unrecognized/cannot be parsed
    * The transform does not apply to the underlying data type
      (*e.g.,* applying the `affine` transformation to a
        Boolean value)
-   * There was an kind of error or exception when attempting to apply
+   * There was any kind of error or exception when attempting to apply
      the transformation
 
 In all but the first case, the tool or environment is strongly

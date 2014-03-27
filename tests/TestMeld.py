@@ -2,6 +2,8 @@ from nose.tools import *
 from recon.meld import FinalizedMeld, MissingData, WriteAfterClose
 from recon.meld import MeldWriter, MeldReader
 
+from recon.transforms import Transform, Affine, Inverse
+
 import os
 
 def write_meld(name,compression=False,verbose=False,n=0):
@@ -14,8 +16,8 @@ def write_meld(name,compression=False,verbose=False,n=0):
         t.add_signal("time", metadata={"units": "s"}, vtype=float)
         t.add_signal("x")
         t.add_signal("y")
-        t.add_alias(alias="a", of="x", transform="aff(1.0,1.0)", metadata={"ax": "zed"});
-        t.add_alias(alias="b", of="y", transform="inv");
+        t.add_alias(alias="a", of="x", transform=Affine(1,1), metadata={"ax": "zed"});
+        t.add_alias(alias="b", of="y", transform=Inverse());
         obj1 = meld.add_object("obj1", metadata={"a": "bar"});
         obj2 = meld.add_object("obj2");
 
@@ -37,7 +39,7 @@ def write_meld(name,compression=False,verbose=False,n=0):
 
         # When the meld is closed (and it must be closed!), the entity that was
         # currently being written is finalized
-        meld.close()
+        #meld.close()
 
 def read_meld(name,verbose=True):
     with MeldReader(os.path.join("test_output",name+".mld"), verbose=verbose) as meld:

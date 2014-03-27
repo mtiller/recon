@@ -1,10 +1,11 @@
 from serial import BSONSerializer, MsgPackSerializer, UMsgPackSerializer
 
-from util import write_len, read_len, parse_transform
+from util import write_len, read_len
+from transforms import decode_transform, Transform
 
 # This is a unique ID that every wall file starts with so
 # it can be identified/verified.
-WALL_ID = "recon:wall:v01"
+WALL_ID = "recon:wall:v02"
 
 #DEFSER = BSONSerializer
 DEFSER = MsgPackSerializer
@@ -271,9 +272,11 @@ class WallTableWriter(object):
 
         self.aliases[alias] = {A_OF: of}
         if transform!=None:
-            if parse_transform(transform)==None:
-                raise ValueError("Transform '"+str(transform)+"' could not be parsed")
-            self.aliases[alias][V_TRANS] = transform
+            if isinstance(transform,Transform):
+                self.aliases[alias][V_TRANS] = transform.encode()
+            else:
+                raise ValueError("Specified transform '"+str(transform)+
+                                 "' is not an instance of Transform class")
         if metadata!=None:
             self._vmd[alias]=metadata
 
@@ -528,13 +531,10 @@ class WallTableReader(object):
         """
         Transformation **object** between alias and base signal
         """
-        return parse_transform(self.header[T_ALIASES][name].get(V_TRANS, None))
-
-    def alias_transform_string(self, name):
-        """
-        Transformation **object** between alias and base signal
-        """
-        return self.header[T_ALIASES][name].get(V_TRANS, None)
+        if V_TRANS in self.header[T_ALIASES][name]:
+            return decode_transform(self.header[T_ALIASES][name][V_TRANS])
+        else:
+            return None
 
     def vmetadata(self, name):
         return self.var_metadata.get(name, None)
@@ -558,8 +558,7 @@ class WallTableReader(object):
         if trans==None:
             return ret
         else:
-            return trans.apply(ret)
-        return ret
+            return map(trans.apply, ret)
 
 class WallObjectReader(object):
     def __init__(self, reader, name, header):

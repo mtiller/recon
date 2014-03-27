@@ -2,7 +2,8 @@ import sys
 
 from serial import BSONSerializer, MsgPackSerializer, UMsgPackSerializer
 
-from util import write_len, read_len, conv_len, parse_transform
+from util import write_len, read_len, conv_len
+from transforms import Transform, decode_transform
 
 #DEFSER = BSONSerializer
 DEFSER = MsgPackSerializer
@@ -10,7 +11,7 @@ DEFSER = MsgPackSerializer
 
 # This is a unique ID that every meld file starts with so
 # it can be identified/verified.
-MELD_ID = "recon:meld:v01"
+MELD_ID = "recon:meld:v02"
 
 # Meld
 H_METADATA = "fmeta"
@@ -192,10 +193,16 @@ class MeldWriter(object):
             self.fp.write(bhead)
             self.start = self.fp.tell()
             self.headlen = blen
+            print "Initial header: "+repr(self.header)
+            print "Initial header length: "+repr(blen)
+            if self.header==None:
+                raise ValueError("Header is invalid")
         else:
             # If this is a rewrite of the header...
             if self.verbose:
                 print "Rewriting header"
+            print "Final header: "+repr(self.header)
+            print "Final header length: "+repr(blen)
             if blen>self.headlen: # pragma: no cover
                 raise IOError("Header length increased on rewrite")
             # Save where we are
@@ -363,10 +370,16 @@ class MeldTableWriter(object):
 
         # Process any transformation associated with this alias
         if transform!=None:
-            if parse_transform(transform)==None:
-                raise ValueError("Transform '"+str(transform)+ \
-                                     "' could not be parsed")
-            self.aliases[alias][V_TRANS] = transform
+            print "transform = "+str(transform)
+            if isinstance(transform,Transform):
+                print "transform is a Transform"
+                enc = transform.encode()
+                print "Encoded: "+str(enc)
+                self.aliases[alias][V_TRANS] = enc
+            else:
+                print "transform is not a Tranform"
+                raise ValueError("Specified transform '"+str(transform)+ \
+                                 "' is not an instance of Transform class")
 
         # If metadata was supplied, associated it with the alias name
         if metadata!=None:
@@ -605,14 +618,17 @@ class MeldTableReader(object):
                                 " found in table "+str(self.table))
         ind = self.indices[signal][V_INDEX]
         blen = self.indices[signal][V_LENGTH]
-        trans = parse_transform(self.indices[signal].get(V_TRANS, None))
+        if V_TRANS in self.indices[signal]:
+            trans = decode_transform(self.indices[signal][V_TRANS])
+        else:
+            trans = None
         self.reader.fp.seek(ind)
         data = self.reader.ser.decode_vec(self.reader.fp, blen)
 
         if trans==None:
             return data
         else:
-            return trans.apply(data)
+            return map(trans.apply, data)
 
 class MeldObjectReader(object):
     """
