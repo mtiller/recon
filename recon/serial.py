@@ -1,4 +1,5 @@
 import bz2
+import msgpack
 
 def compress(data):
     """
@@ -76,11 +77,12 @@ class MsgPackSerializer(object):
         """
         self.compress = compress
         self.single = single
+    def encode_len(self, fp, l):
+        return msgpack.pack(l, fp)
     def encode_obj(self, x, verbose=False, uncomp=False):
         """
         Encode an object (uncomp=True means suppress compression)
         """
-        import msgpack
         try:
             data = msgpack.packb(x, use_single_float=self.single)
             if self.compress and not uncomp:
@@ -96,11 +98,39 @@ class MsgPackSerializer(object):
         Encode a vector (uncomp=True means suppress compression)
         """
         return self.encode_obj(x, verbose=verbose, uncomp=uncomp)
+    def decode_len(self, fp, ignoreEOF=False, verbose=False):
+        # Assume the worst case and that the int is 9 bytes long
+        bytes = fp.read(9)
+        print "Bytes read: "+repr(bytes)
+        if len(bytes)==0 and ignoreEOF:
+            return None
+        needed = None
+        first = ord(bytes[0])
+        print "first = %x" % (first)
+        # If leading bit is zero, then the first byte is our int
+        if (first & 0x80)==0:
+            needed = 1
+        elif first==0xcc or first==0xd0:
+            needed = 2
+        elif first==0xcd or first==0xd1:
+            needed = 3
+        elif first==0xce or first==0xd2:
+            needed = 5
+        elif first==0xcf or first==0xd3:
+            needed = 9
+        else:
+            raise ValueError("Cannot determine number of bytes for integer")
+        if len(bytes)<needed:
+            raise ValueError("Insufficient bytes to decode integer")
+        print "Number of bytes needed: "+str(needed)
+        ret = msgpack.unpackb(bytes[0:needed])
+        fp.seek(-len(bytes),1) # Rewind to where we were
+        fp.seek(needed,1) # Move past bytes used to encode length
+        return ret
     def decode_obj(self, fp, length, verbose=False, uncomp=False):
         """
         Decode an object (uncomp=True means suppress decompression)
         """
-        import msgpack
         data = fp.read(length)
         if self.compress and not uncomp:
             data = decompress(data)

@@ -1,6 +1,5 @@
 from serial import BSONSerializer, MsgPackSerializer, UMsgPackSerializer
 
-from util import write_len, read_len
 from transforms import decode_transform, Transform
 
 # This is a unique ID that every wall file starts with so
@@ -186,7 +185,7 @@ class WallWriter(object):
             print "Binary header length: "+str(len(bhead))
             print "Binary header: "+repr(bhead)
         self.fp.write(WALL_ID)
-        write_len(self.fp, len(bhead))
+        self.ser.encode_len(self.fp, len(bhead))
         self.fp.write(bhead)
         self.defined = True
 
@@ -198,13 +197,13 @@ class WallWriter(object):
             if self.verbose:
                 print row
             rowdata = self.ser.encode_obj({row[0]: row[1]})
-            write_len(self.fp, len(rowdata))
+            self.ser.encode_len(self.fp, len(rowdata))
             self.fp.write(rowdata)
         for field in self.buffered_fields:
             if self.verbose:
                 print field
             fielddata = self.ser.encode_obj({field[0]: field[1]})
-            write_len(self.fp, len(fielddata))
+            self.ser.encode_len(self.fp, len(fielddata))
             self.fp.write(fielddata)
         self.buffered_rows = []
         self.buffered_fields = []
@@ -373,7 +372,7 @@ class WallReader(object):
 
         # Now read the length of the header object
         # and then the header object itself
-        self.headlen = read_len(self.fp, verbose=verbose)
+        self.headlen = self.ser.decode_len(self.fp, verbose=verbose)
         if verbose:
             print "Header length: "+str(self.headlen)
         self.header = self.ser.decode_obj(self.fp, length=self.headlen,
@@ -448,7 +447,7 @@ class WallReader(object):
         self.fp.seek(self.start)
 
         # Read the next object
-        rowlen = read_len(self.fp, ignoreEOF=True, verbose=self.verbose)
+        rowlen = self.ser.decode_len(self.fp, ignoreEOF=True, verbose=self.verbose)
         while rowlen!=None:
             row = self.ser.decode_obj(self.fp, length=rowlen,
                                       verbose=self.verbose)
@@ -460,7 +459,7 @@ class WallReader(object):
             # be returned.
             if name in row:
                 ret.append(row[name])
-            rowlen = read_len(self.fp, ignoreEOF=True, verbose=self.verbose)
+            rowlen = self.ser.decode_len(self.fp, ignoreEOF=True, verbose=self.verbose)
         return ret
 
     def read_object(self, name):

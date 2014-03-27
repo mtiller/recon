@@ -1,8 +1,6 @@
 import sys
 
 from serial import BSONSerializer, MsgPackSerializer, UMsgPackSerializer
-
-from util import write_len, read_len, conv_len
 from transforms import Transform, decode_transform
 
 #DEFSER = BSONSerializer
@@ -189,20 +187,16 @@ class MeldWriter(object):
             if self.verbose:
                 print "Writing header for the first time"
             self.fp.write(MELD_ID)
-            write_len(self.fp, blen)
+            self.ser.encode_len(self.fp, blen)
             self.fp.write(bhead)
             self.start = self.fp.tell()
             self.headlen = blen
-            print "Initial header: "+repr(self.header)
-            print "Initial header length: "+repr(blen)
             if self.header==None:
                 raise ValueError("Header is invalid")
         else:
             # If this is a rewrite of the header...
             if self.verbose:
                 print "Rewriting header"
-            print "Final header: "+repr(self.header)
-            print "Final header length: "+repr(blen)
             if blen>self.headlen: # pragma: no cover
                 raise IOError("Header length increased on rewrite")
             # Save where we are
@@ -211,7 +205,7 @@ class MeldWriter(object):
             self.fp.seek(0)
             # Rewrite the header
             self.fp.write(MELD_ID)
-            write_len(self.fp, blen)
+            self.ser.encode_len(self.fp, blen)
             self.fp.write(bhead)
             # Jump back to where we were when this function was called
             self.fp.seek(save)
@@ -370,14 +364,10 @@ class MeldTableWriter(object):
 
         # Process any transformation associated with this alias
         if transform!=None:
-            print "transform = "+str(transform)
             if isinstance(transform,Transform):
-                print "transform is a Transform"
                 enc = transform.encode()
-                print "Encoded: "+str(enc)
                 self.aliases[alias][V_TRANS] = enc
             else:
-                print "transform is not a Tranform"
                 raise ValueError("Specified transform '"+str(transform)+ \
                                  "' is not an instance of Transform class")
 
@@ -478,13 +468,11 @@ class MeldReader(object):
 
         self.ser = DEFSER(compress=False)
 
-        lead = self.fp.read(len(MELD_ID)+4)
-        
-        file_id = lead[:-4]
+        file_id = self.fp.read(len(MELD_ID))
         if file_id != MELD_ID:
             raise IOError("File is not a Meld file")
 
-        blen = conv_len(lead[-4:])
+        blen = self.ser.decode_len(self.fp)
         self.headlen = blen
         self.header = self.ser.decode_obj(self.fp, length=blen)
         self.metadata = self.header[H_METADATA]
