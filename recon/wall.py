@@ -498,19 +498,48 @@ class WallTableReader(object):
         self.reader = reader
         self.name = name
         self.header = header
-        self.metadata = self.header[T_METADATA]
-        self.var_metadata = self.header[T_VMETADATA]
+        self.var_metadata = self.get_var_metadata()
+        self.metadata = self.get_metadata()
+
+    def get_var_metadata(self):
+        """
+        Variable-Metadata in this table
+        """
+        if not T_VMETADATA in self.header:
+            print "WARNING: Variable-Metadata information is missing from table '%s'" % (self.name)
+            return set()
+        else:
+            return self.header[T_VMETADATA]
+
+    def get_metadata(self):
+        """
+        Metadata in this table
+        """
+        if not T_METADATA in self.header:
+            print "WARNING: Metadata information is missing from table '%s'" % (self.name)
+            return set()
+        else:
+            return self.header[T_METADATA]
+
     def signals(self):
         """
         Signals in this table
         """
-        return self.header[T_SIGNALS]
+        if not T_SIGNALS in self.header:
+            print "WARNING: Signal information is missing from table '%s'" % (self.name)
+            return set()
+        else:
+            return self.header[T_SIGNALS]
 
     def aliases(self):
         """
         Aliases in this table
         """
-        return self.header[T_ALIASES].keys()
+        if not T_ALIASES in self.header:
+            print "WARNING: Alias information is missing from table '%s'" % (self.name)
+            return set()
+        else:
+            return self.header[T_ALIASES].keys()
 
     def variables(self):
         """
