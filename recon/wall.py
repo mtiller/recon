@@ -504,7 +504,11 @@ class WallTableReader(object):
         """
         Signals in this table
         """
-        return self.header[T_SIGNALS]
+        if not T_SIGNALS in self.header:
+            print "WARNING: Signal information is missing from table '%s'" % (self.name)
+            return set()
+        else:
+            return self.header[T_SIGNALS]
 
     def aliases(self):
         """
