@@ -498,8 +498,19 @@ class WallTableReader(object):
         self.reader = reader
         self.name = name
         self.header = header
-        self.metadata = self.header[T_METADATA]
         self.var_metadata = self.header[T_VMETADATA]
+        self.metadata = self.get_metadata()
+
+    def get_metadata(self):
+        """
+        Metadata in this table
+        """
+        if not T_METADATA in self.header:
+            print "WARNING: Metadata information is missing from table '%s'" % (self.name)
+            return set()
+        else:
+            return self.header[T_METADATA]
+
     def signals(self):
         """
         Signals in this table
