@@ -514,7 +514,11 @@ class WallTableReader(object):
         """
         Aliases in this table
         """
-        return self.header[T_ALIASES].keys()
+        if not T_ALIASES in self.header:
+            print "WARNING: Alias information is missing from table '%s'" % (self.name)
+            return set()
+        else:
+            return self.header[T_ALIASES].keys()
 
     def variables(self):
         """
